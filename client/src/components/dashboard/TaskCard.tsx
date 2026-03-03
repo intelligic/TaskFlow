@@ -24,7 +24,7 @@ export default function TaskCard({ task, onUpdateStatus, role }: Props) {
         {/* Pending */}
         <button
           disabled={isPending}
-          className={`px-3 py-1 text-xs rounded 
+          className={`px-3 py-1 text-sm rounded 
             ${isPending ? 'bg-red-500 text-white' : 'bg-red-100 text-red-400'}`}
         >
           Pending

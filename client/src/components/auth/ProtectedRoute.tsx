@@ -1,41 +1,13 @@
-// 'use client';
-
-// import { useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
-
-// export default function ProtectedRoute({
-//   children,
-//   role,
-// }: {
-//   children: React.ReactNode;
-//   role: 'admin' | 'employee';
-// }) {
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     const userRole = localStorage.getItem('role');
-
-//     if (!userRole) {
-//       router.push('/login');
-//       return;
-//     }
-
-//     if (userRole !== role) {
-//       router.push(`/${userRole}/dashboard`);
-//     }
-//   }, [router, role]);
-
-//   return <>{children}</>;
-// }
-
 'use client';
 
 export default function ProtectedRoute({
   children,
+  role,
 }: {
   children: React.ReactNode;
+  role?: 'admin' | 'employee';
 }) {
-  // 🔓 TEMP DEV MODE:
-  // Frontend UI testing ke liye sabko allow
+  // TEMP DEV MODE: allow all roles during UI development.
+  void role;
   return <>{children}</>;
 }

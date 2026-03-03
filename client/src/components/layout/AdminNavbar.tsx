@@ -1,5 +1,6 @@
 'use client';
 
+import { LogOut, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -44,11 +45,21 @@ export default function AdminNavbar() {
           + Create Task
         </Link>
 
+        <div
+          className="ml-2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-600"
+          aria-label="User profile"
+          title="User"
+        >
+          <User size={16} />
+        </div>
+
         <button
           onClick={handleLogout}
-          className="text-sm text-gray-600 hover:text-black ml-2"
+          className="rounded p-1.5 text-gray-600 hover:bg-gray-100 hover:text-black"
+          aria-label="Logout"
+          title="Logout"
         >
-          Logout
+          <LogOut size={18} />
         </button>
       </div>
     </div>
