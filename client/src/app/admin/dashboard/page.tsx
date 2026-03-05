@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { ClipboardList, PlayCircle, CheckCircle2, Users } from 'lucide-react';
-import { employees } from '@/lib/mock-employees';
+import { useRouter } from "next/navigation";
+import { ClipboardList, PlayCircle, CheckCircle2, Users } from "lucide-react";
+import { employees } from "@/lib/mock-employees";
 
 const summary = {
   totalTasks: 1284,
-  totalChange: '+12% from last week',
+  totalChange: "+12% from last week",
   activeTasks: 142,
-  activeDesc: 'Currently in progress',
+  activeDesc: "Currently in progress",
   completedTasks: 1142,
-  completedDesc: '89% Success rate',
+  completedDesc: "89% Success rate",
   activeUsers: employees.length,
   usersDesc: `Across ${employees.length} team members`,
 };
@@ -21,8 +21,10 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-semibold">Admin Dashboard</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-xl font-bold text-black tracking-wide font-serif">
+          Admin Dashboard
+        </h2>
+        <p className="text-md font-semibold font-serif text-gray-500 text-semibold tracking-wide">
           Real-time task overview and employee performance
         </p>
       </div>
@@ -34,6 +36,10 @@ export default function AdminDashboardPage() {
           desc={summary.totalChange}
           icon={<ClipboardList className="h-5 w-5 text-blue-600" />}
           iconBg="bg-blue-100"
+          cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
+          titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
+          valueClassName="mt-3 text-3xl font-bold text-slate-900 leading-none "
+          descClassName="mt-3 font-medium text-green-600 text-sm"
         />
         <SummaryCard
           title="Active Tasks"
@@ -41,6 +47,10 @@ export default function AdminDashboardPage() {
           desc={summary.activeDesc}
           icon={<PlayCircle className="h-5 w-5 text-orange-600" />}
           iconBg="bg-orange-100"
+          cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
+          titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
+          valueClassName="mt-3 text-3xl font-bold text-slate-900 leading-none "
+          descClassName="mt-3 font-medium text-green-600 text-sm"
         />
         <SummaryCard
           title="Completed"
@@ -48,6 +58,10 @@ export default function AdminDashboardPage() {
           desc={summary.completedDesc}
           icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
           iconBg="bg-green-100"
+          cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
+          titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
+          valueClassName="mt-3 text-3xl font-bold text-slate-900 leading-none "
+          descClassName="mt-3 font-medium text-green-600 text-sm"
         />
         <SummaryCard
           title="Active Users"
@@ -55,6 +69,10 @@ export default function AdminDashboardPage() {
           desc={summary.usersDesc}
           icon={<Users className="h-5 w-5 text-purple-600" />}
           iconBg="bg-purple-100"
+          cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
+          titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
+          valueClassName="mt-3 text-3xl font-bold text-slate-900 leading-none "
+          descClassName="mt-3 font-medium text-green-600 text-sm"
         />
       </div>
 
@@ -81,7 +99,9 @@ export default function AdminDashboardPage() {
               <span>Completed: {emp.completed}</span>
             </div>
 
-            <div className="text-right text-sm text-gray-500">{emp.lastActive}</div>
+            <div className="text-right text-sm text-gray-500">
+              {emp.lastActive}
+            </div>
           </div>
         ))}
       </section>
@@ -95,21 +115,35 @@ function SummaryCard({
   desc,
   icon,
   iconBg,
+  cardClassName,
+  titleClassName,
+  valueClassName,
+  descClassName,
 }: {
   title: string;
   value: number;
   desc: string;
   icon: React.ReactNode;
   iconBg: string;
+  cardClassName?: string;
+  titleClassName?: string;
+  valueClassName?: string;
+  descClassName?: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border bg-white p-4">
+    <div
+      className={`flex items-center justify-between rounded-lg border bg-white p-4 ${cardClassName || ""}`}
+    >
       <div>
-        <p className="text-xs text-gray-500">{title}</p>
-        <p className="text-xl font-semibold">{value}</p>
-        <p className="mt-1 text-xs text-green-600">{desc}</p>
+        <p className={titleClassName || "text-xs text-gray-500"}>{title}</p>
+        <p className={valueClassName || "text-xl font-semibold"}>{value}</p>
+        <p className={descClassName || "mt-1 text-xs text-green-600"}>{desc}</p>
       </div>
-      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>{icon}</div>
+      <div
+        className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}
+      >
+        {icon}
+      </div>
     </div>
   );
 }

@@ -129,8 +129,8 @@ export default function EmployeeDashboardPage() {
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-8 overflow-hidden items-center justify-center">
       {/* Maine Heading */}
       <div className='w-full'>
-        <h2 className="text-2xl font-bold text-black tracking-wide">Employee Dashboard</h2>
-        <p className="text-md font-semibold text-gray-500 text-semibold tracking-wide">
+        <h2 className="text-xl font-bold text-black tracking-wide font-serif">Employee Dashboard</h2>
+        <p className="text-md font-semibold font-serif text-gray-500 text-semibold tracking-wide">
           {employeeProfile.name} | {employeeProfile.designation}
         </p>
       </div>
@@ -142,10 +142,10 @@ export default function EmployeeDashboardPage() {
           desc="All tasks assigned to you"
           icon={<ClipboardList className="h-5 w-5 text-blue-600" />}
           iconBg="bg-blue-100"
-          cardClassName="border-blue-100 bg-gradient-to-r from-blue-50 to-white flex shadow-lg"
-          titleClassName="text-[14px] font-bold uppercase tracking-[0.10em] opacity-90 text-blue-700"
-          valueClassName="mt-2 text-4xl font-bold text-slate-900 leading-none "
-          descClassName="mt-2 text-md font-medium text-slate-600"
+          cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
+          titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
+          valueClassName="mt-2 text-3xl font-bold text-slate-900 leading-none "
+          descClassName="mt-2 text-md font-medium text-black"
         />
         <SummaryCard
           title="Completed Tasks"
@@ -153,10 +153,10 @@ export default function EmployeeDashboardPage() {
           desc="Tasks marked complete"
           icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
           iconBg="bg-green-100"
-          cardClassName="border-blue-100 bg-gradient-to-r from-blue-50 to-white shadow-lg"
-          titleClassName="text-[14px] font-bold uppercase tracking-[0.10em] opacity-90 text-blue-700"
-          valueClassName="mt-2 text-4xl font-bold text-slate-900 leading-none "
-          descClassName="mt-2 text-md font-medium text-slate-600"
+          cardClassName=" shadow-lg hover:shadow-xl transition-shadow duration-300"
+          titleClassName="text-[14px] font-bold uppercase text-gray-900"
+          valueClassName="mt-2 text-3xl font-bold text-slate-900 tracking-wide leading-none "
+          descClassName="mt-2 font-medium text-black text-sm"
         />
       </div>
 
@@ -167,7 +167,7 @@ export default function EmployeeDashboardPage() {
           ))}
         </div>
 
-        <div className="sticky bottom-0 flex flex-col gap-3 bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between mt-2">
+        <div className="sticky bottom-0 flex flex-col gap-3 font-serif bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between mt-2">
           <p className="text-black text-[14px] font-bold">
             Showing {startItem}-{endItem} of {tasks.length} tasks
           </p>
@@ -188,7 +188,7 @@ export default function EmployeeDashboardPage() {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`rounded border px-3 py-1.5 ${
+                  className={`rounded border px-3 py-1.5 text-gray-500 ${
                     active ? 'border-blue-600 bg-blue-600 text-white' : 'hover:bg-gray-50'
                   }`}
                 >
@@ -200,7 +200,7 @@ export default function EmployeeDashboardPage() {
             <button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-80"
+              className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Next
             </button>
@@ -266,7 +266,7 @@ function TaskCard({
       <h3 className="font-bold text-md text-black">{task.title}</h3>
       <p className="text-sm text-gray-800">{task.desc}</p>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <StatusButton
           active={task.status === 'pending'}
           color="red"
@@ -294,15 +294,15 @@ function TaskCard({
 
       <button
         onClick={() => setShowComments((prev) => !prev)}
-        className="text-xs text-blue-600 hover:underline"
+        className="text-[14px] text-blue-600 hover:underline duration-700 font-bold"
       >
         {showComments ? 'Hide Comments' : 'Open Comments'}
       </button>
 
       {showComments && (
-        <div className="mt-2 space-y-3 border-t pt-3">
+        <div className=" space-y-2 border-t pt-2">
           <div className="max-h-32 space-y-2 overflow-y-auto">
-            {comments.length === 0 && <p className="text-xs text-gray-400">No comments yet.</p>}
+            {comments.length === 0 && <p className="text-[12px] font-semibold text-gray-400">No comments yet.</p>}
 
             {comments.map((item, index) => (
               <div key={`${task.id}-${index}`} className="rounded bg-gray-100 px-3 py-2 text-xs">
@@ -315,12 +315,12 @@ function TaskCard({
             <input
               type="text"
               placeholder="Write your doubt..."
-              className="flex-1 rounded border px-2 py-1 text-xs"
+              className="flex-1 rounded border px-2 py-1 text-[14px] font-medium text-gray-700 focus:outline-none focus:border-none  focus:ring-1 focus:ring-blue-600"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
 
-            <button onClick={addComment} className="rounded bg-blue-600 px-3 py-1 text-xs text-white">
+            <button onClick={addComment} className="rounded bg-blue-600 px-3 py-1 text-[14px] text-white">
               Send
             </button>
           </div>
@@ -348,7 +348,7 @@ function StatusButton({
   };
 
   return (
-    <button onClick={onClick} className={`rounded px-3 py-1 text-xs ${colors[color]}`}>
+    <button onClick={onClick} className={`rounded px-3 py-1 text-[14px] ${colors[color]}`}>
       {children}
     </button>
   );

@@ -9,17 +9,31 @@ import { usePathname } from 'next/navigation';
 export default function EmployeeNavbar() {
   const pathname = usePathname();
 
+  const normalizePath = (path: string) => {
+    const normalized = path.replace(/\/+$/, '');
+    return normalized || '/';
+  };
+
+  const isActive = (path: string) => {
+    const current = normalizePath(pathname);
+    const target = normalizePath(path);
+
+    if (current === target) return true;
+    if (target === '/employee/dashboard' && current === '/employee') return true;
+    return current.startsWith(`${target}/`);
+  };
+
   const linkClass = (path: string) =>
-    `text-[16px] font-semibold tracking-wide transition-colors ${
-      pathname === path
+    `text-[14px] border-none font-semibold tracking-wide transition-colors ${
+      isActive(path)
         ? 'text-indigo-700'
         : 'text-slate-500 hover:text-indigo-600'
     }`;
 
   return (
-    <header className="h-14 bg-white border-b flex items-center justify-between px-6">
-      <h1 className="flex items-center gap-2 text-xl text-black font-bold tracking-wider">
-        <ClipboardList size={30} className='text-black' />
+    <header className="h-14 bg-white shadow-lg font-serif flex items-center justify-between px-6">
+      <h1 className="flex items-center gap-2 text-md text-black font-bold tracking-wide">
+        <ClipboardList size={25} className='text-black' />
         <span>TaskManager</span>
       </h1>
 
