@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut, User } from "lucide-react";
+import { RiLogoutCircleRLine } from "react-icons/ri";
+import { FaUserAlt } from "react-icons/fa";
 import { ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,8 +13,8 @@ export default function AdminNavbar() {
   const pathname = usePathname();
 
   const normalizePath = (path: string) => {
-    const normalized = path.replace(/\/+$/, '');
-    return normalized || '/';
+    const normalized = path.replace(/\/+$/, "");
+    return normalized || "/";
   };
 
   const isActive = (path: string) => {
@@ -21,7 +22,7 @@ export default function AdminNavbar() {
     const target = normalizePath(path);
 
     if (current === target) return true;
-    if (target === '/admin/dashboard' && current === '/admin') return true;
+    if (target === "/admin/dashboard" && current === "/admin") return true;
     return current.startsWith(`${target}/`);
   };
 
@@ -33,14 +34,9 @@ export default function AdminNavbar() {
   return (
     <div className="h-14 bg-white shadow-lg font-serif flex items-center justify-between px-6">
       <div className="flex items-center gap-10">
-        <div>
-          <Link
-            href="/admin/dashboard"
-            className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider"
-          >
-            <ClipboardList size={25} className="text-black" />
-            TaskManager
-          </Link>
+        <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
+          <ClipboardList size={25} className="text-black" />
+          TaskManager
         </div>
 
         <div className="flex items-center gap-4">
@@ -80,7 +76,7 @@ export default function AdminNavbar() {
       <div className="flex items-center gap-2">
         <Link
           href="/admin/employees/invite"
-          className="border border-gray-500 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-200 duration-700 ease-in-out flex items-center gap-2 text-gray-900"
+          className="border border-gray-500 px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm hover:bg-gray-200 duration-700 ease-in-out flex items-center gap-2 text-gray-900"
         >
           <MdPersonAddAlt1 className="text-lg" />
           Add Employee
@@ -88,7 +84,7 @@ export default function AdminNavbar() {
 
         <Link
           href="/admin/task/create"
-          className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-2"
+          className="bg-blue-600 text-white px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm flex items-center gap-2 transition-colors hover:bg-blue-700"
         >
           <MdOutlineAddTask className="text-lg" />
           Create Task
@@ -99,16 +95,16 @@ export default function AdminNavbar() {
           aria-label="User profile"
           title="User"
         >
-          <User size={18} />
+          <FaUserAlt size={18} />
         </div>
 
         <button
           onClick={handleLogout}
-          className="rounded p-1.5 text-gray-600 hover:bg-gray-100 hover:text-black"
+          className="rounded p-1.5 text-red-800 hover:text-red-400 font-bold"
           aria-label="Logout"
           title="Logout"
         >
-          <LogOut size={22} />
+          <RiLogoutCircleRLine size={22} />
         </button>
       </div>
     </div>

@@ -13,16 +13,16 @@ export default function TaskBubble({
 }) {
   return (
     <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
-      <p className="text-sm">{task.text}</p>
+      <p className="whitespace-pre-wrap wrap-break-word text-sm font-medium text-black">{task.text}</p>
 
       <div className="flex items-center gap-2 text-xs">
         {/* Pending */}
         <button
           disabled
-          className={`px-2 py-1 rounded ${
+          className={`rounded px-3 py-1 text-[14px] ${
             task.status === 'pending'
               ? 'bg-red-600 text-white'
-              : 'bg-red-100 text-red-400 cursor-not-allowed'
+              : 'bg-red-100 text-red-400 hover:bg-red-200 cursor-not-allowed'
           }`}
         >
           Pending
@@ -32,12 +32,12 @@ export default function TaskBubble({
         <button
           onClick={() => role === 'employee' && onUpdateStatus(task.id, 'completed')}
           disabled={!(role === 'employee' && task.status === 'pending')}
-          className={`px-2 py-1 rounded ${
+          className={`rounded px-3 py-1 text-[14px] ${
             task.status === 'completed'
               ? 'bg-blue-600 text-white'
               : role === 'employee' && task.status === 'pending'
-              ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-              : 'bg-blue-50 text-blue-300 cursor-not-allowed'
+              ? 'bg-blue-100 text-blue-400 hover:bg-blue-200'
+              : 'bg-blue-100 text-blue-400 cursor-not-allowed opacity-70'
           }`}
         >
           Complete
@@ -47,12 +47,12 @@ export default function TaskBubble({
         <button
           onClick={() => role === 'admin' && onUpdateStatus(task.id, 'closed')}
           disabled={!(role === 'admin' && task.status === 'completed')}
-          className={`px-2 py-1 rounded ${
+          className={`rounded px-3 py-1 text-[14px] ${
             task.status === 'closed'
               ? 'bg-green-600 text-white'
               : role === 'admin' && task.status === 'completed'
-              ? 'bg-green-100 text-green-600 hover:bg-green-200'
-              : 'bg-green-50 text-green-300 cursor-not-allowed'
+              ? 'bg-green-100 text-green-400 hover:bg-green-200'
+              : 'bg-green-100 text-green-400 cursor-not-allowed opacity-70'
           }`}
         >
           Close

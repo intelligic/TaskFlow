@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { Calendar, ChevronDown, Plus, Tag } from 'lucide-react';
+import { getTagClasses, TASK_TAGS } from '@/lib/task-tags';
+import { useRouter } from 'next/navigation';
+import { MdOutlineAddTask } from "react-icons/md";
+
 
 export default function CreateTaskPage() {
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignee, setAssignee] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  const tags = ['Urgent', 'Internal', 'Finance', 'Backend'];
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -20,6 +24,18 @@ export default function CreateTaskPage() {
   };
 
   const handleSubmit = () => {
+    const raw = localStorage.getItem('adminCreatedTasks');
+    const parsed = raw ? JSON.parse(raw) : [];
+    const nextTask = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      desc: description.trim(),
+      status: 'pending',
+      tags: selectedTags,
+    };
+
+    localStorage.setItem('adminCreatedTasks', JSON.stringify([nextTask, ...parsed]));
+
     console.log({
       title,
       description,
@@ -32,98 +48,116 @@ export default function CreateTaskPage() {
   };
 
   return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-2xl bg-white border rounded-xl p-8 shadow-sm">
-        <h2 className="text-xl font-semibold mb-6">Create New Task</h2>
+    <div className="mx-auto w-full max-w-190">
+      <div className='space-y-3'>
+      <h1 className="font-serif text-3xl font-bold tracking-tight text-slate-900">Create New Task</h1>
+      <p className="w-160 text-md text-slate-500 font-medium">Set up a new project task and assign it to a team member.</p>
+      </div>
 
-        {/* Task Title */}
-        <div className="mb-4">
-          <label className="text-sm font-medium">Task Title</label>
+      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-7 shadow-sm">
+        <div className="mb-5">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Task Title</label>
           <input
             type="text"
             placeholder="e.g. Q4 Financial Reporting"
-            className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
-        {/* Description */}
-        <div className="mb-4">
-          <label className="text-sm font-medium">Description</label>
+        <div className="mb-5">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Description</label>
           <textarea
             placeholder="Describe the task requirements and goals..."
-            className="w-full mt-1 border rounded-lg px-3 py-2 text-sm h-24 resize-none"
+            className="h-28 w-full resize-none rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 
-        {/* Assign + Due Date */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="text-sm font-medium">Assign To</label>
-            <select
-              className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
-              value={assignee}
-              onChange={(e) => setAssignee(e.target.value)}
-            >
-              <option value="">Select employee</option>
-              <option value="1">Aman</option>
-              <option value="2">Ravi</option>
-              <option value="3">Neha</option>
-            </select>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Assign To</label>
+            <div className="relative">
+              <select
+                className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-3 pr-10 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+              >
+                <option value="">Select employee</option>
+                <option value="1">Aman</option>
+                <option value="2">Ravi</option>
+                <option value="3">Neha</option>
+              </select>
+              <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            </div>
           </div>
 
           <div>
-            <label className="text-sm font-medium">Due Date</label>
-            <input
-              type="date"
-              className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Due Date</label>
+            <div className="relative">
+              <input
+                type="date"
+                className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+              <Calendar size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            </div>
           </div>
         </div>
 
-        {/* Tags */}
         <div className="mb-6">
-          <label className="text-sm font-medium">Tags</label>
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Tags</label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {tags.map((tag) => (
+            {TASK_TAGS.map((tag) => (
               <button
                 key={tag}
                 type="button"
                 onClick={() => toggleTag(tag)}
-                className={`px-3 py-1 rounded-full text-xs border ${
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${
                   selectedTags.includes(tag)
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-gray-100 text-gray-600 border-gray-200'
+                    ? getTagClasses(tag, 'selected')
+                    : getTagClasses(tag, 'unselected')
                 }`}
               >
+                <Tag size={12} />
                 {tag}
               </button>
             ))}
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500"
+            >
+              <Plus size={12} />
+              Add New
+            </button>
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
           <button
             onClick={handleSubmit}
-            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:opacity-90 text-sm"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg tracking-wide bg-blue-600 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
-            + Create Task
+            <MdOutlineAddTask className="text-lg"  />
+            Create Task
           </button>
 
           <button
             type="button"
-            className="text-sm text-gray-500 hover:text-black"
+            onClick={() => router.push('/admin/dashboard')}
+            className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
           >
             Cancel
           </button>
         </div>
       </div>
+
+      <p className="mt-5 text-center text-xs font-medium text-slate-400">
+        Notifications will be sent to the assigned employee automatically.
+      </p>
     </div>
   );
 }

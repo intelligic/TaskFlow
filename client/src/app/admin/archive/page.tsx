@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const archivedTasks = [
   {
@@ -30,30 +30,64 @@ const ITEMS_PER_PAGE = 13;
 
 export default function AdminArchivePage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const totalPages = Math.max(1, Math.ceil(archivedTasks.length / ITEMS_PER_PAGE));
+  const filteredTasks = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return archivedTasks;
+
+    return archivedTasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(query) ||
+        task.employee.toLowerCase().includes(query) ||
+        task.completedAt.toLowerCase().includes(query) ||
+        task.closedAt.toLowerCase().includes(query),
+    );
+  }, [searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const paginatedTasks = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return archivedTasks.slice(start, start + ITEMS_PER_PAGE);
-  }, [currentPage]);
+    return filteredTasks.slice(start, start + ITEMS_PER_PAGE);
+  }, [currentPage, filteredTasks]);
 
-  const startItem = archivedTasks.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, archivedTasks.length);
+  const startItem = filteredTasks.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredTasks.length);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1 items-start justify-start">
-        <h2 className="text-2xl font-bold text-black tracking-wide">
-          Archived Tasks
-        </h2>
-        <p className="text-[12px] font-normal text-gray-500">
-          A Text only Historical record of your complete and close tasks.
-        </p>
+      <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
+        <div className="flex flex-col gap-1 items-start justify-start">
+          <h2 className="text-lg font-bold text-black tracking-wide font-serif">
+            Archived Tasks
+          </h2>
+          <p className="text-[12px] font-semibold text-gray-500 tracking-wider">
+            A Text only Historical record of your complete and close tasks.
+          </p>
+        </div>
+
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search by task, employee, completed or closed date..."
+          className="w-full max-w-sm rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        />
       </div>
 
       <div className="bg-white border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 text-[14px] opacity-70 bg-gray-100 text-black text-center uppercase tracking-wide font-semibold">
+        <div className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 text-[14px] opacity-80 bg-gray-100 text-black text-center capatalize tracking-wide font-semibold">
           <span>Task</span>
           <span>Employee</span>
           <span>Completed On</span>
@@ -65,7 +99,7 @@ export default function AdminArchivePage() {
             key={task.id}
             className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 last:border-b-0 text-[12px] font-semibold text-black text-center"
           >
-            <span >{task.title}</span>
+            <span className='text-[14px]'>{task.title}</span>
             <span className='opacity-65'>{task.employee}</span>
             <span className='opacity-65'>{task.completedAt}</span>
             <span className='opacity-65'>{task.closedAt}</span>
@@ -75,7 +109,7 @@ export default function AdminArchivePage() {
 
       <div className="flex flex-col gap-3 bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between border rounded-lg">
         <p className="text-black text-[14px] font-bold">
-          Showing {startItem}-{endItem} of {archivedTasks.length} tasks
+          Showing {startItem}-{endItem} of {filteredTasks.length} tasks
         </p>
 
         <div className="flex items-center gap-2">

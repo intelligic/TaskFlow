@@ -3,6 +3,7 @@
 import { CheckCircle2, ClipboardList } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { employees } from '@/lib/mock-employees';
+import { getTagClasses } from '@/lib/task-tags';
 
 type TaskStatus = 'pending' | 'completed' | 'closed';
 
@@ -11,6 +12,7 @@ type TaskItem = {
   title: string;
   desc: string;
   status: TaskStatus;
+  tags?: string[];
 };
 
 const TASKS_PER_PAGE = 4;
@@ -69,10 +71,25 @@ const initialTasks: TaskItem[] = [
 export default function EmployeeDashboardPage() {
   const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const [employeeProfile, setEmployeeProfile] = useState({
     name: 'Employee',
     designation: 'Team Member',
   });
+
+  useEffect(() => {
+    const rawCreatedTasks = localStorage.getItem('adminCreatedTasks');
+    if (!rawCreatedTasks) return;
+
+    try {
+      const createdTasks = JSON.parse(rawCreatedTasks) as TaskItem[];
+      if (Array.isArray(createdTasks) && createdTasks.length > 0) {
+        setTasks((prev) => [...createdTasks, ...prev]);
+      }
+    } catch {
+      localStorage.removeItem('adminCreatedTasks');
+    }
+  }, []);
 
   useEffect(() => {
     const storedName = localStorage.getItem('employeeName');
@@ -105,7 +122,17 @@ export default function EmployeeDashboardPage() {
     [tasks],
   );
 
-  const totalPages = Math.max(1, Math.ceil(tasks.length / TASKS_PER_PAGE));
+  const filteredTasks = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return tasks;
+    return tasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(query) ||
+        task.desc.toLowerCase().includes(query),
+    );
+  }, [searchTerm, tasks]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / TASKS_PER_PAGE));
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -113,29 +140,33 @@ export default function EmployeeDashboardPage() {
     }
   }, [currentPage, totalPages]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const paginatedTasks = useMemo(() => {
     const start = (currentPage - 1) * TASKS_PER_PAGE;
-    return tasks.slice(start, start + TASKS_PER_PAGE);
-  }, [currentPage, tasks]);
+    return filteredTasks.slice(start, start + TASKS_PER_PAGE);
+  }, [currentPage, filteredTasks]);
 
-  const startItem = tasks.length === 0 ? 0 : (currentPage - 1) * TASKS_PER_PAGE + 1;
-  const endItem = Math.min(currentPage * TASKS_PER_PAGE, tasks.length);
+  const startItem = filteredTasks.length === 0 ? 0 : (currentPage - 1) * TASKS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * TASKS_PER_PAGE, filteredTasks.length);
 
   const updateTaskStatus = (taskId: string, status: TaskStatus) => {
     setTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, status } : task)));
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col gap-8 overflow-hidden items-center justify-center">
+    <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
       {/* Maine Heading */}
       <div className='w-full'>
-        <h2 className="text-xl font-bold text-black tracking-wide font-serif">Employee Dashboard</h2>
-        <p className="text-md font-semibold font-serif text-gray-500 text-semibold tracking-wide">
+        <h2 className="text-lg font-bold text-black tracking-wide font-serif">Employee Dashboard</h2>
+        <p className="text-sm font-semibold font-serif text-gray-500 text-semibold tracking-wide">
           {employeeProfile.name} | {employeeProfile.designation}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-10 md:grid-cols-2 w-300 items-center justify-center ">
+      <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2">
         <SummaryCard
           title="Total Assigned Tasks"
           value={totalAssigned}
@@ -145,7 +176,7 @@ export default function EmployeeDashboardPage() {
           cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
           titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
           valueClassName="mt-2 text-3xl font-bold text-slate-900 leading-none "
-          descClassName="mt-2 text-md font-medium text-black"
+          descClassName="mt-2 text-[14px] font-medium text-black"
         />
         <SummaryCard
           title="Completed Tasks"
@@ -156,20 +187,31 @@ export default function EmployeeDashboardPage() {
           cardClassName=" shadow-lg hover:shadow-xl transition-shadow duration-300"
           titleClassName="text-[14px] font-bold uppercase text-gray-900"
           valueClassName="mt-2 text-3xl font-bold text-slate-900 tracking-wide leading-none "
-          descClassName="mt-2 font-medium text-black text-sm"
+          descClassName="mt-2 font-medium text-black text-[14px]"
         />
       </div>
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg w-full">
-        <div className="flex-1 space-y-4 overflow-y-auto">
+      <section className="flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-lg p-1">
+        <div className="flex items-center justify-between rounded-t-lg border border-gray-200 bg-gray-200 px-4 py-3">
+          <h3 className="text-[15px] font-bold text-slate-800">Task Feed</h3>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by title or description..."
+            className="w-full max-w-xs rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto border border-t-0 border-gray-200 rounded-b-lg p-3 bg-white">
           {paginatedTasks.map((task) => (
             <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} />
           ))}
         </div>
 
-        <div className="sticky bottom-0 flex flex-col gap-3 font-serif bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between mt-2">
+        <div className="flex shrink-0 flex-col gap-3 bg-white px-4 py-2 rounded-lg font-serif text-sm md:flex-row md:items-center md:justify-between border">
           <p className="text-black text-[14px] font-bold">
-            Showing {startItem}-{endItem} of {tasks.length} tasks
+            Showing {startItem}-{endItem} of {filteredTasks.length} tasks
           </p>
 
           <div className="flex items-center gap-2">
@@ -262,9 +304,9 @@ function TaskCard({
   };
 
   return (
-    <div className="space-y-3 rounded-lg border bg-white p-4">
-      <h3 className="font-bold text-md text-black">{task.title}</h3>
-      <p className="text-sm text-gray-800">{task.desc}</p>
+    <div className="space-y-1 rounded-lg border bg-white p-3" >
+      <h3 className="font-bold text-[14px] text-black">{task.title}</h3>
+      <p className="text-[12px] font-medium text-gray-800">{task.desc}</p>
 
       <div className="flex items-center gap-2 flex-wrap">
         <StatusButton
@@ -294,13 +336,26 @@ function TaskCard({
 
       <button
         onClick={() => setShowComments((prev) => !prev)}
-        className="text-[14px] text-blue-600 hover:underline duration-700 font-bold"
+        className="text-[12px] text-blue-600 hover:underline duration-700 font-bold"
       >
         {showComments ? 'Hide Comments' : 'Open Comments'}
       </button>
 
+      {!!task.tags?.length && (
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {task.tags.map((tag) => (
+            <span
+              key={`${task.id}-${tag}`}
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getTagClasses(tag, 'badge')}`}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
       {showComments && (
-        <div className=" space-y-2 border-t pt-2">
+        <div className=" space-y-2 border-t">
           <div className="max-h-32 space-y-2 overflow-y-auto">
             {comments.length === 0 && <p className="text-[12px] font-semibold text-gray-400">No comments yet.</p>}
 
@@ -315,7 +370,7 @@ function TaskCard({
             <input
               type="text"
               placeholder="Write your doubt..."
-              className="flex-1 rounded border px-2 py-1 text-[14px] font-medium text-gray-700 focus:outline-none focus:border-none  focus:ring-1 focus:ring-blue-600"
+              className="flex-1 rounded border px-2 py-1 text-[12px] font-medium text-gray-700 focus:outline-none focus:border-none  focus:ring-1 focus:ring-blue-600"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />

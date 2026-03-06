@@ -1,11 +1,15 @@
-import React from 'react'
+import React from 'react';
+import { FaRegCopyright } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <div className='absolute bottom-0 border shadow-lg w-full bg-white text-gray-800 text-center py-3'>
-      <h1 className="text-sm font-bold font-serif tracking-wide">© 2026 Task Manager — Internal Workflow System for Intelligic Solutions.</h1>
-    </div>
-  )
-}
+    <footer className="mt-auto w-full border-t bg-white py-3 text-center text-gray-800 shadow-lg">
+      <h1 className="font-serif text-sm font-bold tracking-wide flex justify-center items-center gap-2">
+        <FaRegCopyright  size={16} /> 
+        <span>2026 Task Manager - Internal Workflow System for Intelligic Solutions.</span>
+      </h1>
+    </footer>
+  );
+};
 
-export default Footer
+export default Footer;
