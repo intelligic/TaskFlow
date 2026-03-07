@@ -15,8 +15,6 @@ type TaskItem = {
   tags?: string[];
 };
 
-const TASKS_PER_PAGE = 4;
-
 const initialTasks: TaskItem[] = [
   {
     id: '1',
@@ -70,7 +68,6 @@ const initialTasks: TaskItem[] = [
 
 export default function EmployeeDashboardPage() {
   const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeProfile, setEmployeeProfile] = useState({
     name: 'Employee',
@@ -132,26 +129,6 @@ export default function EmployeeDashboardPage() {
     );
   }, [searchTerm, tasks]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / TASKS_PER_PAGE));
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  const paginatedTasks = useMemo(() => {
-    const start = (currentPage - 1) * TASKS_PER_PAGE;
-    return filteredTasks.slice(start, start + TASKS_PER_PAGE);
-  }, [currentPage, filteredTasks]);
-
-  const startItem = filteredTasks.length === 0 ? 0 : (currentPage - 1) * TASKS_PER_PAGE + 1;
-  const endItem = Math.min(currentPage * TASKS_PER_PAGE, filteredTasks.length);
-
   const updateTaskStatus = (taskId: string, status: TaskStatus) => {
     setTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, status } : task)));
   };
@@ -204,49 +181,9 @@ export default function EmployeeDashboardPage() {
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto border border-t-0 border-gray-200 rounded-b-lg p-3 bg-white">
-          {paginatedTasks.map((task) => (
+          {filteredTasks.map((task) => (
             <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} />
           ))}
-        </div>
-
-        <div className="flex shrink-0 flex-col gap-3 bg-white px-4 py-2 rounded-lg font-serif text-sm md:flex-row md:items-center md:justify-between border">
-          <p className="text-black text-[14px] font-bold">
-            Showing {startItem}-{endItem} of {filteredTasks.length} tasks
-          </p>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="rounded border border-black px-6 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-80"
-            >
-              Previous
-            </button>
-
-            {Array.from({ length: totalPages }).map((_, index) => {
-              const page = index + 1;
-              const active = page === currentPage;
-              return (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`rounded border px-3 py-1.5 text-gray-500 ${
-                    active ? 'border-blue-600 bg-blue-600 text-white' : 'hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Next
-            </button>
-          </div>
         </div>
       </section>
     </div>
