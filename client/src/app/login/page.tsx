@@ -1,19 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { generateCaptcha } from "@/lib/captcha";
 import { TbRefresh } from "react-icons/tb";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/lib/auth-schema";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { getUserRole } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [captcha, setCaptcha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -25,6 +29,23 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = token ? getUserRole(token) : null;
+
+    if (role === "admin") {
+      router.replace("/admin/dashboard");
+      return;
+    }
+
+    if (role === "employee") {
+      router.replace("/employee/dashboard");
+      return;
+    }
+
+    localStorage.removeItem("token");
+  }, [router]);
+
+  useEffect(() => {
     const newCaptcha = generateCaptcha();
     setCaptcha(newCaptcha);
     setValue("captchaGenerated", newCaptcha);
@@ -34,30 +55,45 @@ export default function LoginPage() {
     const newCaptcha = generateCaptcha();
     setCaptcha(newCaptcha);
     setValue("captchaGenerated", newCaptcha);
+    setValue("captchaInput", "");
   };
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log({
-      email: data.email,
-      password: data.password,
-    });
+  const onSubmit = async (data: LoginFormData) => {
+    setServerError("");
 
-    /* TEMP ROLE LOGIC */
+    try {
+      setLoading(true);
+      const res = await api.post("/auth/login", {
+        email: data.email,
+        password: data.password,
+      });
 
-    if (data.email.includes("admin")) {
-      router.push("/admin/dashboard");
-    } else {
-      router.push("/employee/dashboard");
+      const { token, role } = res.data as {
+        token: string;
+        role: "admin" | "employee";
+      };
+
+      localStorage.setItem("token", token);
+
+      if (role === "admin") {
+        router.replace("/admin/dashboard");
+      } else {
+        router.replace("/employee/dashboard");
+      }
+    } catch (error: unknown) {
+      setServerError(getApiErrorMessage(error, "Login failed"));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-8 rounded-xl shadow-md w-105"
+        className="w-105 rounded-xl bg-white p-8 shadow-md"
       >
-        <h2 className="text-2xl font-semibold mb-6 text-black font-serif">Login</h2>
+        <h2 className="mb-6 font-serif text-2xl font-semibold text-black">Login</h2>
 
         <div className="flex flex-col gap-3">
           <div>
@@ -67,12 +103,7 @@ export default function LoginPage() {
               {...register("email")}
               className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
-
-            {errors.email && (
-              <p className="text-red-500 text-sm mb-2">
-                {errors.email.message}
-              </p>
-            )}
+            {errors.email && <p className="mb-2 text-sm text-red-500">{errors.email.message}</p>}
           </div>
 
           <div className="relative">
@@ -90,24 +121,12 @@ export default function LoginPage() {
             >
               {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
             </button>
-
-            {errors.password && (
-              <p className="text-red-500 text-sm mb-2">
-                {errors.password.message}
-              </p>
-            )}
+            {errors.password && <p className="mb-2 text-sm text-red-500">{errors.password.message}</p>}
           </div>
 
-          <div className="flex items-center gap-3 mb-3">
-            <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">
-              {captcha}
-            </div>
-
-            <button
-              type="button"
-              onClick={refreshCaptcha}
-              className="text-blue-600 text-sm"
-            >
+          <div className="mb-3 flex items-center gap-3">
+            <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">{captcha}</div>
+            <button type="button" onClick={refreshCaptcha} className="text-sm text-blue-600">
               <TbRefresh className="text-[25px]" />
             </button>
           </div>
@@ -119,24 +138,24 @@ export default function LoginPage() {
           {...register("captchaInput")}
           className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
-
-        {errors.captchaInput && (
-          <p className="text-red-500 text-sm mb-2">
-            {errors.captchaInput.message}
-          </p>
-        )}
+        {errors.captchaInput && <p className="mb-2 text-sm text-red-500">{errors.captchaInput.message}</p>}
 
         <input type="hidden" {...register("captchaGenerated")} />
 
-        <button className="w-full bg-blue-600 text-white py-2 rounded mt-3">
-          Login
+        {serverError && <p className="mt-3 text-sm text-red-600">{serverError}</p>}
+
+        <button
+          disabled={loading}
+          className="mt-3 w-full rounded bg-blue-600 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="text-sm mt-4 font-serif text-gray-700 text-center">
+        <p className="mt-4 text-center font-serif text-sm text-gray-700">
           New user?
-          <a href="/register" className="text-blue-600 ml-1">
+          <Link href="/register" className="ml-1 text-blue-600">
             Register
-          </a>
+          </Link>
         </p>
       </form>
     </div>

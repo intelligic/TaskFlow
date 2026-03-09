@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -8,12 +9,17 @@ import { generateCaptcha } from "@/lib/captcha";
 import { registerSchema, RegisterFormData } from "@/lib/auth-schema";
 import { TbRefresh } from "react-icons/tb";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { getUserRole } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [captcha, setCaptcha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const {
     register,
@@ -23,6 +29,23 @@ export default function RegisterPage() {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = token ? getUserRole(token) : null;
+
+    if (role === "admin") {
+      router.replace("/admin/dashboard");
+      return;
+    }
+
+    if (role === "employee") {
+      router.replace("/employee/dashboard");
+      return;
+    }
+
+    localStorage.removeItem("token");
+  }, [router]);
 
   useEffect(() => {
     const newCaptcha = generateCaptcha();
@@ -36,44 +59,59 @@ export default function RegisterPage() {
     setValue("captchaGenerated", newCaptcha);
   };
 
-  const onSubmit = (data: RegisterFormData) => {
-    console.log({
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      role: "admin",
-    });
+  const onSubmit = async (data: RegisterFormData) => {
+    setServerError("");
+    setSuccessMessage("");
 
-    router.push("/login");
+    try {
+      setLoading(true);
+      const res = await api.post("/auth/register", {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+
+      const roleAssigned = (res.data as { roleAssigned: "admin" | "employee" }).roleAssigned;
+      setSuccessMessage(
+        roleAssigned === "admin"
+          ? "Registration complete. Your account is set as admin. Please login."
+          : "Registration complete. Please login to continue.",
+      );
+
+      setTimeout(() => {
+        router.replace("/login");
+      }, 700);
+    } catch (error: unknown) {
+      setServerError(getApiErrorMessage(error, "Registration failed"));
+      refreshCaptcha();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-8 rounded-xl shadow-md w-105"
+        className="w-105 rounded-xl bg-white p-8 shadow-md"
       >
-        <h2 className="text-2xl font-semibold mb-6 text-black">Admin Register</h2>
+        <h2 className="mb-6 text-2xl font-semibold text-black">Register</h2>
 
         <input
           type="text"
           placeholder="Full Name"
           {...register("name")}
-          className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 mb-3"
+          className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
-        {errors.name && (
-          <p className="text-red-500 text-sm mb-2">{errors.name.message}</p>
-        )}
+        {errors.name && <p className="mb-2 text-sm text-red-500">{errors.name.message}</p>}
 
         <input
           type="email"
           placeholder="Email"
           {...register("email")}
-          className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 mb-3"
+          className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
-        {errors.email && (
-          <p className="text-red-500 text-sm mb-2">{errors.email.message}</p>
-        )}
+        {errors.email && <p className="mb-2 text-sm text-red-500">{errors.email.message}</p>}
 
         <div className="relative mb-3">
           <input
@@ -91,9 +129,7 @@ export default function RegisterPage() {
             {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
           </button>
         </div>
-        {errors.password && (
-          <p className="text-red-500 text-sm mb-2">{errors.password.message}</p>
-        )}
+        {errors.password && <p className="mb-2 text-sm text-red-500">{errors.password.message}</p>}
 
         <div className="relative mb-3">
           <input
@@ -111,22 +147,11 @@ export default function RegisterPage() {
             {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
           </button>
         </div>
-        {errors.confirmPassword && (
-          <p className="text-red-500 text-sm mb-2">
-            {errors.confirmPassword.message}
-          </p>
-        )}
+        {errors.confirmPassword && <p className="mb-2 text-sm text-red-500">{errors.confirmPassword.message}</p>}
 
-        <div className="flex items-center gap-3 mb-3">
-          <div className="bg-gray-200 px-4 py-2 text-lg tracking-widest text-black font-serif">
-            {captcha}
-          </div>
-
-          <button
-            type="button"
-            onClick={refreshCaptcha}
-            className="text-blue-600 text-sm"
-          >
+        <div className="mb-3 flex items-center gap-3">
+          <div className="font-serif bg-gray-200 px-4 py-2 text-lg tracking-widest text-black">{captcha}</div>
+          <button type="button" onClick={refreshCaptcha} className="text-sm text-blue-600">
             <TbRefresh className="text-[25px]" />
           </button>
         </div>
@@ -135,22 +160,28 @@ export default function RegisterPage() {
           type="text"
           placeholder="Enter captcha"
           {...register("captchaInput")}
-          className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 mb-3"
+          className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
-        {errors.captchaInput && (
-          <p className="text-red-500 text-sm mb-2">
-            {errors.captchaInput.message}
-          </p>
-        )}
+        {errors.captchaInput && <p className="mb-2 text-sm text-red-500">{errors.captchaInput.message}</p>}
 
-        <input
-          type="hidden"
-          {...register("captchaGenerated")}
-        />
+        <input type="hidden" {...register("captchaGenerated")} />
 
-        <button className="w-full bg-green-600 text-white py-2 rounded mt-3">
-          Register
+        {serverError && <p className="mb-2 text-sm text-red-600">{serverError}</p>}
+        {successMessage && <p className="mb-2 text-sm text-green-600">{successMessage}</p>}
+
+        <button
+          disabled={loading}
+          className="mt-3 w-full rounded bg-green-600 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Registering..." : "Register"}
         </button>
+
+        <p className="mt-4 text-center text-sm text-gray-700">
+          Already have an account?
+          <Link href="/login" className="ml-1 text-blue-600">
+            Login
+          </Link>
+        </p>
       </form>
     </div>
   );

@@ -1,29 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getAdminUser } from '@/lib/mock-auth-store';
+import { getUserByEmail } from '@/lib/mock-auth-store';
 
 type LoginBody = {
   email?: string;
   password?: string;
 };
 
-export async function POST(request: Request) {
-  const body = (await request.json()) as LoginBody;
-  const email = body.email?.trim().toLowerCase();
-  const password = body.password;
-  const admin = getAdminUser();
-
-  if (!admin) {
-    return NextResponse.json({ message: 'Admin account is not set up yet' }, { status: 401 });
-  }
-
-  if (!email || !password) {
-    return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
-  }
-
-  if (email !== admin.email || password !== admin.password) {
-    return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
-  }
-
+function createToken(role: 'admin' | 'employee'): string {
   const header = Buffer.from(
     JSON.stringify({
       alg: 'HS256',
@@ -33,14 +16,37 @@ export async function POST(request: Request) {
 
   const payload = Buffer.from(
     JSON.stringify({
-      role: 'admin',
+      role,
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
     }),
   ).toString('base64url');
-  const token = `${header}.${payload}.signature`;
+
+  return `${header}.${payload}.signature`;
+}
+
+export async function POST(request: Request) {
+  const body = (await request.json()) as LoginBody;
+  const email = body.email?.trim().toLowerCase();
+  const password = body.password;
+
+  if (!email || !password) {
+    return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
+  }
+
+  const user = getUserByEmail(email);
+
+  if (!user) {
+    return NextResponse.json({ message: 'Account not found. Please register first.' }, { status: 401 });
+  }
+
+  if (user.password !== password) {
+    return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
+  }
+
+  const token = createToken(user.role);
 
   return NextResponse.json({
     token,
-    role: 'admin',
+    role: user.role,
   });
 }

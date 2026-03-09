@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const normalizeCaptcha = (value: string) => value.trim().toUpperCase();
+
 /* REGISTER */
 
 export const registerSchema = z
@@ -15,7 +17,7 @@ export const registerSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   })
-  .refine((data) => data.captchaInput === data.captchaGenerated, {
+  .refine((data) => normalizeCaptcha(data.captchaInput) === normalizeCaptcha(data.captchaGenerated), {
     message: "Captcha incorrect",
     path: ["captchaInput"],
   });
@@ -32,7 +34,7 @@ export const loginSchema = z
     captchaInput: z.string().min(1, "Captcha required"),
     captchaGenerated: z.string(),
   })
-  .refine((data) => data.captchaInput === data.captchaGenerated, {
+  .refine((data) => normalizeCaptcha(data.captchaInput) === normalizeCaptcha(data.captchaGenerated), {
     message: "Captcha incorrect",
     path: ["captchaInput"],
   });
