@@ -47,10 +47,11 @@ export const createTask = async (req, res) => {
     }
 
     await logActivity({
-      action: `Task "${task.title}" created`,
-      taskId: task._id,
-      projectId: task.projectId,
-      userId: req.user.id,
+      action: "TASK_CREATED",
+      performedBy: req.user.id,
+      targetType: "TASK",
+      targetId: task._id,
+      description: `Task "${task.title}" created`,
     });
     await createAuditLog({
       actor: req.user.id,
@@ -227,10 +228,11 @@ export const updateTaskStatus = async (req, res) => {
     }
 
     await logActivity({
-      action: `Task \"${task.title}\" status updated to \"${status}\"`,
-      taskId: task._id,
-      projectId: task.projectId,
-      userId: req.user.id,
+      action: "TASK_STATUS_UPDATED",
+      performedBy: req.user.id,
+      targetType: "TASK",
+      targetId: task._id,
+      description: `Task "${task.title}" status updated to "${nextStatus}"`,
     });
 
     await createAuditLog({

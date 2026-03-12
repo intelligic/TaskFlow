@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
+import { inviteEmailTemplate } from "../templates/inviteEmailTemplate.js";
 
 export const register = async (req, res) => {
 
@@ -19,8 +20,6 @@ return res.status(400).json({message:"User already exists"});
 
 const hashedPassword = await bcrypt.hash(password,10);
 
-const verificationToken = crypto.randomBytes(32).toString("hex");
-
 const configuredAdminEmail = process.env.ADMIN_EMAIL
   ? process.env.ADMIN_EMAIL.trim().toLowerCase()
   : null;
@@ -29,12 +28,15 @@ const hasAnyAdmin = await User.exists({ role: "admin" });
 const shouldBeAdmin =
   !hasAnyAdmin || (configuredAdminEmail && configuredAdminEmail === normalizedEmail);
 
+if (!shouldBeAdmin && String(process.env.ALLOW_EMPLOYEE_REGISTER || "").toLowerCase() !== "true") {
+  return res.status(403).json({ message: "Employee registration is disabled. Please use an invite link." });
+}
+
 const user = await User.create({
 name,
 email: normalizedEmail,
 password:hashedPassword,
 role: shouldBeAdmin ? "admin" : "employee",
-verificationToken,
 isVerified: true,
 });
 
@@ -164,14 +166,12 @@ export const inviteEmployee = async (req, res) => {
       });
 
     const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_ORIGIN || "http://localhost:3000";
-    const link = `${frontendUrl.replace(/\\/+$/, "")}/set-password?token=${inviteToken}`;
+    const link = `${frontendUrl.replace(/\/+$/, "")}/set-password?token=${inviteToken}`;
 
     await sendEmail(
       normalizedEmail,
-      "You're invited to TaskManager",
-      `<p>Hello ${safeName},</p>
-       <p>You have been invited to TaskManager. Set your password using the link below (valid for 24 hours):</p>
-       <p><a href="${link}">${link}</a></p>`,
+      "You're invited to Task Manager",
+      inviteEmailTemplate(link),
     );
 
     res.status(201).json({

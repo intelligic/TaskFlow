@@ -11,7 +11,7 @@ export const getDashboardStats = async (req, res) => {
     const [totalProjects, totalTasks, completedTasks, totalEmployees] = await Promise.all([
       Project.countDocuments({}),
       Task.countDocuments({}),
-      Task.countDocuments({ status: "done" }),
+      Task.countDocuments({ status: { $in: ["COMPLETED", "done"] } }),
       User.countDocuments({ role: "employee" }),
     ]);
 
@@ -25,4 +25,3 @@ export const getDashboardStats = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

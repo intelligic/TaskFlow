@@ -2,6 +2,7 @@ import express from "express";
 
 import protect from "../middleware/authMiddleware.js";
 import { inviteEmployee, login, register, setPassword, verifyInvite } from "../controllers/authController.js";
+import { getProfile } from "../controllers/profileController.js";
 
 const router = express.Router();
 
@@ -10,5 +11,6 @@ router.post("/login", login);
 router.post("/invite", protect, inviteEmployee);
 router.get("/verify-invite", verifyInvite);
 router.post("/set-password", setPassword);
+router.get("/profile", protect, getProfile);
 
 export default router;

@@ -6,6 +6,7 @@ import { FaUserAlt } from "react-icons/fa";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import NotificationBell from "@/components/layout/NotificationBell";
+import { logout } from "@/lib/auth";
 
 export default function EmployeeNavbar() {
   const pathname = usePathname();
@@ -68,8 +69,7 @@ export default function EmployeeNavbar() {
 
         <button
           onClick={() => {
-            localStorage.clear();
-            window.location.href = "/login";
+            logout();
           }}
           className="rounded text-red-800 hover:text-red-400 font-bold"
           aria-label="Logout"

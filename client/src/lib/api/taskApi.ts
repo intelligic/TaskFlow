@@ -34,6 +34,7 @@ export type Task = {
   dueDate?: string;
   userId?: string;
   attachments?: TaskAttachment[];
+  isArchived?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };

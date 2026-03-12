@@ -1,20 +1,17 @@
 import Activity from "../models/Activity.js";
 
-const logActivity = async ({ action, taskId, projectId, userId }) => {
-
+const logActivity = async ({ action, performedBy, targetType, targetId, description }) => {
   try {
-
     await Activity.create({
       action,
-      taskId,
-      projectId,
-      userId
+      performedBy,
+      targetType,
+      targetId,
+      description,
     });
-
   } catch (error) {
     console.error("Activity log error:", error.message);
   }
-
 };
 
 export default logActivity;

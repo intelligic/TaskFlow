@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { MdPersonAddAlt1, MdOutlineAddTask } from "react-icons/md";
 import NotificationBell from "@/components/layout/NotificationBell";
+import { logout } from "@/lib/auth";
 
 export default function AdminNavbar() {
   const router = useRouter();
@@ -28,8 +29,7 @@ export default function AdminNavbar() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/login");
+    logout();
   };
 
   return (

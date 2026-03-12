@@ -19,7 +19,8 @@ export const createProject = async (req, res) => {
 export const getProjects = async (req, res) => {
   try {
 
-    const projects = await Project.find({ userId: req.user.id });
+    const query = req.user && req.user.role === "admin" ? {} : { userId: req.user.id };
+    const projects = await Project.find(query).sort({ createdAt: -1 });
 
     res.json(projects);
 
@@ -30,10 +31,11 @@ export const getProjects = async (req, res) => {
 
 export const getProjectById = async (req, res) => {
   try {
-    const project = await Project.findOne({
-      _id: req.params.id,
-      userId: req.user.id,
-    });
+    const query = req.user && req.user.role === "admin"
+      ? { _id: req.params.id }
+      : { _id: req.params.id, userId: req.user.id };
+
+    const project = await Project.findOne(query);
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });

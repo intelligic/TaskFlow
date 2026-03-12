@@ -1,6 +1,7 @@
 import express from "express";
 
 import protect from "../middleware/authMiddleware.js";
+import requireRole from "../middleware/requireRole.js";
 import { upload } from "../middleware/upload.js";
 import validate from "../middleware/validate.js";
 import { createTaskSchema } from "../validators/taskValidator.js";
@@ -22,17 +23,17 @@ import {
 
 const router = express.Router();
 
-router.post("/", protect, validate(createTaskSchema), createTask);
+router.post("/", protect, requireRole("admin"), validate(createTaskSchema), createTask);
 router.get("/", protect, getTasks);
 router.get("/stats/dashboard", protect, getDashboardStats);
 router.get("/project/:projectId", protect, getTasksByProject);
 router.get("/assigned", protect, getAssignedTasks);
-router.get("/archived", protect, getArchivedTasks);
+router.get("/archived", protect, requireRole("admin"), getArchivedTasks);
 router.post("/:id/comments", protect, addComment);
 router.get("/:id/comments", protect, fetchTaskComments);
 router.get("/:id", protect, getTaskById);
 router.post("/:id/attachments", protect, upload.single("file"), uploadTaskAttachment);
-router.patch("/:id/archive", protect, archiveTask);
+router.patch("/:id/archive", protect, requireRole("admin"), archiveTask);
 router.put("/:id", protect, updateTask);
 router.delete("/:id", protect, deleteTask);
 router.patch("/:id/status", protect, updateTaskStatus);
