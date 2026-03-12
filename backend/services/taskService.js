@@ -1,6 +1,6 @@
-const Task = require("../models/Task");
+import Task from "../models/Task.js";
 
-const createTaskService = async (data) => {
+export const createTaskService = async (data) => {
 
   const task = await Task.create(data);
 
@@ -8,7 +8,7 @@ const createTaskService = async (data) => {
 
 };
 
-const getTasksService = async (query) => {
+export const getTasksService = async (query) => {
 
   const tasks = await Task.find(query);
 
@@ -16,7 +16,3 @@ const getTasksService = async (query) => {
 
 };
 
-module.exports = {
-  createTaskService,
-  getTasksService
-};

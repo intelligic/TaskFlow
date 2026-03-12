@@ -1,7 +1,8 @@
-const express = require("express");
-const { uploadAttachment, getTaskAttachments } = require("../controllers/attachmentController");
-const protect = require("../middleware/authMiddleware");
-const { upload } = require("../middleware/uploadMiddleware");
+import express from "express";
+
+import protect from "../middleware/authMiddleware.js";
+import { upload } from "../middleware/uploadMiddleware.js";
+import { getTaskAttachments, uploadAttachment } from "../controllers/attachmentController.js";
 
 const router = express.Router();
 
@@ -18,4 +19,4 @@ router.get(
   getTaskAttachments
 );
 
-module.exports = router;
+export default router;

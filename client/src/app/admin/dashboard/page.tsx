@@ -5,24 +5,25 @@ import { useEffect, useMemo, useState } from "react";
 import { ClipboardList, PlayCircle, CheckCircle2, Users } from "lucide-react";
 import { employees } from "@/lib/mock-employees";
 import { RiArrowDownBoxFill, RiArrowUpBoxFill } from "react-icons/ri";
+import { getDashboardStats, getRecentActivity } from "@/lib/api/dashboardApi";
 
 const ITEMS_PER_PAGE = 5;
-
-const summary = {
-  totalTasks: 1284,
-  totalChange: "+12% from last week",
-  activeTasks: 142,
-  activeDesc: "Currently in progress",
-  completedTasks: 1142,
-  completedDesc: "89% Success rate",
-  activeUsers: employees.length,
-  usersDesc: `Across ${employees.length} team members`,
-};
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [stats, setStats] = useState<{
+    totalProjects: number;
+    totalTasks: number;
+    completedTasks: number;
+    totalEmployees: number;
+  } | null>(null);
+  const [activity, setActivity] = useState<
+    { _id?: string; action?: string; description?: string; createdAt?: string }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const filteredEmployees = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -46,6 +47,38 @@ export default function AdminDashboardPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+
+        const [statsRes, activityRes] = await Promise.all([
+          getDashboardStats(),
+          getRecentActivity(),
+        ]);
+
+        if (cancelled) return;
+        setStats(statsRes);
+        setActivity(Array.isArray(activityRes) ? activityRes : []);
+      } catch {
+        if (cancelled) return;
+        setError(true);
+      } finally {
+        if (cancelled) return;
+        setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const paginatedEmployees = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredEmployees.slice(start, start + ITEMS_PER_PAGE);
@@ -65,11 +98,23 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
+      {error && (
+        <p className="rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-red-600">
+          Failed to load dashboard data
+        </p>
+      )}
+
+      {loading && (
+        <p className="rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-gray-600">
+          Loading...
+        </p>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <SummaryCard
-          title="Total Tasks"
-          value={summary.totalTasks}
-          desc={summary.totalChange}
+          title="Total Projects"
+          value={stats?.totalProjects ?? 0}
+          desc=""
           icon={<ClipboardList className="h-5 w-5 text-blue-600" />}
           iconBg="bg-blue-100"
           cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
@@ -78,9 +123,9 @@ export default function AdminDashboardPage() {
           descClassName="mt-3 font-medium text-green-600 text-[12px]"
         />
         <SummaryCard
-          title="Active Tasks"
-          value={summary.activeTasks}
-          desc={summary.activeDesc}
+          title="Total Tasks"
+          value={stats?.totalTasks ?? 0}
+          desc=""
           icon={<PlayCircle className="h-5 w-5 text-orange-600" />}
           iconBg="bg-orange-100"
           cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
@@ -89,9 +134,9 @@ export default function AdminDashboardPage() {
           descClassName="mt-3 font-medium text-green-600 text-[12px]"
         />
         <SummaryCard
-          title="Completed"
-          value={summary.completedTasks}
-          desc={summary.completedDesc}
+          title="Completed Tasks"
+          value={stats?.completedTasks ?? 0}
+          desc=""
           icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
           iconBg="bg-green-100"
           cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
@@ -100,9 +145,9 @@ export default function AdminDashboardPage() {
           descClassName="mt-3 font-medium text-green-600 text-[12px]"
         />
         <SummaryCard
-          title="Active Users"
-          value={summary.activeUsers}
-          desc={summary.usersDesc}
+          title="Total Employees"
+          value={stats?.totalEmployees ?? 0}
+          desc=""
           icon={<Users className="h-5 w-5 text-purple-600" />}
           iconBg="bg-purple-100"
           cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
@@ -123,6 +168,12 @@ export default function AdminDashboardPage() {
             className="w-full max-w-xs rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
         </div>
+
+        {activity.length > 0 && (
+          <div className="border-b border-b-gray-100 bg-white px-4 py-2 text-xs font-semibold text-gray-600">
+            Latest activity: {activity[0]?.description || activity[0]?.action || "Updated"}
+          </div>
+        )}
 
         <div className="flex  justify-between items-center text-center border-b px-4 py-3 border-b-gray-100 text-[14px] opacity-80 bg-gray-200 text-black capatalize tracking-wide font-semibold">
           <span className="text-left">Employee</span>

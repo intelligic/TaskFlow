@@ -9,8 +9,8 @@ import { generateCaptcha } from "@/lib/captcha";
 import { registerSchema, RegisterFormData } from "@/lib/auth-schema";
 import { TbRefresh } from "react-icons/tb";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { api, getApiErrorMessage } from "@/lib/api";
-import { getUserRole } from "@/lib/auth";
+import { registerUser } from "@/lib/api/authApi";
+import { getUserRole, setToken } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -65,28 +65,33 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      const res = await api.post("/auth/register", {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-      });
+      const res = await registerUser(data.name, data.email, data.password);
 
-      const roleAssigned = (res.data as { roleAssigned: "admin" | "employee" }).roleAssigned;
-      setSuccessMessage(
-        roleAssigned === "admin"
-          ? "Registration complete. Your account is set as admin. Please login."
-          : "Registration complete. Please login to continue.",
-      );
+      if (res?.token) {
+        setToken(res.token);
 
-      setTimeout(() => {
-        router.replace("/login");
-      }, 700);
+        const role = res.user?.role;
+        if (role === "admin") {
+          router.replace("/admin/dashboard");
+          return;
+        }
+
+        if (role === "employee") {
+          router.replace("/employee/dashboard");
+          return;
+        }
+      }
+
+      router.replace("/login");
+      return;
     } catch (error: unknown) {
-      setServerError(getApiErrorMessage(error, "Registration failed"));
+      setServerError("Registration failed. Try again.");
       refreshCaptcha();
+      return;
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
@@ -100,6 +105,7 @@ export default function RegisterPage() {
         <input
           type="text"
           placeholder="Full Name"
+          autoComplete="name"
           {...register("name")}
           className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
@@ -108,6 +114,7 @@ export default function RegisterPage() {
         <input
           type="email"
           placeholder="Email"
+          autoComplete="email"
           {...register("email")}
           className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
@@ -117,6 +124,7 @@ export default function RegisterPage() {
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
+            autoComplete="new-password"
             {...register("password")}
             className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
@@ -135,6 +143,7 @@ export default function RegisterPage() {
           <input
             type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirm Password"
+            autoComplete="new-password"
             {...register("confirmPassword")}
             className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
@@ -159,6 +168,7 @@ export default function RegisterPage() {
         <input
           type="text"
           placeholder="Enter captcha"
+          autoComplete="off"
           {...register("captchaInput")}
           className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />

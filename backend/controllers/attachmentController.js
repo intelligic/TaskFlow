@@ -1,6 +1,7 @@
-const Attachment = require("../models/Attachment");
+import Attachment from "../models/Attachment.js";
+import { emitRealtime } from "../utils/realtime.js";
 
-const uploadAttachment = async (req, res) => {
+export const uploadAttachment = async (req, res) => {
   try {
     const { taskId } = req.body;
 
@@ -18,6 +19,8 @@ const uploadAttachment = async (req, res) => {
       filePath: req.file.path,
     });
 
+    emitRealtime("fileUploaded", attachment);
+
     res.json({
       success: true,
       data: attachment,
@@ -30,7 +33,7 @@ const uploadAttachment = async (req, res) => {
   }
 };
 
-const getTaskAttachments = async (req, res) => {
+export const getTaskAttachments = async (req, res) => {
   try {
     const { taskId } = req.params;
 
@@ -48,5 +51,3 @@ const getTaskAttachments = async (req, res) => {
     });
   }
 };
-
-module.exports = { uploadAttachment, getTaskAttachments };

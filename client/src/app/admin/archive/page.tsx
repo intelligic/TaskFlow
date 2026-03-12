@@ -2,48 +2,51 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const archivedTasks = [
-  {
-    id: "1",
-    title: "Prepare monthly report",
-    employee: "Jane Doe",
-    completedAt: "2024-02-20",
-    closedAt: "2024-02-21",
-  },
-  {
-    id: "2",
-    title: "Fix login bug",
-    employee: "Sam Miller",
-    completedAt: "2024-02-18",
-    closedAt: "2024-02-18",
-  },
-  {
-    id: "3",
-    title: "Fix login bug",
-    employee: "Sam Miller",
-    completedAt: "2024-02-18",
-    closedAt: "2024-02-18",
-  },
-];
+import { getArchivedTasks, type Task } from "@/lib/api/taskApi";
 
 const ITEMS_PER_PAGE = 13;
 
 export default function AdminArchivePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const load = async () => {
+    try {
+      setError(false);
+      setLoading(true);
+      const res = await getArchivedTasks();
+      setTasks(Array.isArray(res) ? res : []);
+    } catch {
+      setError(true);
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTasks = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    if (!query) return archivedTasks;
+    if (!query) return tasks;
 
-    return archivedTasks.filter(
-      (task) =>
+    return tasks.filter((task) => {
+      const projectName =
+        typeof task.projectId === "string" ? "" : task.projectId?.name || "";
+
+      const completedOn = task.updatedAt
+        ? new Date(task.updatedAt).toLocaleDateString()
+        : "";
+
+      return (
         task.title.toLowerCase().includes(query) ||
-        task.employee.toLowerCase().includes(query) ||
-        task.completedAt.toLowerCase().includes(query) ||
-        task.closedAt.toLowerCase().includes(query),
-    );
-  }, [searchTerm]);
+        (task.assignee || "").toLowerCase().includes(query) ||
+        projectName.toLowerCase().includes(query) ||
+        completedOn.toLowerCase().includes(query)
+      );
+    });
+  }, [searchTerm, tasks]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
 
@@ -64,6 +67,10 @@ export default function AdminArchivePage() {
 
   const startItem = filteredTasks.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredTasks.length);
+
+  useEffect(() => {
+    load();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -86,6 +93,12 @@ export default function AdminArchivePage() {
         />
       </div>
 
+      {error && (
+        <p className="rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-red-600">
+          Failed to load archived tasks
+        </p>
+      )}
+
       <div className="bg-white border rounded-lg overflow-hidden">
         <div className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 text-[14px] opacity-80 bg-gray-100 text-black text-center capatalize tracking-wide font-semibold">
           <span>Task</span>
@@ -94,17 +107,27 @@ export default function AdminArchivePage() {
           <span>Closed On</span>
         </div>
 
-        {paginatedTasks.map((task) => (
-          <div
-            key={task.id}
-            className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 last:border-b-0 text-[12px] font-semibold text-black text-center"
-          >
-            <span className='text-[14px]'>{task.title}</span>
-            <span className='opacity-65'>{task.employee}</span>
-            <span className='opacity-65'>{task.completedAt}</span>
-            <span className='opacity-65'>{task.closedAt}</span>
-          </div>
-        ))}
+        {loading ? (
+          <div className="px-4 py-6 text-sm font-semibold text-gray-600">Loading...</div>
+        ) : (
+          paginatedTasks.map((task) => {
+            const project = typeof task.projectId === "string" ? undefined : task.projectId;
+            const completedOn = task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : "-";
+            const closedOn = task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : "-";
+
+            return (
+              <div
+                key={task._id}
+                className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 last:border-b-0 text-[12px] font-semibold text-black text-center"
+              >
+                <span className="text-[14px]">{task.title}</span>
+                <span className="opacity-65">{task.assignee || project?.name || "-"}</span>
+                <span className="opacity-65">{completedOn}</span>
+                <span className="opacity-65">{closedOn}</span>
+              </div>
+            );
+          })
+        )}
       </div>
 
       <div className="flex flex-col gap-3 bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between border rounded-lg">

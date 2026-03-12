@@ -5,6 +5,7 @@ import { RiLogoutCircleRLine } from "react-icons/ri";
 import { FaUserAlt } from "react-icons/fa";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NotificationBell from "@/components/layout/NotificationBell";
 
 export default function EmployeeNavbar() {
   const pathname = usePathname();
@@ -56,6 +57,7 @@ export default function EmployeeNavbar() {
       </div>
 
       <div className="flex items-center gap-4">
+        <NotificationBell />
         <div
           className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-600"
           aria-label="User profile"

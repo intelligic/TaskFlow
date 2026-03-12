@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { MdPersonAddAlt1, MdOutlineAddTask } from "react-icons/md";
+import NotificationBell from "@/components/layout/NotificationBell";
 
 export default function AdminNavbar() {
   const router = useRouter();
@@ -74,6 +75,7 @@ export default function AdminNavbar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <NotificationBell />
         <Link
           href="/admin/employees/invite"
           className="border border-gray-500 px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm hover:bg-gray-200 duration-700 ease-in-out flex items-center gap-2 text-gray-900"

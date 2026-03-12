@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema(
   {
@@ -11,8 +11,8 @@ const taskSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["todo", "in-progress", "done"],
-      default: "todo",
+      enum: ["TODO", "IN_PROGRESS", "REVIEW", "COMPLETED"],
+      default: "TODO",
     },
 
     priority: {
@@ -26,12 +26,35 @@ const taskSchema = new mongoose.Schema(
       ref: "Project",
     },
 
+    assignee: {
+      type: String,
+      default: "",
+    },
+
+    dueDate: Date,
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+
+    attachments: [
+      {
+        fileName: String,
+        fileUrl: String,
+        uploadedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
+
+    isArchived: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true },
 );
 
-module.exports = mongoose.model("Task", taskSchema);
+export default mongoose.model("Task", taskSchema);

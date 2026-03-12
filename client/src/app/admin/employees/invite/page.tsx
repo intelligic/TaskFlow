@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { ArrowLeft, Info, Mail, User, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { inviteEmployee } from "@/lib/api/employeeApi";
 
 export default function InviteEmployeePage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   return (
     <div className="mx-auto w-full max-w-180 py-2">
       <Link
@@ -25,7 +33,37 @@ export default function InviteEmployeePage() {
       </div>
 
       <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form className="space-y-5">
+        <form
+          className="space-y-5"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              setError("");
+              setSuccess("");
+              setLoading(true);
+              const res = await inviteEmployee(name.trim(), email.trim());
+              setSuccess(res.message || "Invite sent");
+              setName("");
+              setEmail("");
+            } catch {
+              setError("Failed to send invite");
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          {!!error && (
+            <p className="rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-red-600">
+              {error}
+            </p>
+          )}
+
+          {!!success && (
+            <p className="rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-green-700">
+              {success}
+            </p>
+          )}
+
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
               Full Name
@@ -39,6 +77,9 @@ export default function InviteEmployeePage() {
                 type="text"
                 className="w-full rounded-lg border border-slate-200 py-3 pl-10 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 placeholder="Enter employee's full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
             </div>
           </div>
@@ -56,16 +97,20 @@ export default function InviteEmployeePage() {
                 type="email"
                 className="w-full rounded-lg border border-slate-200 py-3 pl-10 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 placeholder="e.g. name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
           </div>
 
           <button
             type="submit"
+            disabled={loading}
             className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-blue-700"
           >
             <UserPlus size={16} />
-            Add Employee
+            {loading ? "Sending..." : "Add Employee"}
           </button>
         </form>
       </div>

@@ -1,10 +1,15 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const projectSchema = new mongoose.Schema(
 {
   name: {
     type: String,
     required: true
+  },
+
+  description: {
+    type: String,
+    default: ""
   },
 
   userId: {
@@ -16,4 +21,4 @@ const projectSchema = new mongoose.Schema(
 { timestamps: true }
 );
 
-module.exports = mongoose.model("Project", projectSchema);
+export default mongoose.model("Project", projectSchema);

@@ -1,10 +1,11 @@
-const express = require("express");
-const { addComment, fetchTaskComments } = require("../controllers/commentController");
-const protect = require("../middleware/authMiddleware");
+import express from "express";
+
+import protect from "../middleware/authMiddleware.js";
+import { addComment, fetchTaskComments } from "../controllers/commentController.js";
 
 const router = express.Router();
 
 router.post("/add", protect, addComment);
 router.get("/:taskId", protect, fetchTaskComments);
 
-module.exports = router;
+export default router;

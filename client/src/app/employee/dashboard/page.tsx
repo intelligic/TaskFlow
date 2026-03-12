@@ -4,88 +4,80 @@ import { CheckCircle2, ClipboardList } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { employees } from '@/lib/mock-employees';
 import { getTagClasses } from '@/lib/task-tags';
-
-type TaskStatus = 'pending' | 'completed' | 'closed';
+import {
+  createTaskComment,
+  getAssignedTasks,
+  getTaskComments,
+  updateTaskStatus,
+  uploadTaskAttachment,
+  type Task,
+  type TaskAttachment,
+  type TaskComment,
+  type TaskStatus,
+} from '@/lib/api/taskApi';
 
 type TaskItem = {
   id: string;
   title: string;
   desc: string;
   status: TaskStatus;
+  projectName?: string;
+  priority?: string;
+  dueDate?: string;
   tags?: string[];
+  attachments?: TaskAttachment[];
 };
 
-const initialTasks: TaskItem[] = [
-  {
-    id: '1',
-    title: 'Update Security Protocols',
-    desc: 'Review and update firewall rules.',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    title: 'Q2 Performance Audit',
-    desc: 'Audit weekly performance logs.',
-    status: 'completed',
-  },
-  {
-    id: '3',
-    title: 'Initial Workspace Setup',
-    desc: 'Configure dev environment.',
-    status: 'pending',
-  },
-  {
-    id: '4',
-    title: 'Client Follow-up',
-    desc: 'Share revised timeline and dependencies.',
-    status: 'completed',
-  },
-  {
-    id: '5',
-    title: 'Fix API Retry Logic',
-    desc: 'Handle timeout retries for task sync endpoint.',
-    status: 'pending',
-  },
-  {
-    id: '6',
-    title: 'Prepare Weekly Report',
-    desc: 'Compile completed and pending items for admin review.',
-    status: 'closed',
-  },
-  {
-    id: '7',
-    title: 'Dashboard QA Pass',
-    desc: 'Verify employee dashboard flows on mobile and desktop.',
-    status: 'pending',
-  },
-  {
-    id: '8',
-    title: 'Archive Old Attachments',
-    desc: 'Move outdated files to archive storage bucket.',
-    status: 'completed',
-  },
-];
+const normalizeStatus = (value?: string): TaskStatus => {
+  if (!value) return 'TODO';
+  const upper = value.trim().toUpperCase();
+  if (upper === 'TODO') return 'TODO';
+  if (upper === 'IN-PROGRESS' || upper === 'IN_PROGRESS') return 'IN_PROGRESS';
+  if (upper === 'REVIEW') return 'REVIEW';
+  if (upper === 'DONE' || upper === 'COMPLETED') return 'COMPLETED';
+  if (value === 'todo') return 'TODO';
+  if (value === 'in-progress') return 'IN_PROGRESS';
+  if (value === 'done') return 'COMPLETED';
+  return 'TODO';
+};
 
 export default function EmployeeDashboardPage() {
-  const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeProfile, setEmployeeProfile] = useState({
     name: 'Employee',
     designation: 'Team Member',
   });
+  const [loading, setLoading] = useState(true);
+
+  const loadAssigned = async () => {
+    try {
+      setLoading(true);
+      const res = await getAssignedTasks();
+      const list = Array.isArray(res) ? res : (res as { tasks: Task[] }).tasks;
+      const mapped: TaskItem[] = (list || []).map((t) => {
+        const project = typeof t.projectId === 'string' ? undefined : t.projectId;
+        return {
+          id: t._id,
+          title: t.title,
+          desc: t.description || '',
+          status: normalizeStatus(t.status),
+          projectName: project?.name,
+          priority: t.priority,
+          dueDate: t.dueDate,
+          attachments: Array.isArray(t.attachments) ? t.attachments : [],
+        };
+      });
+      setTasks(mapped);
+    } catch {
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const rawCreatedTasks = localStorage.getItem('adminCreatedTasks');
-    if (!rawCreatedTasks) return;
-
-    try {
-      const createdTasks = JSON.parse(rawCreatedTasks) as TaskItem[];
-      if (Array.isArray(createdTasks) && createdTasks.length > 0) {
-        setTasks((prev) => [...createdTasks, ...prev]);
-      }
-    } catch {
-      localStorage.removeItem('adminCreatedTasks');
-    }
+    loadAssigned();
   }, []);
 
   useEffect(() => {
@@ -115,7 +107,7 @@ export default function EmployeeDashboardPage() {
 
   const totalAssigned = tasks.length;
   const completedTasks = useMemo(
-    () => tasks.filter((task) => task.status === 'completed').length,
+    () => tasks.filter((task) => task.status === 'COMPLETED').length,
     [tasks],
   );
 
@@ -128,10 +120,6 @@ export default function EmployeeDashboardPage() {
         task.desc.toLowerCase().includes(query),
     );
   }, [searchTerm, tasks]);
-
-  const updateTaskStatus = (taskId: string, status: TaskStatus) => {
-    setTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, status } : task)));
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
@@ -181,9 +169,15 @@ export default function EmployeeDashboardPage() {
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto border border-t-0 border-gray-200 rounded-b-lg p-3 bg-white">
-          {filteredTasks.map((task) => (
-            <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} />
-          ))}
+          {loading ? (
+            <p className="text-sm font-semibold text-gray-600">Loading...</p>
+          ) : filteredTasks.length === 0 ? (
+            <p className="text-sm font-semibold text-gray-600">No tasks assigned yet</p>
+          ) : (
+            filteredTasks.map((task) => (
+              <TaskCard key={task.id} task={task} refreshTasks={loadAssigned} />
+            ))
+          )}
         </div>
       </section>
     </div>
@@ -225,50 +219,181 @@ function SummaryCard({
 
 function TaskCard({
   task,
-  onStatusChange,
+  refreshTasks,
 }: {
   task: TaskItem;
-  onStatusChange: (id: string, status: TaskStatus) => void;
+  refreshTasks: () => Promise<void>;
 }) {
   const [showComments, setShowComments] = useState(false);
   const [comment, setComment] = useState('');
-  const [comments, setComments] = useState<string[]>([]);
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [statusError, setStatusError] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
-  const addComment = () => {
-    if (!comment.trim()) return;
-    setComments((prev) => [...prev, comment.trim()]);
-    setComment('');
-  };
+  const backendOrigin =
+    process.env.NEXT_PUBLIC_BACKEND_ORIGIN || 'http://localhost:5000';
+
+  useEffect(() => {
+    if (!showComments) return;
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setCommentsError('');
+        setCommentsLoading(true);
+        const res = await getTaskComments(task.id);
+        if (cancelled) return;
+        setComments(Array.isArray(res) ? res : []);
+      } catch {
+        if (cancelled) return;
+        setComments([]);
+        setCommentsError('Failed to load comments');
+      } finally {
+        if (cancelled) return;
+        setCommentsLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showComments, task.id]);
 
   return (
     <div className="space-y-1 rounded-lg border bg-white p-3" >
       <h3 className="font-bold text-[14px] text-black">{task.title}</h3>
       <p className="text-[12px] font-medium text-gray-800">{task.desc}</p>
+      <p className="text-[12px] font-semibold text-gray-500">
+        Project: {task.projectName || '—'} • Priority: {task.priority || '—'} • Due:{' '}
+        {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '—'}
+      </p>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <StatusButton
-          active={task.status === 'pending'}
-          color="red"
-          onClick={() => onStatusChange(task.id, 'pending')}
-        >
-          Pending
-        </StatusButton>
+        {task.status === 'TODO' && (
+          <button
+            disabled={updating}
+            onClick={async () => {
+              try {
+                setStatusError('');
+                setUpdating(true);
+                await updateTaskStatus(task.id, 'IN_PROGRESS');
+                await refreshTasks();
+              } catch {
+                setStatusError('Failed to update status');
+              } finally {
+                setUpdating(false);
+              }
+            }}
+            className="rounded bg-blue-600 px-3 py-1 text-[14px] text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Start Task
+          </button>
+        )}
 
-        <StatusButton
-          active={task.status === 'completed'}
-          color="blue"
-          onClick={() => onStatusChange(task.id, 'completed')}
-        >
-          Complete
-        </StatusButton>
+        {task.status === 'IN_PROGRESS' && (
+          <button
+            disabled={updating}
+            onClick={async () => {
+              try {
+                setStatusError('');
+                setUpdating(true);
+                await updateTaskStatus(task.id, 'REVIEW');
+                await refreshTasks();
+              } catch {
+                setStatusError('Failed to update status');
+              } finally {
+                setUpdating(false);
+              }
+            }}
+            className="rounded bg-orange-600 px-3 py-1 text-[14px] text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Send To Review
+          </button>
+        )}
 
-        <StatusButton
-          active={task.status === 'closed'}
-          color="green"
-          onClick={() => onStatusChange(task.id, 'closed')}
-        >
-          Close
-        </StatusButton>
+        <span className="text-[12px] font-bold text-gray-600">
+          Status: {task.status.replace('_', ' ')}
+        </span>
+      </div>
+
+      {!!statusError && (
+        <p className="text-[12px] font-semibold text-red-600">{statusError}</p>
+      )}
+
+      <div className="mt-2 space-y-2 rounded border border-slate-200 bg-slate-50 p-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="file"
+            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+            className="block w-full text-[12px] font-semibold text-gray-700 file:mr-3 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1 file:text-white"
+          />
+          <button
+            type="button"
+            disabled={!selectedFile || uploading}
+            onClick={async () => {
+              if (!selectedFile) return;
+              try {
+                setUploadError('');
+                setUploading(true);
+                await uploadTaskAttachment(task.id, selectedFile);
+                setSelectedFile(null);
+                await refreshTasks();
+              } catch {
+                setUploadError('Failed to upload file');
+              } finally {
+                setUploading(false);
+              }
+            }}
+            className="rounded bg-blue-600 px-3 py-1 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {uploading ? 'Uploading...' : 'Upload'}
+          </button>
+        </div>
+
+        {!!uploadError && (
+          <p className="text-[12px] font-semibold text-red-600">{uploadError}</p>
+        )}
+
+        {task.attachments && task.attachments.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-[12px] font-bold text-slate-700">Attachments</p>
+            <ul className="space-y-1">
+              {task.attachments.map((att, index) => {
+                const href = att.fileUrl
+                  ? att.fileUrl.startsWith('http')
+                    ? att.fileUrl
+                    : `${backendOrigin}${att.fileUrl}`
+                  : '';
+
+                return (
+                  <li key={`${task.id}-att-${index}`} className="text-[12px] font-semibold">
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {att.fileName || 'Download file'}
+                      </a>
+                    ) : (
+                      <span className="text-gray-600">{att.fileName || 'File'}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </div>
 
       <button
@@ -294,11 +419,29 @@ function TaskCard({
       {showComments && (
         <div className=" space-y-2 border-t">
           <div className="max-h-32 space-y-2 overflow-y-auto">
-            {comments.length === 0 && <p className="text-[12px] font-semibold text-gray-400">No comments yet.</p>}
+            {commentsLoading && (
+              <p className="text-[12px] font-semibold text-gray-400">Loading comments...</p>
+            )}
+
+            {!!commentsError && (
+              <p className="text-[12px] font-semibold text-red-600">{commentsError}</p>
+            )}
+
+            {!commentsLoading && !commentsError && comments.length === 0 && (
+              <p className="text-[12px] font-semibold text-gray-400">No comments yet.</p>
+            )}
 
             {comments.map((item, index) => (
-              <div key={`${task.id}-${index}`} className="rounded bg-gray-100 px-3 py-2 text-xs">
-                {item}
+              <div key={item._id || `${task.id}-${index}`} className="rounded bg-gray-100 px-3 py-2 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[12px] font-bold text-gray-800">
+                    {item.author?.name || "Unknown"}
+                  </span>
+                  <span className="text-[11px] font-semibold text-gray-500">
+                    {item.createdAt ? new Date(item.createdAt).toLocaleString() : ""}
+                  </span>
+                </div>
+                <p className="mt-1 text-[12px] font-semibold text-gray-700">{item.message}</p>
               </div>
             ))}
           </div>
@@ -306,42 +449,38 @@ function TaskCard({
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Write your doubt..."
+              placeholder="Write comment..."
               className="flex-1 rounded border px-2 py-1 text-[12px] font-medium text-gray-700 focus:outline-none focus:border-none  focus:ring-1 focus:ring-blue-600"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
 
-            <button onClick={addComment} className="rounded bg-blue-600 px-3 py-1 text-[14px] text-white">
-              Send
+            <button
+              disabled={postingComment}
+              onClick={async () => {
+                const message = comment.trim();
+                if (!message) return;
+
+                try {
+                  setCommentsError("");
+                  setPostingComment(true);
+                  await createTaskComment(task.id, message);
+                  setComment("");
+                  const res = await getTaskComments(task.id);
+                  setComments(Array.isArray(res) ? res : []);
+                } catch {
+                  setCommentsError("Failed to post comment");
+                } finally {
+                  setPostingComment(false);
+                }
+              }}
+              className="rounded bg-blue-600 px-3 py-1 text-[14px] text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {postingComment ? "Sending..." : "Send"}
             </button>
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-function StatusButton({
-  children,
-  active,
-  color,
-  onClick,
-}: {
-  children: string;
-  active: boolean;
-  color: 'red' | 'blue' | 'green';
-  onClick: () => void;
-}) {
-  const colors = {
-    red: active ? 'bg-red-600 text-white' : 'bg-red-100 text-red-400 hover:bg-red-200',
-    blue: active ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-400 hover:bg-blue-200',
-    green: active ? 'bg-green-600 text-white' : 'bg-green-100 text-green-400 hover:bg-green-200',
-  };
-
-  return (
-    <button onClick={onClick} className={`rounded px-3 py-1 text-[14px] ${colors[color]}`}>
-      {children}
-    </button>
   );
 }

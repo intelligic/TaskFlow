@@ -1,4 +1,4 @@
-const Activity = require("../models/Activity");
+import Activity from "../models/Activity.js";
 
 const logActivity = async ({ action, taskId, projectId, userId }) => {
 
@@ -17,4 +17,4 @@ const logActivity = async ({ action, taskId, projectId, userId }) => {
 
 };
 
-module.exports = logActivity;
+export default logActivity;

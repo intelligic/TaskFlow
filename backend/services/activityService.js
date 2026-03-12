@@ -1,6 +1,6 @@
-const Activity = require("../models/Activity");
+import Activity from "../models/Activity.js";
 
-const createActivity = async ({
+export const createActivity = async ({
   action,
   performedBy,
   targetType,
@@ -15,5 +15,3 @@ const createActivity = async ({
     description,
   });
 };
-
-module.exports = { createActivity };

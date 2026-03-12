@@ -2,9 +2,7 @@ import ChatBox from '@/components/chat/ChatBox';
 import { getEmployeeById } from '@/lib/mock-employees';
 
 type Props = {
-  params: {
-    employeeId: string;
-  };
+  params: { employeeId: string } | Promise<{ employeeId: string }>;
 };
 
 function getInitials(name: string) {
@@ -16,8 +14,8 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-export default function AdminChatPage({ params }: Props) {
-  const { employeeId } = params;
+export default async function AdminChatPage({ params }: Props) {
+  const { employeeId } = await Promise.resolve(params);
   const employee =
     getEmployeeById(employeeId) || {
       id: employeeId,

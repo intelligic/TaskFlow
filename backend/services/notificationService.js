@@ -1,37 +1,27 @@
-const { sendEmail } = require("../utils/sendEmail");
+import Notification from "../models/Notification.js";
+import User from "../models/User.js";
+import { emitRealtime } from "../utils/realtime.js";
 
-const sendTaskAssignedEmail = async (employee, task) => {
-  const subject = "New Task Assigned";
+export const createNotification = async ({ userId, message }) => {
+  const notification = await Notification.create({
+    userId,
+    message,
+    isRead: false,
+  });
 
-  const message = `
-Hello ${employee.name},
-
-You have been assigned a new task.
-
-Task Title: ${task.title}
-
-Please login to the system to check details.
-
-Regards
-Company Management System
-`;
-
-  await sendEmail(employee.email, subject, message);
+  emitRealtime("notificationCreated", notification);
+  return notification;
 };
 
-const sendTaskCompletedEmail = async (adminEmail, task) => {
-  const subject = "Task Completed";
+export const createNotificationsForAdmins = async ({ message }) => {
+  const admins = await User.find({ role: "admin" }).select("_id");
+  if (!admins.length) return [];
 
-  const message = `
-Task "${task.title}" has been completed.
+  const notifications = await Notification.insertMany(
+    admins.map((a) => ({ userId: a._id, message, isRead: false })),
+  );
 
-Please review it in the dashboard.
-`;
-
-  await sendEmail(adminEmail, subject, message);
+  notifications.forEach((n) => emitRealtime("notificationCreated", n));
+  return notifications;
 };
 
-module.exports = {
-  sendTaskAssignedEmail,
-  sendTaskCompletedEmail,
-};

@@ -1,14 +1,60 @@
-const { createComment, getTaskComments } = require("../services/commentService");
+import { createComment, getTaskComments } from "../services/commentService.js";
+import { emitRealtime } from "../utils/realtime.js";
+import Task from "../models/Task.js";
+import { createNotification, createNotificationsForAdmins } from "../services/notificationService.js";
 
-const addComment = async (req, res) => {
+const ensureCanAccessTask = async (req, taskId) => {
+  if (!taskId) return null;
+
+  if (req.user && req.user.role === "admin") {
+    return await Task.findById(taskId).select("_id userId title");
+  }
+
+  return await Task.findOne({ _id: taskId, userId: req.user.id }).select("_id userId title");
+};
+
+export const addComment = async (req, res) => {
   try {
-    const { taskId, message } = req.body;
+    const taskId = req.params?.id || req.body?.taskId;
+    const message = req.body?.message;
+
+    if (!message || typeof message !== "string" || !message.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Message is required",
+      });
+    }
+
+    const task = await ensureCanAccessTask(req, taskId);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
 
     const comment = await createComment({
       taskId,
       authorId: req.user.id,
-      message,
+      message: message.trim(),
     });
+
+    emitRealtime("newComment", comment);
+
+    const taskTitle = task?.title || "a task";
+
+    if (req.user && req.user.role === "admin") {
+      if (task?.userId) {
+        await createNotification({
+          userId: task.userId,
+          message: `New comment on task "${taskTitle}"`,
+        });
+      }
+    } else {
+      await createNotificationsForAdmins({
+        message: `New comment on task "${taskTitle}"`,
+      });
+    }
 
     res.json({
       success: true,
@@ -22,9 +68,17 @@ const addComment = async (req, res) => {
   }
 };
 
-const fetchTaskComments = async (req, res) => {
+export const fetchTaskComments = async (req, res) => {
   try {
-    const { taskId } = req.params;
+    const taskId = req.params?.id || req.params?.taskId;
+
+    const task = await ensureCanAccessTask(req, taskId);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
 
     const comments = await getTaskComments(taskId);
 
@@ -39,5 +93,3 @@ const fetchTaskComments = async (req, res) => {
     });
   }
 };
-
-module.exports = { addComment, fetchTaskComments };

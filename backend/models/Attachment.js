@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const attachmentSchema = new mongoose.Schema(
   {
@@ -21,4 +21,4 @@ const attachmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Attachment", attachmentSchema);
+export default mongoose.model("Attachment", attachmentSchema);

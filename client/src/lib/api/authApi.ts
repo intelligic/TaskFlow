@@ -1,0 +1,48 @@
+import { api } from '@/lib/api/axios';
+import { setToken } from '@/lib/auth';
+
+export type LoginResponse = {
+  token: string;
+  user?: unknown;
+};
+
+export type RegisterResponse = {
+  token?: string;
+  user?: {
+    role?: 'admin' | 'employee';
+  };
+};
+
+export const loginUser = async (email: string, password: string) => {
+  const response = await api.post<LoginResponse>('/auth/login', { email, password });
+  if (response.data?.token) {
+    setToken(response.data.token);
+  }
+  return response.data;
+};
+
+export const registerUser = async (name: string, email: string, password: string) => {
+  const response = await api.post<RegisterResponse>('/auth/register', { name, email, password });
+  return response.data;
+};
+
+export const getProfile = async () => {
+  const response = await api.get('/auth/profile');
+  return response.data;
+};
+
+export const verifyInviteToken = async (token: string) => {
+  const response = await api.get<{ valid: boolean; user?: { name?: string; email?: string } }>(
+    `/auth/verify-invite?token=${encodeURIComponent(token)}`,
+  );
+  return response.data;
+};
+
+export const setEmployeePassword = async (token: string, password: string, name?: string) => {
+  const response = await api.post<{ message: string }>("/auth/set-password", {
+    token,
+    password,
+    name,
+  });
+  return response.data;
+};

@@ -9,8 +9,8 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/lib/auth-schema";
-import { api, getApiErrorMessage } from "@/lib/api";
-import { getUserRole } from "@/lib/auth";
+import { loginUser } from "@/lib/api/authApi";
+import { getUserRole, setToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,19 +30,20 @@ export default function LoginPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const role = token ? getUserRole(token) : null;
 
-    if (role === "admin") {
-      router.replace("/admin/dashboard");
-      return;
+    if (!token) return;
+
+    try {
+      const role = getUserRole(token);
+
+      if (role === "admin") {
+        router.replace("/admin/dashboard");
+      } else if (role === "employee") {
+        router.replace("/employee/dashboard");
+      }
+    } catch {
+      localStorage.removeItem("token");
     }
-
-    if (role === "employee") {
-      router.replace("/employee/dashboard");
-      return;
-    }
-
-    localStorage.removeItem("token");
   }, [router]);
 
   useEffect(() => {
@@ -63,25 +64,26 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      const res = await api.post("/auth/login", {
-        email: data.email,
-        password: data.password,
-      });
+      const res = await loginUser(data.email, data.password);
+      const token = res?.token;
+      const role = (res as { user?: { role?: unknown } })?.user?.role;
 
-      const { token, role } = res.data as {
-        token: string;
-        role: "admin" | "employee";
-      };
+      if (!token) {
+        setServerError("Invalid email or password");
+        return;
+      }
 
-      localStorage.setItem("token", token);
+      setToken(token);
 
       if (role === "admin") {
         router.replace("/admin/dashboard");
-      } else {
+      } else if (role === "employee") {
         router.replace("/employee/dashboard");
+      } else {
+        router.replace("/login");
       }
     } catch (error: unknown) {
-      setServerError(getApiErrorMessage(error, "Login failed"));
+      setServerError("Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -93,23 +95,31 @@ export default function LoginPage() {
         onSubmit={handleSubmit(onSubmit)}
         className="w-105 rounded-xl bg-white p-8 shadow-md"
       >
-        <h2 className="mb-6 font-serif text-2xl font-semibold text-black">Login</h2>
+        <h2 className="mb-6 font-serif text-2xl font-semibold text-black">
+          Login
+        </h2>
 
         <div className="flex flex-col gap-3">
           <div>
             <input
               type="email"
               placeholder="Email"
+              autoComplete="email"
               {...register("email")}
               className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
-            {errors.email && <p className="mb-2 text-sm text-red-500">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="mb-2 text-sm text-red-500">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
+              autoComplete="current-password"
               {...register("password")}
               className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
@@ -121,12 +131,22 @@ export default function LoginPage() {
             >
               {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
             </button>
-            {errors.password && <p className="mb-2 text-sm text-red-500">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="mb-2 text-sm text-red-500">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           <div className="mb-3 flex items-center gap-3">
-            <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">{captcha}</div>
-            <button type="button" onClick={refreshCaptcha} className="text-sm text-blue-600">
+            <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">
+              {captcha}
+            </div>
+            <button
+              type="button"
+              onClick={refreshCaptcha}
+              className="text-sm text-blue-600"
+            >
               <TbRefresh className="text-[25px]" />
             </button>
           </div>
@@ -135,14 +155,21 @@ export default function LoginPage() {
         <input
           type="text"
           placeholder="Enter captcha"
+          autoComplete="off"
           {...register("captchaInput")}
           className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
-        {errors.captchaInput && <p className="mb-2 text-sm text-red-500">{errors.captchaInput.message}</p>}
+        {errors.captchaInput && (
+          <p className="mb-2 text-sm text-red-500">
+            {errors.captchaInput.message}
+          </p>
+        )}
 
         <input type="hidden" {...register("captchaGenerated")} />
 
-        {serverError && <p className="mt-3 text-sm text-red-600">{serverError}</p>}
+        {serverError && (
+          <p className="mt-3 text-sm text-red-600">{serverError}</p>
+        )}
 
         <button
           disabled={loading}

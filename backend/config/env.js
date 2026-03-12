@@ -1,5 +1,7 @@
-const { z } = require("zod");
-require("dotenv").config();
+import { z } from "zod";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -18,4 +20,4 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-module.exports = parsed.data;
+export default parsed.data;
