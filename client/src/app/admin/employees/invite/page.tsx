@@ -8,6 +8,7 @@ import { inviteEmployee } from "@/lib/api/employeeApi";
 export default function InviteEmployeePage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [designation, setDesignation] = useState("Senior Developer");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -41,10 +42,11 @@ export default function InviteEmployeePage() {
               setError("");
               setSuccess("");
               setLoading(true);
-              const res = await inviteEmployee(name.trim(), email.trim());
+              const res = await inviteEmployee(name.trim(), email.trim(), designation);
               setSuccess(res.message || "Invite sent");
               setName("");
               setEmail("");
+              setDesignation("Senior Developer");
             } catch {
               setError("Failed to send invite");
             } finally {
@@ -102,6 +104,23 @@ export default function InviteEmployeePage() {
                 required
               />
             </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Designation
+            </label>
+            <select
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="Senior Developer">Senior Developer</option>
+              <option value="Junior Developer">Junior Developer</option>
+              <option value="Intern">Intern</option>
+              <option value="Operator">Operator</option>
+              <option value="Account Manager">Account Manager</option>
+            </select>
           </div>
 
           <button

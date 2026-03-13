@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getUserRole, logout } from '@/lib/auth';
+import { getToken, getUserRole, logout } from '@/lib/auth';
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
@@ -20,7 +20,7 @@ export default function ProtectedRoute({
   const pathname = usePathname();
   const isClient = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
-  const token = isClient ? localStorage.getItem('token') : null;
+  const token = isClient ? getToken() : null;
   const userRole = token ? getUserRole(token) : null;
 
   useEffect(() => {
@@ -29,7 +29,6 @@ export default function ProtectedRoute({
     }
 
     if (!token || !userRole) {
-      localStorage.removeItem('token');
       router.replace('/login');
       return;
     }

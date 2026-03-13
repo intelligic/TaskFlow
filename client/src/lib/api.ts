@@ -1,18 +1,6 @@
 import axios from 'axios';
 
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
-});
-
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
+export { api } from '@/lib/api/axios';
 
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError<{ message?: string }>(error)) {
@@ -22,3 +10,4 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   }
   return fallback;
 }
+

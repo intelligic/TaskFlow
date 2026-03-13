@@ -2,13 +2,35 @@
 
 import { useEffect, useMemo, useState } from "react";
 import EmployeeList from "@/components/dashboard/EmployeeList";
-import { employees } from "@/lib/mock-employees";
+import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
+import { getApiErrorMessage } from "@/lib/api";
 
 const ITEMS_PER_PAGE = 8;
 
 export default function AdminEmployeesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [employees, setEmployees] = useState<EmployeeItem[]>([]);
+
+  const refresh = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      const res = await getEmployees();
+      setEmployees(Array.isArray(res.employees) ? res.employees : []);
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, "Unable to load employees"));
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   const filteredEmployees = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -18,29 +40,20 @@ export default function AdminEmployeesPage() {
       (emp) =>
         emp.name.toLowerCase().includes(query) ||
         emp.email.toLowerCase().includes(query) ||
-        emp.role.toLowerCase().includes(query),
+        String(emp.designation || "").toLowerCase().includes(query),
     );
-  }, [searchTerm]);
+  }, [employees, searchTerm]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE));
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
+  const safePage = Math.min(currentPage, totalPages);
 
   const paginatedEmployees = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
     return filteredEmployees.slice(start, start + ITEMS_PER_PAGE);
-  }, [currentPage, filteredEmployees]);
+  }, [filteredEmployees, safePage]);
 
-  const startItem = filteredEmployees.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredEmployees.length);
+  const startItem = filteredEmployees.length === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(safePage * ITEMS_PER_PAGE, filteredEmployees.length);
 
   return (
     <div className="space-y-6">
@@ -58,14 +71,25 @@ export default function AdminEmployeesPage() {
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search by name, email or designation..."
             className="w-full max-w-sm rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
         </div>
 
         <div className="bg-white p-3">
-          <EmployeeList data={paginatedEmployees} />
+          {loading ? (
+            <p className="px-2 py-3 text-sm font-semibold text-slate-600">Loading...</p>
+          ) : error ? (
+            <p className="px-2 py-3 text-sm font-semibold text-red-600">{error}</p>
+          ) : paginatedEmployees.length === 0 ? (
+            <p className="px-2 py-3 text-sm font-semibold text-slate-600">No employees yet.</p>
+          ) : (
+            <EmployeeList data={paginatedEmployees} />
+          )}
         </div>
       </div>
 
@@ -77,7 +101,7 @@ export default function AdminEmployeesPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
+            disabled={safePage === 1}
             className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-70"
           >
             Previous
@@ -85,7 +109,7 @@ export default function AdminEmployeesPage() {
 
           {Array.from({ length: totalPages }).map((_, index) => {
             const page = index + 1;
-            const active = page === currentPage;
+            const active = page === safePage;
 
             return (
               <button
@@ -102,7 +126,7 @@ export default function AdminEmployeesPage() {
 
           <button
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
+            disabled={safePage === totalPages}
             className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-70"
           >
             Next

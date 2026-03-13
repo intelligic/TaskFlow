@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { employees } from "@/lib/mock-employees";
 import { archiveTask, createTask, getTasks, updateTaskStatus, type Task, type TaskStatus } from "@/lib/api/taskApi";
 import { getProjects, type Project } from "@/lib/api/projectApi";
+import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
 
 function formatDate(value?: string) {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString();
@@ -16,11 +16,11 @@ function formatDate(value?: string) {
 type TasksResponse = { tasks: Task[] } | Task[];
 
 export default function AdminTasksPage() {
-  const backendOrigin =
-    process.env.NEXT_PUBLIC_BACKEND_ORIGIN || "http://localhost:5000";
+  const backendOrigin = process.env.NEXT_PUBLIC_BACKEND_ORIGIN || "";
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -41,9 +41,14 @@ export default function AdminTasksPage() {
       setError(false);
       setLoading(true);
 
-      const [projectsRes, tasksRes] = await Promise.all([getProjects(), getTasks()]);
+      const [projectsRes, tasksRes, employeesRes] = await Promise.all([
+        getProjects(),
+        getTasks(),
+        getEmployees({ role: "employee" }),
+      ]);
 
       setProjects(Array.isArray(projectsRes) ? projectsRes : []);
+      setEmployees(Array.isArray(employeesRes.employees) ? employeesRes.employees : []);
 
       const parsed = tasksRes as TasksResponse;
       const nextTasks = Array.isArray(parsed) ? parsed : parsed.tasks;
@@ -63,14 +68,18 @@ export default function AdminTasksPage() {
     e.preventDefault();
     try {
       setSubmitting(true);
+      const selectedEmployee = employees.find((emp) => emp._id === assignee);
+
       await createTask({
         title: title.trim(),
         description: description.trim(),
         projectId: projectId || undefined,
-        assignee: assignee || undefined,
+        assignedTo: assignee || undefined,
+        assignee: selectedEmployee?.email || selectedEmployee?.name || undefined,
         priority,
         dueDate: dueDate || undefined,
       });
+
       setTitle("");
       setDescription("");
       setProjectId("");
@@ -172,7 +181,7 @@ export default function AdminTasksPage() {
               >
                 <option value="">Select employee</option>
                 {employees.map((e) => (
-                  <option key={e.id} value={e.email}>
+                  <option key={e._id} value={e._id}>
                     {e.name}
                   </option>
                 ))}
@@ -247,13 +256,15 @@ export default function AdminTasksPage() {
                   <div>
                     <p className="text-[15px] font-bold text-slate-900">{task.title}</p>
                     <p className="mt-1 text-xs font-semibold text-gray-600">
-                      Project: {project?.name ?? "â€”"}
+                      Project: {project?.name ?? "-"}
                     </p>
                     <p className="mt-1 text-xs font-semibold text-gray-600">
-                      Assignee: {task.assignee || "â€”"}
+                      Assignee: {typeof task.assignedTo === "object"
+                        ? task.assignedTo?.name || task.assignedTo?.email || "-"
+                        : task.assignee || "-"}
                     </p>
                     <p className="mt-1 text-xs font-semibold text-gray-600">
-                      Due: {formatDate(task.dueDate)} â€¢ Priority: {task.priority || "â€”"}
+                      Due: {formatDate(task.dueDate)} - Priority: {task.priority || "-"}
                     </p>
                   </div>
 
@@ -363,8 +374,7 @@ export default function AdminTasksPage() {
               </div>
 
               {rows.map((task) => {
-                const project =
-                  typeof task.projectId === "string" ? undefined : task.projectId;
+                const project = typeof task.projectId === "string" ? undefined : task.projectId;
                 const status = task.status as TaskStatus;
                 const attachments = Array.isArray(task.attachments) ? task.attachments : [];
                 const isArchiving = !!archivingIds[task._id];
@@ -403,8 +413,12 @@ export default function AdminTasksPage() {
                         </div>
                       )}
                     </div>
-                    <span className="text-gray-700">{project?.name ?? "—"}</span>
-                    <span className="text-gray-700">{task.assignee || "—"}</span>
+                    <span className="text-gray-700">{project?.name ?? "-"}</span>
+                    <span className="text-gray-700">
+                      {typeof task.assignedTo === "object"
+                        ? task.assignedTo?.name || task.assignedTo?.email || "-"
+                        : task.assignee || "-"}
+                    </span>
                     <span className="text-gray-700">
                       {status}
                       {status === "COMPLETED" && !task.isArchived && (
@@ -436,7 +450,7 @@ export default function AdminTasksPage() {
 
               {rows.length === 0 && (
                 <div className="px-4 py-6 text-sm font-semibold text-gray-600">
-                  No tasks yet.
+                  No tasks created yet.
                 </div>
               )}
             </div>

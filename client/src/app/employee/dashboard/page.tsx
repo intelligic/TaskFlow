@@ -2,7 +2,6 @@
 
 import { CheckCircle2, ClipboardList } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { employees } from '@/lib/mock-employees';
 import { getTagClasses } from '@/lib/task-tags';
 import {
   createTaskComment,
@@ -15,6 +14,7 @@ import {
   type TaskComment,
   type TaskStatus,
 } from '@/lib/api/taskApi';
+import { getProfile } from '@/lib/api/authApi';
 
 type TaskItem = {
   id: string;
@@ -31,6 +31,9 @@ type TaskItem = {
 const normalizeStatus = (value?: string): TaskStatus => {
   if (!value) return 'TODO';
   const upper = value.trim().toUpperCase();
+  const lower = value.trim().toLowerCase();
+  if (lower === 'pending') return 'TODO';
+  if (lower === 'completed' || lower === 'closed') return 'COMPLETED';
   if (upper === 'TODO') return 'TODO';
   if (upper === 'IN-PROGRESS' || upper === 'IN_PROGRESS') return 'IN_PROGRESS';
   if (upper === 'REVIEW') return 'REVIEW';
@@ -81,28 +84,27 @@ export default function EmployeeDashboardPage() {
   }, []);
 
   useEffect(() => {
-    const storedName = localStorage.getItem('employeeName');
-    const storedDesignation = localStorage.getItem('employeeDesignation');
-    const storedEmail = localStorage.getItem('email') || localStorage.getItem('userEmail');
+    let cancelled = false;
 
-    if (storedName || storedDesignation) {
-      setEmployeeProfile({
-        name: storedName || 'Employee',
-        designation: storedDesignation || 'Team Member',
-      });
-      return;
-    }
+    const loadProfile = async () => {
+      try {
+        const profile = await getProfile();
+        if (cancelled) return;
+        setEmployeeProfile({
+          name: profile?.name || 'Employee',
+          designation: profile?.designation || 'Team Member',
+        });
+      } catch {
+        if (cancelled) return;
+        setEmployeeProfile({ name: 'Employee', designation: 'Team Member' });
+      }
+    };
 
-    const matchedEmployee =
-      employees.find((emp) => storedEmail && emp.email.toLowerCase() === storedEmail.toLowerCase()) ||
-      employees[0];
+    loadProfile();
 
-    if (matchedEmployee) {
-      setEmployeeProfile({
-        name: matchedEmployee.name,
-        designation: matchedEmployee.role,
-      });
-    }
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const totalAssigned = tasks.length;
@@ -172,7 +174,7 @@ export default function EmployeeDashboardPage() {
           {loading ? (
             <p className="text-sm font-semibold text-gray-600">Loading...</p>
           ) : filteredTasks.length === 0 ? (
-            <p className="text-sm font-semibold text-gray-600">No tasks assigned yet</p>
+            <p className="text-sm font-semibold text-gray-600">No tasks assigned yet.</p>
           ) : (
             filteredTasks.map((task) => (
               <TaskCard key={task.id} task={task} refreshTasks={loadAssigned} />
@@ -237,7 +239,7 @@ function TaskCard({
   const [uploadError, setUploadError] = useState('');
 
   const backendOrigin =
-    process.env.NEXT_PUBLIC_BACKEND_ORIGIN || 'http://localhost:5000';
+    process.env.NEXT_PUBLIC_BACKEND_ORIGIN || '';
 
   useEffect(() => {
     if (!showComments) return;
@@ -273,8 +275,8 @@ function TaskCard({
       <h3 className="font-bold text-[14px] text-black">{task.title}</h3>
       <p className="text-[12px] font-medium text-gray-800">{task.desc}</p>
       <p className="text-[12px] font-semibold text-gray-500">
-        Project: {task.projectName || '—'} • Priority: {task.priority || '—'} • Due:{' '}
-        {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '—'}
+        Project: {task.projectName || '-'} - Priority: {task.priority || '-'} - Due:{' '}
+        {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
       </p>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -484,3 +486,4 @@ function TaskCard({
     </div>
   );
 }
+

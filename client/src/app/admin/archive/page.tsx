@@ -109,6 +109,8 @@ export default function AdminArchivePage() {
 
         {loading ? (
           <div className="px-4 py-6 text-sm font-semibold text-gray-600">Loading...</div>
+        ) : paginatedTasks.length === 0 ? (
+          <div className="px-4 py-6 text-sm font-semibold text-gray-600">No archived tasks.</div>
         ) : (
           paginatedTasks.map((task) => {
             const project = typeof task.projectId === "string" ? undefined : task.projectId;
@@ -121,7 +123,11 @@ export default function AdminArchivePage() {
                 className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 last:border-b-0 text-[12px] font-semibold text-black text-center"
               >
                 <span className="text-[14px]">{task.title}</span>
-                <span className="opacity-65">{task.assignee || project?.name || "-"}</span>
+                <span className="opacity-65">
+                  {typeof task.assignedTo === "object"
+                    ? task.assignedTo?.name || task.assignedTo?.email || "-"
+                    : task.assignee || project?.name || "-"}
+                </span>
                 <span className="opacity-65">{completedOn}</span>
                 <span className="opacity-65">{closedOn}</span>
               </div>

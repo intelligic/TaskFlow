@@ -1,9 +1,9 @@
 import { api } from '@/lib/api/axios';
 
 export type DashboardStats = {
-  totalProjects: number;
   totalTasks: number;
   completedTasks: number;
+  activeTasks: number;
   totalEmployees: number;
 };
 
@@ -23,4 +23,3 @@ export const getRecentActivity = async () => {
   const response = await api.get<ActivityItem[]>('/activity');
   return response.data;
 };
-

@@ -31,7 +31,10 @@ export type Task = {
   priority?: 'low' | 'medium' | 'high';
   projectId?: string | { _id: string; name: string; description?: string };
   assignee?: string;
+  assignedTo?: string | { _id?: string; name?: string; email?: string; designation?: string };
+  createdBy?: string;
   dueDate?: string;
+  tags?: string[];
   userId?: string;
   attachments?: TaskAttachment[];
   isArchived?: boolean;
@@ -39,8 +42,17 @@ export type Task = {
   updatedAt?: string;
 };
 
-export const getTasks = async () => {
-  const response = await api.get<{ tasks: Task[] } | Task[]>('/tasks');
+export const getTasks = async (params?: {
+  assignedTo?: "currentUser" | string;
+  archived?: boolean;
+  status?: string;
+}) => {
+  const searchParams = new URLSearchParams();
+  if (params?.assignedTo) searchParams.set("assignedTo", params.assignedTo);
+  if (params?.archived) searchParams.set("archived", "true");
+  if (params?.status) searchParams.set("status", params.status);
+  const suffix = searchParams.toString();
+  const response = await api.get<{ tasks: Task[] } | Task[]>(`/tasks${suffix ? `?${suffix}` : ""}`);
   return response.data;
 };
 

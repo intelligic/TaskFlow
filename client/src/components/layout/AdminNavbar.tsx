@@ -2,16 +2,15 @@
 
 import { RiLogoutCircleRLine } from "react-icons/ri";
 import { FaUserAlt } from "react-icons/fa";
-import { ClipboardList } from "lucide-react";
+// import { ClipboardList } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { MdPersonAddAlt1, MdOutlineAddTask } from "react-icons/md";
 import NotificationBell from "@/components/layout/NotificationBell";
 import { logout } from "@/lib/auth";
 
 export default function AdminNavbar() {
-  const router = useRouter();
   const pathname = usePathname();
 
   const normalizePath = (path: string) => {
@@ -34,10 +33,13 @@ export default function AdminNavbar() {
 
   return (
     <div className="h-14 bg-white shadow-lg font-serif flex items-center justify-between px-6">
-      <div className="flex items-center gap-10">
-        <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
+      <div className="flex items-center gap-10 pt-3">
+        {/* <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
           <ClipboardList size={25} className="text-black" />
           TaskManager
+        </div> */}
+        <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
+          <Image src="/TaskFlowLogo.png" alt="logo" width={200} height={200} />
         </div>
 
         <div className="flex items-center gap-4">

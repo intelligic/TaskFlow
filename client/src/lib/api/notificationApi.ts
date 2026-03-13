@@ -3,6 +3,8 @@ import { api } from "@/lib/api/axios";
 export type NotificationItem = {
   _id: string;
   userId?: string;
+  title?: string;
+  type?: string;
   message: string;
   isRead: boolean;
   createdAt?: string;
@@ -24,3 +26,7 @@ export const markNotificationRead = async (id: string) => {
   return response.data;
 };
 
+export const markAllNotificationsRead = async () => {
+  const response = await api.patch<{ message: string }>(`/notifications/read`);
+  return response.data;
+};

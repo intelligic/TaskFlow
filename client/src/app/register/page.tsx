@@ -10,7 +10,8 @@ import { registerSchema, RegisterFormData } from "@/lib/auth-schema";
 import { TbRefresh } from "react-icons/tb";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { registerUser } from "@/lib/api/authApi";
-import { getUserRole, setToken } from "@/lib/auth";
+import { getToken, getUserRole, setToken } from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function RegisterPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
     const role = token ? getUserRole(token) : null;
 
     if (role === "admin") {
@@ -44,7 +45,7 @@ export default function RegisterPage() {
       return;
     }
 
-    localStorage.removeItem("token");
+    // getToken already cleans up invalid/expired tokens.
   }, [router]);
 
   useEffect(() => {
@@ -84,8 +85,9 @@ export default function RegisterPage() {
 
       router.replace("/login");
       return;
-    } catch (error: unknown) {
-      setServerError("Registration failed. Try again.");
+    } catch (e: unknown) {
+      console.error("Registration failed:", e);
+      setServerError(getApiErrorMessage(e, "Registration failed. Try again."));
       refreshCaptcha();
       return;
     } finally {

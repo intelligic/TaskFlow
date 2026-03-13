@@ -1,21 +1,23 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import TaskBubble from './TaskBubble';
-import ChatInput from './ChatInput';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import TaskBubble from "./TaskBubble";
+import ChatInput from "./ChatInput";
+import { createTask, getTasks, updateTaskStatus, type Task } from "@/lib/api/taskApi";
 
-type TaskStatus = 'pending' | 'completed' | 'closed';
+export type ChatTaskStatus = "pending" | "completed" | "closed";
 
 type TaskMessage = {
   id: string;
-  type: 'task';
+  type: "task";
   text: string;
-  status: TaskStatus;
+  status: ChatTaskStatus;
 };
 
 type AttachmentMessage = {
   id: string;
-  type: 'attachment';
+  type: "attachment";
   name: string;
   url: string;
   mimeType: string;
@@ -24,104 +26,85 @@ type AttachmentMessage = {
 
 type ChatMessage = TaskMessage | AttachmentMessage;
 
-const DEFAULT_MESSAGES: ChatMessage[] = [
-  {
-    id: '1',
-    type: 'task',
-    text: "Please complete today's report.",
-    status: 'pending',
-  },
-  {
-    id: '2',
-    type: 'task',
-    text: "Please complete today's report.",
-    status: 'pending',
-  },
-  {
-    id: '3',
-    type: 'task',
-    text: "Please complete today's report.",
-    status: 'pending',
-  },
-];
-
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Unable to read file.'));
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Unable to read file."));
     reader.readAsDataURL(file);
   });
 }
 
+function mapStatus(status?: string, isArchived?: boolean): ChatTaskStatus {
+  if (isArchived) return "closed";
+  const value = String(status || "").toLowerCase();
+  if (value === "closed") return "closed";
+  if (value === "completed" || value === "done") return "completed";
+  return "pending";
+}
+
 export default function ChatBox({
-  role = 'admin',
-  conversationKey = 'employee-1',
-  persistMessages = false,
+  role = "admin",
+  conversationKey = "employee-1",
+  targetEmployeeId,
 }: {
-  role?: 'admin' | 'employee';
+  role?: "admin" | "employee";
   conversationKey?: string;
-  persistMessages?: boolean;
+  targetEmployeeId?: string;
 }) {
-  const storageKey = `chat-conversation:${conversationKey}`;
-  const readConversation = (key: string): ChatMessage[] => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadTasks = async () => {
     try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return DEFAULT_MESSAGES;
-      const parsed = JSON.parse(raw) as ChatMessage[];
-      if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_MESSAGES;
-      const looksLikeOldSingleSeed =
-        parsed.length === 1 &&
-        parsed[0]?.type === 'task' &&
-        parsed[0]?.text === "Please complete today's report.";
-      if (looksLikeOldSingleSeed) return DEFAULT_MESSAGES;
-      return parsed;
+      setLoading(true);
+      const res = await getTasks({
+        assignedTo: role === "employee" ? "currentUser" : targetEmployeeId,
+      });
+      const list = Array.isArray(res) ? res : (res as { tasks: Task[] }).tasks;
+      const items = (list || [])
+        .map((task) => ({
+          id: task._id,
+          type: "task" as const,
+          text: task.title,
+          status: mapStatus(task.status, task.isArchived),
+        }));
+      setMessages(items);
     } catch {
-      localStorage.removeItem(key);
-      return DEFAULT_MESSAGES;
+      setMessages([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const [messages, setMessages] = useState<ChatMessage[]>(DEFAULT_MESSAGES);
-
   useEffect(() => {
-    if (!persistMessages) {
-      setMessages(DEFAULT_MESSAGES);
-      return;
-    }
-    setMessages(readConversation(storageKey));
-  }, [persistMessages, storageKey]);
-
-  useEffect(() => {
-    if (!persistMessages) return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
-    } catch {
-      // Ignore storage quota/serialization issues in UI layer.
-    }
-  }, [messages, persistMessages, storageKey]);
+    loadTasks();
+  }, [conversationKey]);
 
   const handleSendTask = async (msg: string, files: File[] = []) => {
     const nextMessages: ChatMessage[] = [];
     const ts = Date.now();
 
-    if (msg.trim()) {
-      nextMessages.push({
-        id: `${ts}-msg`,
-        type: 'task',
-        text: msg.trim(),
-        status: 'pending',
-      });
+    if (msg.trim() && role === "admin") {
+      try {
+        await createTask({
+          title: msg.trim(),
+          assignedTo: targetEmployeeId,
+        });
+        await loadTasks();
+      } catch {
+        // ignore for now
+      }
     }
 
     if (files.length > 0) {
       const attachmentPayloads = await Promise.all(
         files.map(async (file, index) => ({
           id: `${ts}-file-${index}`,
-          type: 'attachment' as const,
+          type: "attachment" as const,
           name: file.name,
           url: await fileToDataUrl(file),
-          mimeType: file.type || 'application/octet-stream',
+          mimeType: file.type || "application/octet-stream",
           size: file.size,
         })),
       );
@@ -133,33 +116,45 @@ export default function ChatBox({
     setMessages((prev) => [...prev, ...nextMessages]);
   };
 
-  const updateStatus = (id: string, status: TaskStatus) => {
-    setMessages((prev) =>
-      prev.map((item) =>
-        item.type === 'task' && item.id === id ? { ...item, status } : item,
-      ),
-    );
+  const updateStatus = async (id: string, status: ChatTaskStatus) => {
+    try {
+      setMessages((prev) =>
+        prev.map((item) =>
+          item.type === "task" && item.id === id ? { ...item, status } : item,
+        ),
+      );
+      await updateTaskStatus(id, status);
+      await loadTasks();
+    } catch {
+      // ignore for now
+    }
   };
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg bg-white">
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-        {messages.map((item) =>
-          item.type === 'task' ? (
-            <TaskBubble key={item.id} task={item} role={role} onUpdateStatus={updateStatus} />
-          ) : (
-            <AttachmentBubble key={item.id} item={item} />
-          ),
+        {loading ? (
+          <div className="px-3 py-2 text-sm font-semibold text-gray-600">Loading...</div>
+        ) : messages.length === 0 ? (
+          <div className="px-3 py-2 text-sm font-semibold text-gray-600">No tasks yet.</div>
+        ) : (
+          messages.map((item) =>
+            item.type === "task" ? (
+              <TaskBubble key={item.id} task={item} role={role} onUpdateStatus={updateStatus} />
+            ) : (
+              <AttachmentBubble key={item.id} item={item} />
+            ),
+          )
         )}
       </div>
 
-      {role === 'admin' && (
+      {role === "admin" && (
         <div className="shrink-0 border-t bg-white">
           <ChatInput onSend={handleSendTask} />
         </div>
       )}
 
-      {role === 'employee' && (
+      {role === "employee" && (
         <div className="shrink-0 border-t bg-white p-3 text-center text-sm text-gray-500">
           You can update task status using buttons above.
         </div>
@@ -169,7 +164,7 @@ export default function ChatBox({
 }
 
 function AttachmentBubble({ item }: { item: AttachmentMessage }) {
-  const isImage = item.mimeType.startsWith('image/');
+  const isImage = item.mimeType.startsWith("image/");
   const prettySize =
     item.size < 1024 * 1024
       ? `${Math.max(1, Math.round(item.size / 1024))} KB`
@@ -179,7 +174,16 @@ function AttachmentBubble({ item }: { item: AttachmentMessage }) {
     <div className="max-w-xl rounded-lg border bg-slate-50 p-3">
       {isImage ? (
         <a href={item.url} target="_blank" rel="noreferrer" className="block">
-          <img src={item.url} alt={item.name} className="max-h-64 w-auto rounded-md object-contain" />
+          <div className="relative h-64 w-full max-w-xl overflow-hidden rounded-md bg-white">
+            <Image
+              src={item.url}
+              alt={item.name}
+              fill
+              unoptimized
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, 600px"
+            />
+          </div>
         </a>
       ) : (
         <a
@@ -191,7 +195,7 @@ function AttachmentBubble({ item }: { item: AttachmentMessage }) {
         </a>
       )}
       <p className="mt-2 text-xs text-slate-500">
-        {item.name} • {prettySize}
+        {item.name} - {prettySize}
       </p>
     </div>
   );

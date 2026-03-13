@@ -3,6 +3,31 @@
 import { type ChangeEvent, useRef, useState } from 'react';
 import { Mic, Plus, Send, X } from 'lucide-react';
 
+type SpeechRecognitionResultLike = {
+  isFinal: boolean;
+  0: { transcript: string };
+};
+
+type SpeechRecognitionEventLike = {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  onstart: null | (() => void);
+  onresult: null | ((event: SpeechRecognitionEventLike) => void);
+  onend: null | (() => void);
+  onerror: null | (() => void);
+};
+
+type SpeechRecognitionConstructorLike = new () => SpeechRecognitionLike;
+
 export default function ChatInput({
   onSend,
 }: {
@@ -12,7 +37,7 @@ export default function ChatInput({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const triggerFilePicker = () => {
     fileInputRef.current?.click();
@@ -40,8 +65,11 @@ export default function ChatInput({
   };
 
   const toggleVoiceInput = () => {
-    const SpeechRecognitionAPI =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const win = window as unknown as {
+      SpeechRecognition?: SpeechRecognitionConstructorLike;
+      webkitSpeechRecognition?: SpeechRecognitionConstructorLike;
+    };
+    const SpeechRecognitionAPI = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
       alert('Voice input is not supported in this browser.');
@@ -64,7 +92,7 @@ export default function ChatInput({
       setIsRecording(true);
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
       let finalTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
         if (event.results[i].isFinal) {

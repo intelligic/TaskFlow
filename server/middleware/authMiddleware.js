@@ -1,0 +1,101 @@
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import Workspace from "../models/Workspace.js";
+
+const resolveWorkspaceName = (fallback) => {
+  const fromEnv = String(process.env.WORKSPACE_NAME || process.env.COMPANY_NAME || "").trim();
+  return fromEnv || fallback || "TaskFlow";
+};
+
+const ensureWorkspaceForUser = async (user) => {
+  if (user.workspace) return user.workspace;
+
+  if (user.role === "admin") {
+    const workspace = await Workspace.create({
+      name: resolveWorkspaceName(`${user.name || "Admin"} Workspace`),
+      owner: user._id,
+      members: [{ user: user._id, role: "admin" }],
+      plan: "free",
+    });
+    user.workspace = workspace._id;
+    await user.save();
+    return workspace._id;
+  }
+
+  const admin = await User.findOne({ role: "admin", workspace: { $ne: null } }).select("workspace");
+  if (admin?.workspace) {
+    user.workspace = admin.workspace;
+    await user.save();
+    await Workspace.updateOne(
+      { _id: admin.workspace },
+      { $addToSet: { members: { user: user._id, role: user.role } } },
+    );
+    return admin.workspace;
+  }
+
+  const workspace = await Workspace.create({
+    name: resolveWorkspaceName("TaskFlow Workspace"),
+    owner: user._id,
+    members: [{ user: user._id, role: user.role }],
+    plan: "free",
+  });
+  user.workspace = workspace._id;
+  await user.save();
+  return workspace._id;
+};
+
+const protect = async (req, res, next) => {
+  if (!process.env.JWT_SECRET) {
+    return res.status(500).json({ message: "Server misconfigured: JWT_SECRET missing" });
+  }
+
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const bearerToken =
+    typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : null;
+
+  const tokenFromHeader = req.headers["x-auth-token"] || req.headers.token;
+  const token =
+    bearerToken ||
+    (Array.isArray(tokenFromHeader) ? tokenFromHeader[0] : tokenFromHeader);
+
+  if (!token) {
+    return res.status(401).json({
+      message: "No token provided. Send Authorization: Bearer <token>",
+    });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+
+  try {
+    if (!decoded || typeof decoded !== "object" || !decoded.id || !decoded.role) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const dbUser = await User.findById(decoded.id).select("_id name role workspace");
+    if (!dbUser) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    if (!dbUser.workspace) {
+      await ensureWorkspaceForUser(dbUser);
+    }
+
+    req.user = {
+      id: String(dbUser._id),
+      role: dbUser.role,
+      workspace: dbUser.workspace || null,
+    };
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export default protect;

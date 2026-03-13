@@ -10,7 +10,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/lib/auth-schema";
 import { loginUser } from "@/lib/api/authApi";
-import { getUserRole, setToken } from "@/lib/auth";
+import { getToken, getUserRole, setToken } from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     if (!token) return;
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
         router.replace("/employee/dashboard");
       }
     } catch {
-      localStorage.removeItem("token");
+      // getToken already cleans up invalid/expired tokens.
     }
   }, [router]);
 
@@ -82,8 +83,9 @@ export default function LoginPage() {
       } else {
         router.replace("/login");
       }
-    } catch (error: unknown) {
-      setServerError("Invalid email or password");
+    } catch (e: unknown) {
+      console.error("Login failed:", e);
+      setServerError(getApiErrorMessage(e, "Invalid email or password"));
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { generateCaptcha } from "@/lib/captcha";
 import { validateEmail, validatePassword } from "@/lib/validation";
@@ -17,20 +17,16 @@ export default function EmployeeVerify() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [captcha, setCaptcha] = useState("");
+  const [captcha, setCaptcha] = useState(() => generateCaptcha());
   const [inputCaptcha, setInputCaptcha] = useState("");
 
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    setCaptcha(generateCaptcha());
-  }, []);
 
   const refreshCaptcha = () => {
     setCaptcha(generateCaptcha());
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (name.length < 3) {

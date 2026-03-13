@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUserRole } from '@/lib/auth';
+import { getToken, getUserRole } from '@/lib/auth';
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
 
     if (!token) {
       router.replace('/login');
@@ -27,7 +27,6 @@ export default function HomePage() {
       return;
     }
 
-    localStorage.removeItem('token');
     router.replace('/login');
   }, [router]);
 

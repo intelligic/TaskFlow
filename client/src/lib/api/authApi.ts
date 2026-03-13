@@ -27,12 +27,23 @@ export const registerUser = async (name: string, email: string, password: string
 };
 
 export const getProfile = async () => {
-  const response = await api.get('/auth/profile');
+  const response = await api.get<{
+    _id?: string;
+    name?: string;
+    email?: string;
+    role?: "admin" | "employee";
+    designation?: string;
+    slug?: string;
+    lastActive?: string;
+  }>('/auth/profile');
   return response.data;
 };
 
 export const verifyInviteToken = async (token: string) => {
-  const response = await api.get<{ valid: boolean; user?: { name?: string; email?: string } }>(
+  const response = await api.get<{
+    valid: boolean;
+    user?: { name?: string; email?: string; designation?: string };
+  }>(
     `/auth/verify-invite?token=${encodeURIComponent(token)}`,
   );
   return response.data;

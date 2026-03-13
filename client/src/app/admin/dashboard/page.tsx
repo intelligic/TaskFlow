@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardList, PlayCircle, CheckCircle2, Users } from "lucide-react";
-import { employees } from "@/lib/mock-employees";
+import { PlayCircle, CheckCircle2, Users, Activity } from "lucide-react";
 import { RiArrowDownBoxFill, RiArrowUpBoxFill } from "react-icons/ri";
 import { getDashboardStats, getRecentActivity } from "@/lib/api/dashboardApi";
+import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -14,11 +14,12 @@ export default function AdminDashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState<{
-    totalProjects: number;
     totalTasks: number;
     completedTasks: number;
+    activeTasks: number;
     totalEmployees: number;
   } | null>(null);
+  const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [activity, setActivity] = useState<
     { _id?: string; action?: string; description?: string; createdAt?: string }[]
   >([]);
@@ -31,9 +32,9 @@ export default function AdminDashboardPage() {
     return employees.filter(
       (emp) =>
         emp.name.toLowerCase().includes(query) ||
-        emp.role.toLowerCase().includes(query),
+        (emp.designation || "").toLowerCase().includes(query),
     );
-  }, [searchTerm]);
+  }, [searchTerm, employees]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / ITEMS_PER_PAGE));
 
@@ -55,14 +56,16 @@ export default function AdminDashboardPage() {
         setLoading(true);
         setError(false);
 
-        const [statsRes, activityRes] = await Promise.all([
+        const [statsRes, activityRes, employeesRes] = await Promise.all([
           getDashboardStats(),
           getRecentActivity(),
+          getEmployees(),
         ]);
 
         if (cancelled) return;
         setStats(statsRes);
         setActivity(Array.isArray(activityRes) ? activityRes : []);
+        setEmployees(Array.isArray(employeesRes.employees) ? employeesRes.employees : []);
       } catch {
         if (cancelled) return;
         setError(true);
@@ -112,17 +115,6 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <SummaryCard
-          title="Total Projects"
-          value={stats?.totalProjects ?? 0}
-          desc=""
-          icon={<ClipboardList className="h-5 w-5 text-blue-600" />}
-          iconBg="bg-blue-100"
-          cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
-          titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
-          valueClassName="mt-3 text-3xl font-bold text-slate-900 leading-none "
-          descClassName="mt-3 font-medium text-green-600 text-[12px]"
-        />
-        <SummaryCard
           title="Total Tasks"
           value={stats?.totalTasks ?? 0}
           desc=""
@@ -139,6 +131,17 @@ export default function AdminDashboardPage() {
           desc=""
           icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
           iconBg="bg-green-100"
+          cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
+          titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
+          valueClassName="mt-3 text-3xl font-bold text-slate-900 leading-none "
+          descClassName="mt-3 font-medium text-green-600 text-[12px]"
+        />
+        <SummaryCard
+          title="Active Tasks"
+          value={stats?.activeTasks ?? 0}
+          desc=""
+          icon={<Activity className="h-5 w-5 text-blue-600" />}
+          iconBg="bg-blue-100"
           cardClassName="shadow-lg hover:shadow-xl transition-shadow duration-300"
           titleClassName="text-[14px] font-bold uppercase tracking-wide text-gray-900"
           valueClassName="mt-3 text-3xl font-bold text-slate-900 leading-none "
@@ -182,33 +185,37 @@ export default function AdminDashboardPage() {
         </div>
 
         <div>
-          {paginatedEmployees.map((emp) => (
-            <div
-              key={emp.id}
-              className="flex justify-betweenitems-center text-center cursor-pointer border-b border-b-gray-200 px-4 py-2 last:border-b-0 hover:bg-gray-50 text-[12px] font-semibold text-black  "
-              onClick={() => router.push(`/admin/chat/${emp.id}`)}
-            >
-              <div className='flex flex-col items-start justify-center w-full'>
-                <p className="text-[14px] font-bold font-serif text-black">{emp.name}</p>
-                <p className="text-sm font-medium text-gray-500">{emp.role}</p>
-              </div>
+          {paginatedEmployees.length === 0 ? (
+            <div className="px-4 py-6 text-sm font-semibold text-gray-600">No employees yet.</div>
+          ) : (
+            paginatedEmployees.map((emp) => (
+              <div
+                key={emp._id}
+                className="flex justify-betweenitems-center text-center cursor-pointer border-b border-b-gray-200 px-4 py-2 last:border-b-0 hover:bg-gray-50 text-[12px] font-semibold text-black  "
+                onClick={() => router.push(`/admin/chat/${emp.slug || emp._id}`)}
+              >
+                <div className='flex flex-col items-start justify-center w-full'>
+                  <p className="text-[14px] font-bold font-serif text-black">{emp.name}</p>
+                  <p className="text-sm font-medium text-gray-500">{emp.designation || 'Employee'}</p>
+                </div>
 
-              <div className="flex items-center justify-center gap-4 text-sm w-full">
-                <span className="text-black text-[16px] py-1 px-2 rounded-md flex items-center  justify-center gap-1 ">
-                  <RiArrowDownBoxFill size={22}  className='text-red-500' /> 
-                  <sup>{emp.pending}</sup>
-                </span>
-                <span className="text-black text-[16px] py-1 px-2 rounded-md flex items-center gap-1  ">
-                  <RiArrowUpBoxFill size={22}  className='text-green-500' />
-                  <sup>{emp.completed}</sup>
-                 </span>
-              </div>
+                <div className="flex items-center justify-center gap-4 text-sm w-full">
+                  <span className="text-black text-[16px] py-1 px-2 rounded-md flex items-center  justify-center gap-1 ">
+                    <RiArrowDownBoxFill size={22}  className='text-red-500' />
+                    <sup>{emp.pending ?? 0}</sup>
+                  </span>
+                  <span className="text-black text-[16px] py-1 px-2 rounded-md flex items-center gap-1  ">
+                    <RiArrowUpBoxFill size={22}  className='text-green-500' />
+                    <sup>{emp.completed ?? 0}</sup>
+                  </span>
+                </div>
 
-              <div className="text-right text-sm text-gray-500 w-full">
-                {emp.lastActive}
+                <div className="text-right text-sm text-gray-500 w-full">
+                  {emp.createdAt ? new Date(emp.createdAt).toLocaleDateString() : '-'}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 

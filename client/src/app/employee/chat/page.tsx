@@ -1,25 +1,32 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import ChatBox from '@/components/chat/ChatBox';
-import { employees } from '@/lib/mock-employees';
+import { useEffect, useState } from "react";
+import ChatBox from "@/components/chat/ChatBox";
+import { getProfile } from "@/lib/api/authApi";
 
 export default function EmployeeChatPage() {
   const [conversationKey, setConversationKey] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedId = localStorage.getItem('employeeId');
-    if (storedId) return setConversationKey(`employee-${storedId}`);
+    let cancelled = false;
 
-    const storedEmail = localStorage.getItem('email') || localStorage.getItem('userEmail');
-    const storedName = localStorage.getItem('employeeName');
-    const matched =
-      employees.find((emp) => storedEmail && emp.email.toLowerCase() === storedEmail.toLowerCase()) ||
-      employees.find((emp) => storedName && emp.name.toLowerCase() === storedName.toLowerCase());
+    const load = async () => {
+      try {
+        const profile = await getProfile();
+        if (cancelled) return;
+        const id = profile?._id || "";
+        setConversationKey(id ? `employee-${id}` : null);
+      } catch {
+        if (cancelled) return;
+        setConversationKey(null);
+      }
+    };
 
-    if (matched) return setConversationKey(`employee-${matched.id}`);
+    load();
 
-    setConversationKey('employee-1');
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!conversationKey) {
@@ -28,7 +35,7 @@ export default function EmployeeChatPage() {
 
   return (
     <div className="space-y-4">
-      <ChatBox role="employee" conversationKey={conversationKey} />
+      <ChatBox key={conversationKey} role="employee" conversationKey={conversationKey} />
     </div>
   );
 }
