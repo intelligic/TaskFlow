@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import Workspace from "../models/Workspace.js";
 
@@ -7,8 +8,17 @@ const resolveWorkspaceName = (fallback) => {
   return fromEnv || fallback || "TaskFlow";
 };
 
+const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
+
 const ensureWorkspaceForUser = async (user) => {
-  if (user.workspace) return user.workspace;
+  if (user.workspace) {
+    if (isValidObjectId(user.workspace)) {
+      const existing = await Workspace.exists({ _id: user.workspace });
+      if (existing) return user.workspace;
+    }
+    // Reset invalid or stale workspace references.
+    user.workspace = undefined;
+  }
 
   if (user.role === "admin") {
     const workspace = await Workspace.create({
@@ -61,39 +71,41 @@ const protect = async (req, res, next) => {
     (Array.isArray(tokenFromHeader) ? tokenFromHeader[0] : tokenFromHeader);
 
   if (!token) {
-    return res.status(401).json({
-      message: "No token provided. Send Authorization: Bearer <token>",
-    });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   try {
     if (!decoded || typeof decoded !== "object" || !decoded.id || !decoded.role) {
-      return res.status(401).json({ message: "Invalid token" });
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!isValidObjectId(decoded.id)) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const dbUser = await User.findById(decoded.id).select("_id name role workspace");
     if (!dbUser) {
-      return res.status(401).json({ message: "Invalid token" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (!dbUser.workspace) {
-      await ensureWorkspaceForUser(dbUser);
-    }
+    const workspaceId = await ensureWorkspaceForUser(dbUser);
 
-    req.user = {
+    const decodedUser = {
       id: String(dbUser._id),
       role: dbUser.role,
-      workspace: dbUser.workspace || null,
+      workspace: workspaceId || dbUser.workspace || null,
     };
+    req.user = decodedUser;
     next();
   } catch (error) {
+    console.error("Auth Middleware Error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

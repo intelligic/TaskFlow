@@ -11,6 +11,7 @@ type EmployeeListProps = {
     email: string;
     role?: string;
     designation?: string;
+    slug?: string;
     status?: string;
     pending?: number;
     completed?: number;
@@ -28,23 +29,23 @@ export default function EmployeeList({ data }: EmployeeListProps) {
           onClick={() => router.push(`/admin/chat/${emp.slug || emp._id}`)}
           className="flex cursor-pointer items-center justify-between rounded border bg-white p-2 hover:bg-gray-50"
         >
-          <div className="flex justify-start gap-10  items-end w-130 relative">
-            <div className="flex flex-col justify-center items-start gap-1 ">
-              <p className=" text-[14px] font-bold font-serif text-black">{emp.name}</p>
-              <p className="text-sm font-medium text-gray-500">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-bold font-serif text-black">{emp.name}</p>
+              <p className="text-xs font-medium text-gray-500">
                 {emp.email} | {emp.designation || "Employee"}
               </p>
             </div>
-            {/* Icons */}
-            <div className='flex justify-center items-center right-0 absolute gap-2 '>
-              <span className="text-black text-[16px] py-1 px-2 rounded-md flex items-center gap-1">
-                <RiArrowDownBoxFill size={22} className='text-red-500' />
-                <sup>{emp.pending ?? 0}</sup>
-              </span>
-              <span className="text-black text-[16px] py-1 px-2 rounded-md flex items-center gap-1">
-                <RiArrowUpBoxFill size={22} className='text-green-500' />
-                <sup>{emp.completed ?? 0}</sup>
-              </span>
+            {/* Stats */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <RiArrowDownBoxFill size={20} className="text-red-500" />
+                <span className="text-xs font-bold text-slate-700">{emp.pending ?? 0}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <RiArrowUpBoxFill size={20} className="text-green-500" />
+                <span className="text-xs font-bold text-slate-700">{emp.completed ?? 0}</span>
+              </div>
             </div>
           </div>
 

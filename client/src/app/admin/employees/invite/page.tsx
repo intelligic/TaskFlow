@@ -47,8 +47,9 @@ export default function InviteEmployeePage() {
               setName("");
               setEmail("");
               setDesignation("Senior Developer");
-            } catch {
-              setError("Failed to send invite");
+            } catch (err: any) {
+              const apiMessage = err?.response?.data?.message;
+              setError(apiMessage || "Failed to send invite");
             } finally {
               setLoading(false);
             }

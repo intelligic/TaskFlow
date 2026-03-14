@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getNotifications,
   markNotificationRead,
+  markAllNotificationsRead,
+  clearNotifications,
   type NotificationItem,
 } from "@/lib/api/notificationApi";
 
@@ -83,13 +85,36 @@ export default function NotificationBell() {
         <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-lg border bg-white shadow-lg">
           <div className="flex items-center justify-between border-b px-3 py-2">
             <p className="text-sm font-bold text-slate-900">Notifications</p>
-            <button
-              type="button"
-              onClick={refresh}
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900"
-            >
-              Refresh
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await markAllNotificationsRead();
+                    await refresh();
+                  } catch {
+                    // silent
+                  }
+                }}
+                className="text-[10px] font-bold text-blue-600 hover:underline"
+              >
+                Mark All Read
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await clearNotifications();
+                    setItems([]);
+                  } catch {
+                    // silent
+                  }
+                }}
+                className="text-[10px] font-bold text-red-600 hover:underline"
+              >
+                Clear All
+              </button>
+            </div>
           </div>
 
           {loading ? (

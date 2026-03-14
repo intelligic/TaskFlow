@@ -17,6 +17,7 @@ export type EmployeeItem = {
   slug?: string;
   lastActive?: string;
   isVerified: boolean;
+  isOnline?: boolean;
   status?: "Active" | "Invited";
   pending?: number;
   completed?: number;
@@ -38,7 +39,7 @@ export const getEmployees = async (params?: { search?: string; page?: number; li
 };
 
 export const getEmployeeById = async (id: string) => {
-  const response = await api.get<{ _id: string; name: string; email: string; role: string; designation?: string }>(
+  const response = await api.get<{ _id: string; name: string; email: string; role: string; designation?: string; isOnline?: boolean }>(
     `/users/${id}`,
   );
   return response.data;
@@ -53,6 +54,12 @@ export const getEmployeeBySlug = async (slug: string) => {
     designation?: string;
     slug?: string;
     lastActive?: string;
+    isOnline?: boolean;
   }>(`/users/slug/${encodeURIComponent(slug)}`);
+  return response.data;
+};
+
+export const updateStatus = async (isOnline: boolean) => {
+  const response = await api.patch<EmployeeItem>("/users/status", { isOnline });
   return response.data;
 };

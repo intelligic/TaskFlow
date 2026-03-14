@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getToken, getUserRole, logout } from '@/lib/auth';
+import { socket } from '@/lib/socket';
 
 const emptySubscribe = () => () => {};
 const getClientSnapshot = () => true;
@@ -29,13 +30,23 @@ export default function ProtectedRoute({
     }
 
     if (!token || !userRole) {
+      if (socket.connected) socket.disconnect();
       router.replace('/login');
       return;
+    }
+
+    if (!socket.connected) {
+      socket.connect();
     }
 
     if (!role || userRole === role) {
       return;
     }
+
+    return () => {
+      // Optional: keep connection alive unless logging out
+      // socket.disconnect();
+    };
   }, [isClient, pathname, role, router, token, userRole]);
 
   if (!isClient || !token || !userRole) {

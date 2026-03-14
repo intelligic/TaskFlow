@@ -10,39 +10,28 @@ const taskSchema = new mongoose.Schema(
       maxlength: 200,
     },
 
-    description: String,
-
-    tags: {
-      type: [String],
-      default: [],
+    description: {
+      type: String,
+      default: "",
     },
 
     status: {
       type: String,
-      enum: ["TODO", "IN_PROGRESS", "REVIEW", "COMPLETED", "pending", "completed", "closed"],
-      default: "TODO",
-    },
-
-    priority: {
-      type: String,
-      enum: ["low", "medium", "high"],
-      default: "medium",
-    },
-
-    projectId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Project",
+      enum: ["pending", "completed", "closed", "archived"],
+      default: "pending",
     },
 
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
       index: true,
     },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
       index: true,
     },
 
@@ -53,55 +42,26 @@ const taskSchema = new mongoose.Schema(
       index: true,
     },
 
-    assignee: {
-      type: String,
-      default: "",
-    },
-
-    dueDate: Date,
-
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-
-    attachments: [
+    comments: [
       {
-        fileName: String,
-        fileUrl: String,
-        workspace: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Workspace",
-        },
-        uploadedBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
       },
     ],
-
-    isArchived: {
-      type: Boolean,
-      default: false,
+    dueDate: {
+      type: Date,
     },
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-taskSchema.virtual("project")
-  .get(function getProject() {
-    return this.projectId;
-  })
-  .set(function setProject(value) {
-    this.projectId = value;
-  });
-
-taskSchema.set("toJSON", { virtuals: true });
-taskSchema.set("toObject", { virtuals: true });
-
-taskSchema.index({ userId: 1, createdAt: -1 });
-taskSchema.index({ projectId: 1, createdAt: -1 });
 taskSchema.index({ status: 1 });
-taskSchema.index({ isArchived: 1, updatedAt: -1 });
+taskSchema.index({ workspace: 1, status: 1 });
 
 export default mongoose.model("Task", taskSchema);

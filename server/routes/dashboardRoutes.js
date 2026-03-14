@@ -9,6 +9,6 @@ const router = express.Router();
 
 router.use(protect, updateLastActive);
 
-router.get("/stats", requireRole("admin"), getDashboardStats);
+router.get("/stats", getDashboardStats);
 
 export default router;

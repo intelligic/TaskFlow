@@ -65,11 +65,6 @@ export default function SetPasswordClient() {
           e.preventDefault();
           if (!token) return;
 
-          if (name.trim().length < 3) {
-            setError("Name must be at least 3 characters");
-            return;
-          }
-
           if (password.length < 8) {
             setError("Password must be at least 8 characters");
             return;
@@ -84,7 +79,7 @@ export default function SetPasswordClient() {
             setError("");
             setSuccess("");
             setSubmitting(true);
-            await setEmployeePassword(token, password, name.trim());
+            await setEmployeePassword(token, password, name.trim(), designation.trim());
             setSuccess("Password set successfully. Redirecting to login...");
             setTimeout(() => router.push("/login"), 800);
           } catch {
@@ -123,10 +118,8 @@ export default function SetPasswordClient() {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                placeholder="Your name"
-                required
+                readOnly
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500 cursor-not-allowed outline-none"
               />
             </div>
 
@@ -136,7 +129,7 @@ export default function SetPasswordClient() {
                 type="email"
                 value={email}
                 readOnly
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500 cursor-not-allowed outline-none"
               />
             </div>
 
@@ -148,7 +141,7 @@ export default function SetPasswordClient() {
                 type="text"
                 value={designation}
                 readOnly
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500 cursor-not-allowed outline-none"
               />
             </div>
 

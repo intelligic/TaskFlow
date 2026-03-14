@@ -17,12 +17,7 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-function isOnline(lastActive?: string) {
-  if (!lastActive) return false;
-  const last = new Date(lastActive).getTime();
-  if (Number.isNaN(last)) return false;
-  return Date.now() - last <= 2 * 60 * 1000;
-}
+
 
 export default function AdminChatPage({ params }: Props) {
   const [slug, setSlug] = useState<string>("");
@@ -31,9 +26,11 @@ export default function AdminChatPage({ params }: Props) {
     name: string;
     designation?: string;
     lastActive?: string;
+    isOnline?: boolean;
   }>({
     name: "Employee",
     designation: "",
+    isOnline: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -54,6 +51,7 @@ export default function AdminChatPage({ params }: Props) {
           name: res.name || "Employee",
           designation: res.designation || "",
           lastActive: res.lastActive,
+          isOnline: res.isOnline,
         });
         setEmployeeId(res._id);
       } catch {
@@ -77,7 +75,7 @@ export default function AdminChatPage({ params }: Props) {
     return `employee-${employeeId}`;
   }, [employeeId]);
 
-  const online = isOnline(employee.lastActive);
+  const online = employee.isOnline;
 
   return (
     <div className="flex h-[calc(100vh-10rem)] min-h-0 flex-col gap-6 overflow-hidden">
@@ -94,7 +92,7 @@ export default function AdminChatPage({ params }: Props) {
               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                 online
                   ? "bg-green-100 text-green-700 ring-1 ring-green-200"
-                  : "bg-red-100 text-red-700 ring-1 ring-red-200"
+                  : "bg-slate-100 text-slate-500 ring-1 ring-slate-200"
               }`}
             >
               {online ? "Online" : "Offline"}

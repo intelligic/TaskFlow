@@ -1,5 +1,6 @@
 import Task from "../models/Task.js";
 import User from "../models/User.js";
+import { emitRealtime } from "../utils/realtime.js";
 
 export const getEmployees = async (req, res) => {
   try {
@@ -19,7 +20,7 @@ export const getEmployees = async (req, res) => {
 
     const [items, total] = await Promise.all([
       User.find(query)
-        .select("_id name email role designation slug lastActive isVerified createdAt")
+        .select("_id name email role designation slug lastActive isVerified isOnline createdAt")
         .sort({ createdAt: -1 })
         .skip((pageNum - 1) * limitNum)
         .limit(limitNum)
@@ -32,22 +33,21 @@ export const getEmployees = async (req, res) => {
     const taskCounts = await Task.aggregate([
       {
         $match: {
-          userId: { $in: ids },
-          isArchived: { $ne: true },
+          assignedTo: { $in: ids },
           workspace: req.user.workspace,
         },
       },
       {
         $group: {
-          _id: "$userId",
+          _id: "$assignedTo",
           pending: {
             $sum: {
-              $cond: [{ $ne: ["$status", "COMPLETED"] }, 1, 0],
+              $cond: [{ $eq: ["$status", "pending"] }, 1, 0],
             },
           },
           completed: {
             $sum: {
-              $cond: [{ $eq: ["$status", "COMPLETED"] }, 1, 0],
+              $cond: [{ $in: ["$status", ["completed", "closed", "archived"]] }, 1, 0],
             },
           },
         },
@@ -77,7 +77,7 @@ export const getEmployees = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.params.id, workspace: req.user.workspace })
-      .select("_id name email role designation slug lastActive isVerified createdAt")
+      .select("_id name email role designation slug lastActive isVerified isOnline createdAt")
       .lean();
 
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -93,10 +93,32 @@ export const getUserBySlug = async (req, res) => {
     if (!slug) return res.status(400).json({ message: "Slug is required" });
 
     const user = await User.findOne({ slug, workspace: req.user.workspace })
-      .select("_id name email role designation slug lastActive isVerified createdAt")
+      .select("_id name email role designation slug lastActive isVerified isOnline createdAt")
       .lean();
 
     if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updateOnlineStatus = async (req, res) => {
+  try {
+    const { isOnline } = req.body;
+    if (typeof isOnline !== "boolean") {
+      return res.status(400).json({ message: "isOnline must be a boolean" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { isOnline },
+      { new: true }
+    ).select("_id name email role designation slug lastActive isVerified isOnline createdAt");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    emitRealtime("userStatusUpdated", user);
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error" });

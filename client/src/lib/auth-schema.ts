@@ -8,6 +8,7 @@ export const registerSchema = z
   .object({
     name: z.string().min(3, "Name must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
+    workspaceName: z.string().min(2, "Workspace name must be at least 2 characters").optional(),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
     captchaInput: z.string().min(1, "Captcha required"),

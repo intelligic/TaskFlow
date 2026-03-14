@@ -66,7 +66,7 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      const res = await registerUser(data.name, data.email, data.password);
+      const res = await registerUser(data.name, data.email, data.password, data.workspaceName);
 
       if (res?.token) {
         setToken(res.token);
@@ -121,6 +121,15 @@ export default function RegisterPage() {
           className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
         {errors.email && <p className="mb-2 text-sm text-red-500">{errors.email.message}</p>}
+
+        <input
+          type="text"
+          placeholder="Workspace Name (e.g. My Company)"
+          autoComplete="organization"
+          {...register("workspaceName")}
+          className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        />
+        {errors.workspaceName && <p className="mb-2 text-sm text-red-500">{errors.workspaceName.message}</p>}
 
         <div className="relative mb-3">
           <input

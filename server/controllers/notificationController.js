@@ -37,12 +37,21 @@ export const createNotificationHandler = async (req, res) => {
 
     res.status(201).json(notification);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("API Error: /api/notifications (create)", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 export const getUserNotifications = async (req, res) => {
   try {
+    if (!Notification || typeof Notification.find !== "function") {
+      return res.status(200).json([]);
+    }
+
+    if (!req.user || !req.user.id) {
+      return res.status(200).json([]);
+    }
+
     const notifications = await Notification.find({
       userId: req.user.id,
       workspace: req.user.workspace,
@@ -51,9 +60,10 @@ export const getUserNotifications = async (req, res) => {
       .limit(50)
       .lean();
 
-    res.json(notifications);
+    res.status(200).json(Array.isArray(notifications) ? notifications : []);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("API Error: /api/notifications", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -71,7 +81,8 @@ export const markNotificationRead = async (req, res) => {
 
     res.json(notification);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("API Error: /api/notifications/:id/read", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -83,6 +94,20 @@ export const markAllNotificationsRead = async (req, res) => {
     );
     res.json({ message: "Notifications marked as read" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("API Error: /api/notifications/read", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const clearNotifications = async (req, res) => {
+  try {
+    await Notification.deleteMany({
+      userId: req.user.id,
+      workspace: req.user.workspace,
+    });
+    res.json({ message: "Notifications cleared" });
+  } catch (error) {
+    console.error("API Error: /api/notifications/clear", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

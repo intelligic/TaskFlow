@@ -1,180 +1,93 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-
-import { getArchivedTasks, type Task } from "@/lib/api/taskApi";
-
-const ITEMS_PER_PAGE = 13;
+import { useEffect, useMemo, useState } from 'react';
+import { getArchivedTasks } from '@/lib/api/taskApi';
+import { Task } from '@/types/task';
+import { FiSearch } from 'react-icons/fi';
 
 export default function AdminArchivePage() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const load = async () => {
-    try {
-      setError(false);
-      setLoading(true);
-      const res = await getArchivedTasks();
+  useEffect(() => {
+    getArchivedTasks().then(res => {
       setTasks(Array.isArray(res) ? res : []);
-    } catch {
-      setError(true);
-      setTasks([]);
-    } finally {
       setLoading(false);
-    }
-  };
+    }).catch(() => setLoading(false));
+  }, []);
 
   const filteredTasks = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     if (!query) return tasks;
-
-    return tasks.filter((task) => {
-      const projectName =
-        typeof task.projectId === "string" ? "" : task.projectId?.name || "";
-
-      const completedOn = task.updatedAt
-        ? new Date(task.updatedAt).toLocaleDateString()
-        : "";
-
-      return (
-        task.title.toLowerCase().includes(query) ||
-        (task.assignee || "").toLowerCase().includes(query) ||
-        projectName.toLowerCase().includes(query) ||
-        completedOn.toLowerCase().includes(query)
-      );
+    return tasks.filter(task => {
+      const title = task.title.toLowerCase();
+      const description = (task.description || "").toLowerCase();
+      const employeeName = typeof task.assignedTo === 'object' ? (task.assignedTo?.name || "").toLowerCase() : "";
+      const date = task.updatedAt ? new Date(task.updatedAt).toLocaleDateString().toLowerCase() : "";
+      
+      return title.includes(query) || 
+             description.includes(query) || 
+             employeeName.includes(query) || 
+             date.includes(query);
     });
   }, [searchTerm, tasks]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  const paginatedTasks = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredTasks.slice(start, start + ITEMS_PER_PAGE);
-  }, [currentPage, filteredTasks]);
-
-  const startItem = filteredTasks.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredTasks.length);
-
-  useEffect(() => {
-    load();
-  }, []);
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-        <div className="flex flex-col gap-1 items-start justify-start">
-          <h2 className="text-lg font-bold text-black tracking-wide font-serif">
-            Archived Tasks
-          </h2>
-          <p className="text-[12px] font-semibold text-gray-500 tracking-wider">
-            A Text only Historical record of your complete and close tasks.
-          </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Task Archive</h2>
+          <p className="text-sm text-slate-500">Historical record of all archived tasks.</p>
         </div>
-
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search by task, employee, completed or closed date..."
-          className="w-full max-w-sm rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-        />
+        <div className="relative flex items-center gap-2 outline-none focus-within:ring-1 pr-3 focus-within:ring-blue-500 border border-slate-200 rounded-md bg-white">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by task, employee, or date..."
+            className="w-80 px-3 py-1.5 text-[12px] text-slate-700 outline-none rounded-md"
+          />
+          <FiSearch className="text-[16px] text-black" />
+        </div>
       </div>
-
-      {error && (
-        <p className="rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-red-600">
-          Failed to load archived tasks
-        </p>
-      )}
 
       <div className="bg-white border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 text-[14px] opacity-80 bg-gray-100 text-black text-center capatalize tracking-wide font-semibold">
-          <span>Task</span>
-          <span>Employee</span>
-          <span>Completed On</span>
-          <span>Closed On</span>
-        </div>
-
-        {loading ? (
-          <div className="px-4 py-6 text-sm font-semibold text-gray-600">Loading...</div>
-        ) : paginatedTasks.length === 0 ? (
-          <div className="px-4 py-6 text-sm font-semibold text-gray-600">No archived tasks.</div>
-        ) : (
-          paginatedTasks.map((task) => {
-            const project = typeof task.projectId === "string" ? undefined : task.projectId;
-            const completedOn = task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : "-";
-            const closedOn = task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : "-";
-
-            return (
-              <div
-                key={task._id}
-                className="grid grid-cols-4 px-4 py-3 border-b border-b-gray-100 last:border-b-0 text-[12px] font-semibold text-black text-center"
-              >
-                <span className="text-[14px]">{task.title}</span>
-                <span className="opacity-65">
-                  {typeof task.assignedTo === "object"
-                    ? task.assignedTo?.name || task.assignedTo?.email || "-"
-                    : task.assignee || project?.name || "-"}
-                </span>
-                <span className="opacity-65">{completedOn}</span>
-                <span className="opacity-65">{closedOn}</span>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      <div className="flex flex-col gap-3 bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between border rounded-lg">
-        <p className="text-black text-[14px] font-bold">
-          Showing {startItem}-{endItem} of {filteredTasks.length} tasks
-        </p>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            Previous
-          </button>
-
-          {Array.from({ length: totalPages }).map((_, index) => {
-            const page = index + 1;
-            const active = page === currentPage;
-
-            return (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`rounded border px-3 py-1.5 ${
-                  active ? "border-blue-600 bg-blue-600 text-white" : "hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            Next
-          </button>
-        </div>
+        <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-50 border-b text-[11px] uppercase font-bold text-slate-600 font-serif">
+              <tr>
+                <th className="px-4 py-3">Task</th>
+                <th className="px-4 py-3">Assigned To</th>
+                <th className="px-4 py-3 text-right">Archived On</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {loading && (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-sm text-slate-400 font-medium font-serif">Loading archive...</td>
+                </tr>
+              )}
+              {!loading && tasks.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-sm text-slate-400 font-medium font-serif">No archived tasks found.</td>
+                </tr>
+              )}
+              {filteredTasks.map((task) => (
+                <tr key={task._id} className="hover:bg-slate-50 transition-colors font-serif">
+                  <td className="px-4 py-4">
+                    <div className="font-bold text-slate-900 text-sm">{task.title}</div>
+                    <div className="text-xs text-slate-500">{task.description}</div>
+                  </td>
+                  <td className="px-4 py-4 text-sm font-medium">
+                    {typeof task.assignedTo === 'object' ? task.assignedTo?.name : 'Unknown'}
+                  </td>
+                  <td className="px-4 py-4 text-right text-xs text-slate-400 font-medium">
+                    {task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
       </div>
     </div>
   );

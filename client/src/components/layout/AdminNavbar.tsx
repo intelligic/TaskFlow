@@ -5,13 +5,14 @@ import { FaUserAlt } from "react-icons/fa";
 // import { ClipboardList } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MdPersonAddAlt1, MdOutlineAddTask } from "react-icons/md";
 import NotificationBell from "@/components/layout/NotificationBell";
 import { logout } from "@/lib/auth";
 
 export default function AdminNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const normalizePath = (path: string) => {
     const normalized = path.replace(/\/+$/, "");
@@ -31,9 +32,17 @@ export default function AdminNavbar() {
     logout();
   };
 
+  const handleCreateTask = () => {
+    if (pathname === "/admin/dashboard") {
+      window.dispatchEvent(new CustomEvent("open-task-modal"));
+    } else {
+      router.push("/admin/dashboard?create=true");
+    }
+  };
+
   return (
     <div className="h-14 bg-white shadow-lg font-serif flex items-center justify-between px-6">
-      <div className="flex items-center gap-10 pt-3">
+      <div className="flex items-center gap-5 pt-3">
         {/* <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
           <ClipboardList size={25} className="text-black" />
           TaskManager
@@ -42,41 +51,44 @@ export default function AdminNavbar() {
           <Image src="/TaskFlowLogo.png" alt="logo" width={200} height={200} />
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <Link
             href="/admin/dashboard"
-            className={`text-[14px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${
-              isActive("/admin/dashboard")
-                ? "text-indigo-700"
-                : "text-slate-500 hover:text-indigo-600"
-            }`}
+            className={`text-[16px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${isActive("/admin/dashboard")
+              ? "text-indigo-700"
+              : "text-slate-500 hover:text-indigo-600"
+              }`}
           >
             Dashboard
           </Link>
           <Link
             href="/admin/employees"
-            className={`text-[14px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${
-              isActive("/admin/employees")
-                ? "text-indigo-700"
-                : "text-slate-500 hover:text-indigo-600"
-            }`}
+            className={`text-[16px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${isActive("/admin/employees")
+              ? "text-indigo-700"
+              : "text-slate-500 hover:text-indigo-600"
+              }`}
           >
             Employees
           </Link>
           <Link
             href="/admin/archive"
-            className={`text-[14px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${
-              isActive("/admin/archive")
-                ? "text-indigo-700"
-                : "text-slate-500 hover:text-indigo-600"
-            }`}
+            className={`text-[16px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${isActive("/admin/archive")
+              ? "text-indigo-700"
+              : "text-slate-500 hover:text-indigo-600"
+              }`}
           >
             Archive
           </Link>
+          {/* <button
+            onClick={handleCreateTask}
+            className={`text-[14px] font-semibold tracking-wide transition-colors duration-300 ease-in-out text-slate-500 hover:text-indigo-600`}
+          >
+            Create Task
+          </button> */}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <NotificationBell />
         <Link
           href="/admin/employees/invite"
@@ -85,7 +97,6 @@ export default function AdminNavbar() {
           <MdPersonAddAlt1 className="text-lg" />
           Add Employee
         </Link>
-
         <Link
           href="/admin/task/create"
           className="bg-blue-600 text-white px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm flex items-center gap-2 transition-colors hover:bg-blue-700"

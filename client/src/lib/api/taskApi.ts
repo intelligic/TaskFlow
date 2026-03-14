@@ -1,58 +1,8 @@
 import { api } from '@/lib/api/axios';
+import { Task, TaskComment, TaskStatus } from '@/types/task';
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED';
-
-export type TaskAttachment = {
-  fileName?: string;
-  fileUrl?: string;
-  uploadedBy?: string;
-};
-
-export type TaskCommentAuthor = {
-  _id?: string;
-  name?: string;
-  email?: string;
-  role?: string;
-};
-
-export type TaskComment = {
-  _id?: string;
-  task?: string;
-  author?: TaskCommentAuthor;
-  message?: string;
-  createdAt?: string;
-};
-
-export type Task = {
-  _id: string;
-  title: string;
-  description?: string;
-  status: TaskStatus;
-  priority?: 'low' | 'medium' | 'high';
-  projectId?: string | { _id: string; name: string; description?: string };
-  assignee?: string;
-  assignedTo?: string | { _id?: string; name?: string; email?: string; designation?: string };
-  createdBy?: string;
-  dueDate?: string;
-  tags?: string[];
-  userId?: string;
-  attachments?: TaskAttachment[];
-  isArchived?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export const getTasks = async (params?: {
-  assignedTo?: "currentUser" | string;
-  archived?: boolean;
-  status?: string;
-}) => {
-  const searchParams = new URLSearchParams();
-  if (params?.assignedTo) searchParams.set("assignedTo", params.assignedTo);
-  if (params?.archived) searchParams.set("archived", "true");
-  if (params?.status) searchParams.set("status", params.status);
-  const suffix = searchParams.toString();
-  const response = await api.get<{ tasks: Task[] } | Task[]>(`/tasks${suffix ? `?${suffix}` : ""}`);
+export const getTasks = async (params?: Record<string, any>) => {
+  const response = await api.get<{ tasks: Task[] }>('/tasks', { params });
   return response.data;
 };
 
@@ -61,23 +11,18 @@ export const getTaskById = async (id: string) => {
   return response.data;
 };
 
-export const createTask = async (data: Partial<Omit<Task, '_id'>>) => {
+export const createTask = async (data: { title: string; description?: string; assignedTo: string; dueDate?: string; tags?: string[] }) => {
   const response = await api.post<Task>('/tasks', data);
   return response.data;
 };
 
-export const updateTaskStatus = async (taskId: string, status: string) => {
+export const updateTaskStatus = async (taskId: string, status: TaskStatus) => {
   const response = await api.patch<Task>(`/tasks/${taskId}/status`, { status });
   return response.data;
 };
 
-export const getAssignedTasks = async () => {
-  const response = await api.get<{ tasks: Task[] } | Task[]>("/tasks/assigned");
-  return response.data;
-};
-
-export const archiveTask = async (taskId: string) => {
-  const response = await api.patch<Task>(`/tasks/${taskId}/archive`);
+export const updateTask = async (taskId: string, data: Partial<Task>) => {
+  const response = await api.patch<Task>(`/tasks/${taskId}`, data);
   return response.data;
 };
 
@@ -86,37 +31,17 @@ export const getArchivedTasks = async () => {
   return response.data;
 };
 
-export const uploadTaskAttachment = async (taskId: string, file: File) => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await api.post<Task>(`/tasks/${taskId}/attachments`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-
-  return response.data;
-};
-
 export const getTaskComments = async (taskId: string) => {
-  const response = await api.get<TaskComment[] | { success?: boolean; data?: TaskComment[] }>(
-    `/tasks/${taskId}/comments`,
+  const response = await api.get<{ success: boolean; data: TaskComment[] }>(
+    `/tasks/${taskId}/comments`
   );
-
-  const payload = response.data;
-  if (Array.isArray(payload)) return payload;
-  if (payload && Array.isArray(payload.data)) return payload.data;
-  return [];
+  return response.data.data || [];
 };
 
 export const createTaskComment = async (taskId: string, message: string) => {
-  const response = await api.post<TaskComment | { success?: boolean; data?: TaskComment }>(
+  const response = await api.post<{ success: boolean; data: TaskComment }>(
     `/tasks/${taskId}/comments`,
-    { message },
+    { message }
   );
-
-  const payload = response.data;
-  if (payload && typeof payload === "object" && "data" in payload) {
-    return (payload as { data?: TaskComment }).data;
-  }
-  return payload as TaskComment;
+  return response.data.data;
 };

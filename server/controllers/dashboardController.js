@@ -1,33 +1,56 @@
-import Project from "../models/Project.js";
 import Task from "../models/Task.js";
 import User from "../models/User.js";
 
 export const getDashboardStats = async (req, res) => {
   try {
-    if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access required" });
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const [totalProjects, totalTasks, completedTasks, activeTasks, totalEmployees] = await Promise.all([
-      Project.countDocuments({ workspace: req.user.workspace }),
-      Task.countDocuments({ workspace: req.user.workspace }),
+    if (req.user.role === "admin") {
+      const [totalTasks, completedTasks, activeTasks, totalEmployees, activeEmployees] = await Promise.all([
+        Task.countDocuments({ 
+          workspace: req.user.workspace, 
+          status: { $ne: "archived" } 
+        }),
+        Task.countDocuments({
+          status: { $in: ["completed", "closed", "archived"] },
+          workspace: req.user.workspace,
+        }),
+        Task.countDocuments({
+          status: "pending",
+          workspace: req.user.workspace,
+        }),
+        User.countDocuments({ role: "employee", workspace: req.user.workspace }),
+        User.countDocuments({ role: "employee", workspace: req.user.workspace, isOnline: true }),
+      ]);
+
+      return res.json({
+        totalTasks,
+        completedTasks,
+        activeTasks,
+        totalEmployees,
+        activeEmployees,
+      });
+    }
+
+    // Employee Stats
+    const [totalTasks, completedTasks] = await Promise.all([
       Task.countDocuments({
-        status: { $in: ["COMPLETED", "completed", "done", "closed"] },
+        assignedTo: req.user.id,
+        status: { $ne: "archived" },
         workspace: req.user.workspace,
       }),
       Task.countDocuments({
-        status: { $nin: ["COMPLETED", "completed", "done", "closed"] },
+        assignedTo: req.user.id,
+        status: { $in: ["completed", "closed", "archived"] },
         workspace: req.user.workspace,
       }),
-      User.countDocuments({ role: "employee", workspace: req.user.workspace }),
     ]);
 
     res.json({
-      totalProjects,
       totalTasks,
       completedTasks,
-      activeTasks,
-      totalEmployees,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

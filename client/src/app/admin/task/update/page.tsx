@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Calendar, ChevronDown, Plus, Tag } from "lucide-react";
 import { getTagClasses, TASK_TAGS } from "@/lib/task-tags";
-import { useRouter } from "next/navigation";
-import { MdOutlineAddTask } from "react-icons/md";
+import { useRouter, useSearchParams } from "next/navigation";
+import { MdOutlineEditNote } from "react-icons/md";
 import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
-import { createTask } from "@/lib/api/taskApi";
+import { getTaskById, updateTask } from "@/lib/api/taskApi";
 
-export default function CreateTaskPage() {
+function UpdateTaskContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const taskId = searchParams.get("id");
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [assignee, setAssignee] = useState("");
@@ -31,30 +34,56 @@ export default function CreateTaskPage() {
   useEffect(() => {
     let cancelled = false;
 
-    const load = async () => {
+    const loadData = async () => {
+      if (!taskId) {
+        setError("No Task ID provided");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
-        const res = await getEmployees({ role: "employee" });
+        
+        // Load employees and task data in parallel
+        const [empRes, taskData] = await Promise.all([
+          getEmployees({ role: "employee" }),
+          getTaskById(taskId)
+        ]);
+
         if (cancelled) return;
-        setEmployees(Array.isArray(res.employees) ? res.employees : []);
-      } catch {
+
+        setEmployees(Array.isArray(empRes.employees) ? empRes.employees : []);
+        
+        // Pre-fill task data
+        setTitle(taskData.title || "");
+        setDescription(taskData.description || "");
+        setAssignee(typeof taskData.assignedTo === 'object' ? taskData.assignedTo._id || "" : taskData.assignedTo || "");
+        setSelectedTags(taskData.tags || []);
+        
+        if (taskData.dueDate) {
+          // Format date for input: YYYY-MM-DD
+          const date = new Date(taskData.dueDate);
+          setDueDate(date.toISOString().split('T')[0]);
+        }
+      } catch (err) {
         if (cancelled) return;
-        setError("Failed to load employees");
+        setError("Failed to load task details or employees");
       } finally {
         if (cancelled) return;
         setLoading(false);
       }
     };
 
-    load();
+    loadData();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [taskId]);
 
   const handleSubmit = async () => {
+    if (!taskId) return;
     if (!title.trim() || !assignee) {
       setError("Title and Assignee are required");
       return;
@@ -64,7 +93,7 @@ export default function CreateTaskPage() {
       setError("");
       setSubmitting(true);
 
-      await createTask({
+      await updateTask(taskId, {
         title: title.trim(),
         description: description.trim(),
         assignedTo: assignee,
@@ -72,27 +101,31 @@ export default function CreateTaskPage() {
         tags: selectedTags,
       });
 
-      setTitle("");
-      setDescription("");
-      setAssignee("");
-      setDueDate("");
-      setSelectedTags([]);
       router.push("/admin/dashboard");
+      router.refresh();
     } catch {
-      setError("Failed to create task");
+      setError("Failed to update task");
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <p className="text-slate-500 font-medium">Loading task data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-190">
       <div className="space-y-3">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-slate-900">Create New Task</h1>
+        <h1 className="font-serif text-3xl font-bold tracking-tight text-slate-900">Update Task</h1>
         <p className="w-160 text-md text-slate-500 font-medium">
-          Set up a new project task and assign it to a team member.
+          Modify the task details and reassign if necessary.
         </p>
-      </div>
+      </div>    
 
       {error && (
         <p className="mt-4 rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-red-600">
@@ -165,10 +198,11 @@ export default function CreateTaskPage() {
                 key={tag}
                 type="button"
                 onClick={() => toggleTag(tag)}
-                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${selectedTags.includes(tag)
-                  ? getTagClasses(tag, "selected")
-                  : getTagClasses(tag, "unselected")
-                  }`}
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTags.includes(tag)
+                    ? getTagClasses(tag, "selected")
+                    : getTagClasses(tag, "unselected")
+                }`}
               >
                 <Tag size={12} />
                 {tag}
@@ -176,7 +210,7 @@ export default function CreateTaskPage() {
             ))}
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500"
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-200 transition-colors"
             >
               <Plus size={12} />
               Add New
@@ -190,8 +224,8 @@ export default function CreateTaskPage() {
             disabled={submitting}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg tracking-wide bg-blue-600 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <MdOutlineAddTask className="text-lg" />
-            {submitting ? "Creating..." : "Create Task"}
+            <MdOutlineEditNote className="text-2xl" />
+            {submitting ? "Updating..." : "Update Task"}
           </button>
 
           <button
@@ -208,5 +242,13 @@ export default function CreateTaskPage() {
         Notifications will be sent to the assigned employee automatically.
       </p>
     </div>
+  );
+}
+
+export default function UpdateTaskPage() {
+  return (
+    <Suspense fallback={<div className="flex h-64 items-center justify-center"><p className="text-slate-500">Loading...</p></div>}>
+      <UpdateTaskContent />
+    </Suspense>
   );
 }

@@ -6,6 +6,7 @@ import User from "../models/User.js";
 import Workspace from "../models/Workspace.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { inviteEmailTemplate } from "../templates/inviteEmailTemplate.js";
+import { resetPasswordTemplate } from "../templates/resetPasswordTemplate.js";
 
 const normalizeEmail = (email) =>
   typeof email === "string" ? email.trim().toLowerCase() : "";
@@ -26,12 +27,12 @@ const resolveWorkspaceName = (fallback) => {
   return fromEnv || fallback || "TaskFlow";
 };
 
-const ensureWorkspaceForUser = async (user) => {
+const ensureWorkspaceForUser = async (user, customWorkspaceName) => {
   if (user.workspace) return user.workspace;
 
   if (user.role === "admin") {
     const workspace = await Workspace.create({
-      name: resolveWorkspaceName(`${user.name || "Admin"} Workspace`),
+      name: resolveWorkspaceName(customWorkspaceName || `${user.name || "Admin"} Workspace`),
       owner: user._id,
       members: [{ user: user._id, role: "admin" }],
       plan: "free",
@@ -65,7 +66,7 @@ const ensureWorkspaceForUser = async (user) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body || {};
+    const { name, email, password, workspaceName } = req.body || {};
 
     const safeName = typeof name === "string" ? name.trim() : "";
     const normalizedEmail = normalizeEmail(email);
@@ -107,7 +108,7 @@ export const register = async (req, res) => {
       status: "active",
     });
 
-    await ensureWorkspaceForUser(user);
+    await ensureWorkspaceForUser(user, workspaceName);
 
     const token = signToken(user);
 
@@ -141,10 +142,12 @@ export const login = async (req, res) => {
 
     const user = await User.findOne({ email: normalizedEmail }).select("+password");
     if (!user) {
+      console.log("Login failed: User not found", normalizedEmail);
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     if (user.role === "employee" && user.isVerified === false) {
+      console.log("Login failed: Employee not verified", normalizedEmail);
       return res.status(403).json({
         message: "Account not verified. Please set your password using the invite link.",
       });
@@ -152,6 +155,7 @@ export const login = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log("Login failed: Password mismatch", normalizedEmail);
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
@@ -212,10 +216,12 @@ export const inviteEmployee = async (req, res) => {
     const normalizedEmail = normalizeEmail(email);
 
     if (!safeName || safeName.length < 2) {
+      console.log("inviteEmployee 400: Name is required", safeName);
       return res.status(400).json({ message: "Name is required" });
     }
 
     if (!isValidEmail(normalizedEmail)) {
+      console.log("inviteEmployee 400: Valid email is required", normalizedEmail);
       return res.status(400).json({ message: "Valid email is required" });
     }
 
@@ -224,6 +230,7 @@ export const inviteEmployee = async (req, res) => {
 
     const existing = await User.findOne({ email: normalizedEmail }).select("+password");
     if (existing && existing.isVerified) {
+      console.log("inviteEmployee 400: Employee already exists", normalizedEmail);
       return res.status(400).json({ message: "Employee already exists" });
     }
 
@@ -290,6 +297,7 @@ export const inviteEmployee = async (req, res) => {
         inviteLink: link,
         adminName,
         workspaceName: finalWorkspaceName,
+        employeeName: safeName,
       }),
       { replyTo },
     );
@@ -323,7 +331,7 @@ export const verifyInvite = async (req, res) => {
 
     res.json({
       valid: true,
-      user: { _id: user._id, name: user.name, email: user.email, role: user.role },
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role, designation: user.designation },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -332,7 +340,7 @@ export const verifyInvite = async (req, res) => {
 
 export const setPassword = async (req, res) => {
   try {
-    const { token, password, name } = req.body || {};
+    const { token, password, name, designation } = req.body || {};
 
     if (!token || typeof token !== "string") {
       return res.status(400).json({ message: "Token is required" });
@@ -357,6 +365,9 @@ export const setPassword = async (req, res) => {
     if (typeof name === "string" && name.trim().length >= 2) {
       user.name = name.trim();
     }
+    if (typeof designation === "string" && designation.trim().length >= 2) {
+      user.designation = designation.trim();
+    }
     user.inviteToken = undefined;
     user.inviteTokenExpires = undefined;
     await user.save();
@@ -364,5 +375,80 @@ export const setPassword = async (req, res) => {
     res.json({ message: "Password set successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ message: "Valid email is required" });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.json({ message: "If that email exists, a reset link has been sent." });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
+
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (!frontendUrl) {
+      return res.status(500).json({ message: "Server misconfigured: FRONTEND_URL missing" });
+    }
+
+    const link = `${frontendUrl.replace(/\/+$/, "")}/reset-password?token=${resetToken}`;
+    const userName = user.name?.trim() || "there";
+
+    await sendEmail(
+      normalizedEmail,
+      "Reset your TaskFlow password",
+      resetPasswordTemplate({ resetLink: link, userName }),
+    );
+
+    res.json({ message: "If that email exists, a reset link has been sent." });
+  } catch (error) {
+    const msg = String(error?.message || "");
+    if (msg.includes("SMTP") || msg.includes("EMAIL_FROM")) {
+      return res.status(500).json({ message: "Email service is not configured" });
+    }
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body || {};
+
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    if (!password || typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 };

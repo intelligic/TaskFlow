@@ -27,6 +27,11 @@ export const markNotificationRead = async (id: string) => {
 };
 
 export const markAllNotificationsRead = async () => {
-  const response = await api.patch<{ message: string }>(`/notifications/read`);
+  const response = await api.patch<{ message: string }>("/notifications/read-all");
+  return response.data;
+};
+
+export const clearNotifications = async () => {
+  const response = await api.delete<{ message: string }>("/notifications/clear");
   return response.data;
 };

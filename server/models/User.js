@@ -69,7 +69,18 @@ const userSchema = new mongoose.Schema(
 
     inviteTokenExpires: Date,
 
+    resetPasswordToken: {
+      type: String,
+      index: true,
+    },
+
+    resetPasswordExpires: Date,
+
     isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isOnline: {
       type: Boolean,
       default: false,
     },
@@ -79,9 +90,9 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ email: 1 }, { unique: true });
 
-userSchema.pre("save", async function setSlug(next) {
-  if (!this.isNew || !this.name) return next();
-  if (this.slug) return next();
+userSchema.pre("save", async function setSlug() {
+  if (!this.isNew || !this.name) return;
+  if (this.slug) return;
 
   const base = String(this.name)
     .trim()
@@ -102,7 +113,6 @@ userSchema.pre("save", async function setSlug(next) {
   }
 
   this.slug = slug;
-  next();
 });
 
 export default mongoose.model("User", userSchema);

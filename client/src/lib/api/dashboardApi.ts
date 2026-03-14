@@ -3,8 +3,9 @@ import { api } from '@/lib/api/axios';
 export type DashboardStats = {
   totalTasks: number;
   completedTasks: number;
-  activeTasks: number;
-  totalEmployees: number;
+  activeTasks?: number;
+  totalEmployees?: number;
+  activeEmployees?: number;
 };
 
 export const getDashboardStats = async () => {

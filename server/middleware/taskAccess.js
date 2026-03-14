@@ -10,7 +10,7 @@ export const requireTaskAccess = async (req, res, next) => {
       : {
         _id: taskId,
         workspace: req.user.workspace,
-        $or: [{ assignedTo: req.user.id }, { userId: req.user.id }],
+        assignedTo: req.user.id,
       };
 
     const task = await Task.findOne(query);

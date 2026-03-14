@@ -8,14 +8,14 @@ const ensureCanAccessTask = async (req, taskId) => {
 
   if (req.user && req.user.role === "admin") {
     return await Task.findOne({ _id: taskId, workspace: req.user.workspace })
-      .select("_id userId title workspace");
+      .select("_id assignedTo title workspace");
   }
 
   return await Task.findOne({
     _id: taskId,
-    userId: req.user.id,
+    assignedTo: req.user.id,
     workspace: req.user.workspace,
-  }).select("_id userId title workspace");
+  }).select("_id assignedTo title workspace");
 };
 
 export const addComment = async (req, res) => {
@@ -50,9 +50,9 @@ export const addComment = async (req, res) => {
     const taskTitle = task?.title || "a task";
 
     if (req.user && req.user.role === "admin") {
-      if (task?.userId) {
+      if (task?.assignedTo) {
         await createNotification({
-          userId: task.userId,
+          userId: task.assignedTo,
           message: `New comment on task "${taskTitle}"`,
           workspace: task.workspace,
         });

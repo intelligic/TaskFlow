@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import TaskBubble from "./TaskBubble";
 import ChatInput from "./ChatInput";
-import { createTask, getTasks, updateTaskStatus, type Task } from "@/lib/api/taskApi";
+import { socket } from "@/lib/socket";
+import { createTask, getTasks, updateTaskStatus } from "@/lib/api/taskApi";
+import { Task } from "@/types/task";
 
 export type ChatTaskStatus = "pending" | "completed" | "closed";
 
@@ -79,6 +81,20 @@ export default function ChatBox({
 
   useEffect(() => {
     loadTasks();
+
+    const handleRefresh = () => {
+      loadTasks();
+    };
+
+    socket.on("taskCreated", handleRefresh);
+    socket.on("taskUpdated", handleRefresh);
+    socket.on("taskDeleted", handleRefresh);
+
+    return () => {
+      socket.off("taskCreated", handleRefresh);
+      socket.off("taskUpdated", handleRefresh);
+      socket.off("taskDeleted", handleRefresh);
+    };
   }, [conversationKey]);
 
   const handleSendTask = async (msg: string, files: File[] = []) => {
@@ -87,11 +103,13 @@ export default function ChatBox({
 
     if (msg.trim() && role === "admin") {
       try {
-        await createTask({
-          title: msg.trim(),
-          assignedTo: targetEmployeeId,
-        });
-        await loadTasks();
+        if (targetEmployeeId) {
+          await createTask({
+            title: msg.trim(),
+            assignedTo: targetEmployeeId,
+          });
+          await loadTasks();
+        }
       } catch {
         // ignore for now
       }
