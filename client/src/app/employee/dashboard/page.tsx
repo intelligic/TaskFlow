@@ -1,21 +1,22 @@
-'use client';
+"use client";
 
-import { CheckCircle2, ClipboardList } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { getTasks } from '@/lib/api/taskApi';
-import { getDashboardStats, type DashboardStats } from '@/lib/api/dashboardApi';
-import { Task } from '@/types/task';
-import { getProfile } from '@/lib/api/authApi';
-import TaskCard from '@/components/dashboard/TaskCard';
-import { socket } from '@/lib/socket';
+import { CheckCircle2, ClipboardList } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { getTasks } from "@/lib/api/taskApi";
+import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboardApi";
+import { Task } from "@/types/task";
+import { getProfile } from "@/lib/api/authApi";
+import TaskCard from "@/components/dashboard/TaskCard";
+import { socket } from "@/lib/socket";
+import { FiSearch } from "react-icons/fi";
 
 export default function EmployeeDashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [employeeProfile, setEmployeeProfile] = useState({
-    name: 'Employee',
-    designation: 'Team Member',
+    name: "Employee",
+    designation: "Team Member",
   });
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +25,7 @@ export default function EmployeeDashboardPage() {
       setLoading(true);
       const [tasksRes, statsRes] = await Promise.all([
         getTasks(),
-        getDashboardStats()
+        getDashboardStats(),
       ]);
       setTasks(tasksRes.tasks || []);
       setStats(statsRes);
@@ -59,21 +60,25 @@ export default function EmployeeDashboardPage() {
         const profile = await getProfile();
         if (cancelled) return;
         setEmployeeProfile({
-          name: profile?.name || 'Employee',
-          designation: profile?.designation || 'Team Member',
+          name: profile?.name || "Employee",
+          designation: profile?.designation || "Team Member",
         });
       } catch {
         if (cancelled) return;
-        setEmployeeProfile({ name: 'Employee', designation: 'Team Member' });
+        setEmployeeProfile({ name: "Employee", designation: "Team Member" });
       }
     };
     loadProfile();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const totalAssigned = tasks.length;
   const completedCount = useMemo(
-    () => tasks.filter((t) => t.status === 'completed' || t.status === 'closed').length,
+    () =>
+      tasks.filter((t) => t.status === "completed" || t.status === "closed")
+        .length,
     [tasks],
   );
 
@@ -83,14 +88,16 @@ export default function EmployeeDashboardPage() {
     return tasks.filter(
       (task) =>
         task.title.toLowerCase().includes(query) ||
-        (task.description || '').toLowerCase().includes(query),
+        (task.description || "").toLowerCase().includes(query),
     );
   }, [searchTerm, tasks]);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6 overflow-y-auto pb-10">
-      <div className='w-full'>
-        <h2 className="text-lg font-bold text-black tracking-wide font-serif">Employee Dashboard</h2>
+      <div className="w-full">
+        <h2 className="text-lg font-bold text-black tracking-wide font-serif">
+          Employee Dashboard
+        </h2>
         <p className="text-sm font-semibold font-serif text-gray-500 tracking-wide">
           {employeeProfile.name} | {employeeProfile.designation}
         </p>
@@ -123,24 +130,36 @@ export default function EmployeeDashboardPage() {
 
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-md font-bold text-slate-800 uppercase tracking-wider">My Task Feed</h3>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search tasks..."
-            className="w-full max-w-xs rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+          <h3 className="text-md font-bold text-slate-800 uppercase tracking-wider">
+            My Task Feed
+          </h3>
+          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-80 rounded-md  px-3 py-1.5 text-[12px] text-slate-700 pr-8 outline-none focus:ring-none focus:border-none"
+            />
+            <FiSearch className="text-[16px] text-black" />
+          </div>
         </div>
 
         <div className="space-y-4">
           {loading ? (
             <p className="text-sm font-semibold text-gray-600">Loading...</p>
           ) : filteredTasks.length === 0 ? (
-            <p className="text-sm font-semibold text-gray-600 italic">No tasks assigned yet.</p>
+            <p className="text-sm font-semibold text-gray-600 italic">
+              No tasks assigned yet.
+            </p>
           ) : (
             filteredTasks.map((task) => (
-              <TaskCard key={task._id} task={task} role="employee" onRefresh={loadData} />
+              <TaskCard
+                key={task._id}
+                task={task}
+                role="employee"
+                onRefresh={loadData}
+              />
             ))
           )}
         </div>
@@ -149,15 +168,31 @@ export default function EmployeeDashboardPage() {
   );
 }
 
-function SummaryCard({ title, value, desc, icon, iconBg, cardClassName, titleClassName, valueClassName, descClassName }: any) {
+function SummaryCard({
+  title,
+  value,
+  desc,
+  icon,
+  iconBg,
+  cardClassName,
+  titleClassName,
+  valueClassName,
+  descClassName,
+}: any) {
   return (
-    <div className={`flex items-center justify-between rounded-xl border bg-white p-5 ${cardClassName || ''}`}>
+    <div
+      className={`flex items-center justify-between rounded-xl border bg-white p-5 ${cardClassName || ""}`}
+    >
       <div>
         <p className={titleClassName}>{title}</p>
         <p className={valueClassName}>{value}</p>
         <p className={descClassName}>{desc}</p>
       </div>
-      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}
+      >
+        {icon}
+      </div>
     </div>
   );
 }

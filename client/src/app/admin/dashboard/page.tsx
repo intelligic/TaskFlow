@@ -223,7 +223,7 @@ export default function AdminDashboardPage() {
               {paginatedEmployees.map((emp) => (
                 <div key={emp._id} className="flex justify-between items-center px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200" onClick={() => router.push(`/admin/chat/${emp.slug || emp._id}`)}>
                   <div className="w-1/3 text-left">
-                    <p className="text-[16px] font-bold text-slate-900">{emp.name}</p>
+                    <p className="text-[14px] font-bold text-slate-900">{emp.name}</p>
                   </div>
                   <div className="w-1/3 flex justify-center items-center gap-3">
                     <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
@@ -249,7 +249,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-xl border bg-white p-6 shadow-2xl">
             <div className="mb-6 flex items-center justify-between border-b pb-4">
               <h3 className="text-lg font-bold text-slate-900">Create New Task</h3>

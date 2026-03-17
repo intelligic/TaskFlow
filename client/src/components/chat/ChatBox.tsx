@@ -15,6 +15,8 @@ type TaskMessage = {
   type: "task";
   text: string;
   status: ChatTaskStatus;
+  dueDate?: string;
+  tags?: string[];
 };
 
 type AttachmentMessage = {
@@ -64,13 +66,14 @@ export default function ChatBox({
         assignedTo: role === "employee" ? "currentUser" : targetEmployeeId,
       });
       const list = Array.isArray(res) ? res : (res as { tasks: Task[] }).tasks;
-      const items = (list || [])
-        .map((task) => ({
-          id: task._id,
-          type: "task" as const,
-          text: task.title,
-          status: mapStatus(task.status, task.isArchived),
-        }));
+      const items = (list || []).map((task) => ({
+        id: task._id,
+        type: "task" as const,
+        text: task.title,
+        status: mapStatus(task.status, task.isArchived),
+        dueDate: task.dueDate,
+        tags: task.tags,
+      }));
       setMessages(items);
     } catch {
       setMessages([]);
@@ -97,7 +100,7 @@ export default function ChatBox({
     };
   }, [conversationKey]);
 
-  const handleSendTask = async (msg: string, files: File[] = []) => {
+  const handleSendTask = async (msg: string, files: File[] = [], dueDate?: string, tags?: string[]) => {
     const nextMessages: ChatMessage[] = [];
     const ts = Date.now();
 
@@ -107,6 +110,8 @@ export default function ChatBox({
           await createTask({
             title: msg.trim(),
             assignedTo: targetEmployeeId,
+            dueDate,
+            tags
           });
           await loadTasks();
         }
@@ -149,7 +154,7 @@ export default function ChatBox({
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg bg-white">
+    <div className="relative flex h-full min-h-0 flex-col rounded-lg bg-white overflow-visible">
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
         {loading ? (
           <div className="px-3 py-2 text-sm font-semibold text-gray-600">Loading...</div>
@@ -167,7 +172,7 @@ export default function ChatBox({
       </div>
 
       {role === "admin" && (
-        <div className="shrink-0 border-t bg-white">
+        <div className="shrink-0 border-t bg-white relative z-50">
           <ChatInput onSend={handleSendTask} />
         </div>
       )}
@@ -183,6 +188,7 @@ export default function ChatBox({
 
 function AttachmentBubble({ item }: { item: AttachmentMessage }) {
   const isImage = item.mimeType.startsWith("image/");
+  const isAudio = item.mimeType.startsWith("audio/");
   const prettySize =
     item.size < 1024 * 1024
       ? `${Math.max(1, Math.round(item.size / 1024))} KB`
@@ -203,6 +209,11 @@ function AttachmentBubble({ item }: { item: AttachmentMessage }) {
             />
           </div>
         </a>
+      ) : isAudio ? (
+        <audio controls className="w-full">
+          <source src={item.url} type={item.mimeType} />
+          Your browser does not support the audio element.
+        </audio>
       ) : (
         <a
           href={item.url}

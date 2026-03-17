@@ -10,6 +10,18 @@ const resolveWorkspaceName = (fallback) => {
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
+const parseCookies = (cookieHeader = "") => {
+  const out = {};
+  cookieHeader.split(";").forEach((part) => {
+    const [rawKey, ...rest] = part.split("=");
+    const key = rawKey?.trim();
+    if (!key) return;
+    const value = rest.join("=").trim();
+    out[key] = decodeURIComponent(value);
+  });
+  return out;
+};
+
 const ensureWorkspaceForUser = async (user) => {
   if (user.workspace) {
     if (isValidObjectId(user.workspace)) {
@@ -66,9 +78,12 @@ const protect = async (req, res, next) => {
       : null;
 
   const tokenFromHeader = req.headers["x-auth-token"] || req.headers.token;
+  const cookies = parseCookies(req.headers.cookie || "");
+  const tokenFromCookie = cookies.token;
   const token =
     bearerToken ||
-    (Array.isArray(tokenFromHeader) ? tokenFromHeader[0] : tokenFromHeader);
+    (Array.isArray(tokenFromHeader) ? tokenFromHeader[0] : tokenFromHeader) ||
+    tokenFromCookie;
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });

@@ -112,14 +112,22 @@ function UpdateTaskContent() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="text-slate-500 font-medium">Loading task data...</p>
+      <div className="fixed inset-0 z-50 overflow-hidden">
+        <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm" aria-hidden />
+        <div className="relative z-10 flex h-full items-center justify-center p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white px-8 py-6 shadow-2xl">
+            <p className="text-slate-500 font-medium">Loading task data...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-190">
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm" aria-hidden />
+      <div className="relative z-10 flex h-full items-center justify-center p-6">
+        <div className="w-full max-w-190 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
       <div className="space-y-3">
         <h1 className="font-serif text-3xl font-bold tracking-tight text-slate-900">Update Task</h1>
         <p className="w-160 text-md text-slate-500 font-medium">
@@ -241,6 +249,8 @@ function UpdateTaskContent() {
       <p className="mt-5 text-center text-xs font-medium text-slate-400">
         Notifications will be sent to the assigned employee automatically.
       </p>
+        </div>
+      </div>
     </div>
   );
 }

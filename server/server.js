@@ -56,6 +56,8 @@ const corsOptions = {
     return cb(null, allowedOrigins.includes(origin));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 
 const io = new SocketIOServer(server, { cors: corsOptions });

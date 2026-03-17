@@ -66,7 +66,9 @@ export const getTasks = async (req, res) => {
     };
 
     if (req.user.role === "admin") {
-      query.createdBy = req.user.id;
+      if (typeof req.query.assignedTo === "string" && req.query.assignedTo.trim()) {
+        query.assignedTo = req.query.assignedTo.trim();
+      }
     } else {
       query.assignedTo = req.user.id;
     }
@@ -74,6 +76,10 @@ export const getTasks = async (req, res) => {
     const tasks = await Task.find(query)
       .populate("assignedTo", "name email designation")
       .populate("createdBy", "name email")
+      .populate({
+        path: 'comments',
+        populate: { path: 'author', select: 'name' }
+      })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -183,9 +189,7 @@ export const updateTask = async (req, res) => {
 export const getDashboardStats = async (req, res) => {
   try {
     const query = { workspace: req.user.workspace, status: { $ne: "archived" } };
-    if (req.user.role === "admin") {
-      query.createdBy = req.user.id;
-    } else {
+    if (req.user.role !== "admin") {
       query.assignedTo = req.user.id;
     }
 
@@ -215,6 +219,11 @@ export const getArchivedTasks = async (req, res) => {
 
     const tasks = await Task.find(query)
       .populate("assignedTo", "name email designation")
+      .populate("createdBy", "name email")
+      .populate({
+        path: 'comments',
+        populate: { path: 'author', select: 'name' }
+      })
       .sort({ updatedAt: -1 })
       .lean();
 

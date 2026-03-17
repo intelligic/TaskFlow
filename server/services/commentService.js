@@ -1,4 +1,5 @@
 import Comment from "../models/Comment.js";
+import Task from "../models/Task.js";
 
 export const createComment = async ({ taskId, authorId, message, workspace }) => {
   const comment = await Comment.create({
@@ -6,6 +7,11 @@ export const createComment = async ({ taskId, authorId, message, workspace }) =>
     author: authorId,
     message,
     workspace,
+  });
+
+  // Push comment ID into the parent task's comments array
+  await Task.findByIdAndUpdate(taskId, {
+    $push: { comments: comment._id },
   });
 
   await comment.populate("author", "name email role");

@@ -14,7 +14,10 @@ export default function InviteEmployeePage() {
   const [success, setSuccess] = useState("");
 
   return (
-    <div className="mx-auto w-full max-w-180 py-2">
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm" aria-hidden />
+      <div className="relative z-10 flex h-full items-center justify-center p-6">
+        <div className="w-full max-w-180 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
       <Link
         href="/admin/employees"
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
@@ -141,6 +144,8 @@ export default function InviteEmployeePage() {
           The employee will receive an invitation email to set their password
           and complete their profile registration.
         </p>
+      </div>
+        </div>
       </div>
     </div>
   );

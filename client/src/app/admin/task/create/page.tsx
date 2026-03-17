@@ -14,18 +14,14 @@ export default function CreateTaskPage() {
   const [description, setDescription] = useState("");
   const [assignee, setAssignee] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
-    } else {
-      setSelectedTags([...selectedTags, tag]);
-    }
+    setSelectedTag((current) => (current === tag ? null : tag));
   };
 
   useEffect(() => {
@@ -69,14 +65,14 @@ export default function CreateTaskPage() {
         description: description.trim(),
         assignedTo: assignee,
         dueDate: dueDate || undefined,
-        tags: selectedTags,
+        tags: selectedTag ? [selectedTag] : [],
       });
 
       setTitle("");
       setDescription("");
       setAssignee("");
       setDueDate("");
-      setSelectedTags([]);
+      setSelectedTag(null);
       router.push("/admin/dashboard");
     } catch {
       setError("Failed to create task");
@@ -86,7 +82,10 @@ export default function CreateTaskPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-190">
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm" aria-hidden />
+      <div className="relative z-10 flex h-full items-center justify-center p-6">
+        <div className="w-full max-w-190 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
       <div className="space-y-3">
         <h1 className="font-serif text-3xl font-bold tracking-tight text-slate-900">Create New Task</h1>
         <p className="w-160 text-md text-slate-500 font-medium">
@@ -165,22 +164,21 @@ export default function CreateTaskPage() {
                 key={tag}
                 type="button"
                 onClick={() => toggleTag(tag)}
-                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${selectedTags.includes(tag)
-                  ? getTagClasses(tag, "selected")
-                  : getTagClasses(tag, "unselected")
-                  }`}
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${
+                  selectedTag === tag ? getTagClasses(tag, "selected") : getTagClasses(tag, "unselected")
+                }`}
               >
                 <Tag size={12} />
                 {tag}
               </button>
             ))}
-            <button
+            {/* <button
               type="button"
               className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500"
             >
               <Plus size={12} />
               Add New
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -207,6 +205,8 @@ export default function CreateTaskPage() {
       <p className="mt-5 text-center text-xs font-medium text-slate-400">
         Notifications will be sent to the assigned employee automatically.
       </p>
+        </div>
+      </div>
     </div>
   );
 }

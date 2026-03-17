@@ -11,9 +11,10 @@ type Props = {
   task: Task;
   role: 'admin' | 'employee';
   onRefresh?: () => void;
+  commentsRefreshKey?: number;
 };
 
-export default function TaskCard({ task, role, onRefresh }: Props) {
+export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: Props) {
   const router = useRouter();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -38,6 +39,38 @@ export default function TaskCard({ task, role, onRefresh }: Props) {
       loadComments();
     }
   }, [showComments, task._id]);
+
+  useEffect(() => {
+    if (!showComments) return;
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadComments();
+      }
+    }, 15000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadComments();
+      }
+    };
+
+    window.addEventListener('focus', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [showComments, task._id]);
+
+  useEffect(() => {
+    if (!showComments) return;
+    if (typeof commentsRefreshKey === 'number') {
+      loadComments();
+    }
+  }, [commentsRefreshKey, showComments, task._id]);
 
   const handleStatusUpdate = async (newStatus: TaskStatus) => {
     try {
@@ -64,7 +97,10 @@ export default function TaskCard({ task, role, onRefresh }: Props) {
   };
 
   const assigneeName = typeof task.assignedTo === 'object' ? task.assignedTo.name : 'Unknown';
-  const commentCount = Array.isArray(task.comments) ? task.comments.length : 0;
+  
+  // Use the local comments state if it's been loaded, otherwise fall back to task.comments.length
+  const backendCount = Array.isArray(task.comments) ? task.comments.length : 0;
+  const commentCount = comments.length > 0 ? comments.length : backendCount;
 
   return (
     <div className="rounded-lg border-gray-200 bg-white text-black p-4 shadow-sm hover:shadow-md transition-shadow">

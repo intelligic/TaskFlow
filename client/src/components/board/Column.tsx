@@ -1,7 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import type { Task } from "@/lib/api/taskApi";
+import type { Task } from "@/types/task";
 import TaskCard from "./TaskCard";
 
 export default function Column({

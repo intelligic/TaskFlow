@@ -1,14 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getToken, getUserRole, logout } from '@/lib/auth';
+import { logout, logoutSilent } from '@/lib/auth';
+import { getProfile } from '@/lib/api/authApi';
 import { socket } from '@/lib/socket';
-
-const emptySubscribe = () => () => {};
-const getClientSnapshot = () => true;
-const getServerSnapshot = () => false;
 
 export default function ProtectedRoute({
   children,
@@ -19,41 +15,82 @@ export default function ProtectedRoute({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isClient = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
-
-  const token = isClient ? getToken() : null;
-  const userRole = token ? getUserRole(token) : null;
+  const [status, setStatus] = useState<'loading' | 'authorized' | 'forbidden'>('loading');
+  const [userRole, setUserRole] = useState<'admin' | 'employee' | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!isClient) {
-      return;
-    }
+    let cancelled = false;
 
-    if (!token || !userRole) {
-      if (socket.connected) socket.disconnect();
-      router.replace('/login');
-      return;
-    }
+    const load = async () => {
+      try {
+        const profile = await getProfile();
+        if (cancelled) return;
+        const roleFromServer = profile?.role || null;
+        if (!roleFromServer) {
+          if (socket.connected) socket.disconnect();
+          router.replace('/login');
+          return;
+        }
 
-    if (!socket.connected) {
-      socket.connect();
-    }
+        setUserRole(roleFromServer);
+        if (role && roleFromServer !== role) {
+          setStatus('forbidden');
+          return;
+        }
 
-    if (!role || userRole === role) {
-      return;
-    }
+        if (!socket.connected) socket.connect();
+        setStatus('authorized');
+        setIsAuthorized(true);
+      } catch {
+        if (cancelled) return;
+        if (socket.connected) socket.disconnect();
+        router.replace('/login');
+      }
+    };
+
+    load();
 
     return () => {
-      // Optional: keep connection alive unless logging out
-      // socket.disconnect();
+      cancelled = true;
     };
-  }, [isClient, pathname, role, router, token, userRole]);
+  }, [pathname, role, router]);
 
-  if (!isClient || !token || !userRole) {
+  useEffect(() => {
+    if (!isAuthorized) return;
+
+    const IDLE_MS = 30 * 60 * 1000;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const resetIdle = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        logout();
+      }, IDLE_MS);
+    };
+
+    const events: Array<keyof WindowEventMap> = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+    ];
+
+    events.forEach((evt) => window.addEventListener(evt, resetIdle, { passive: true }));
+    resetIdle();
+
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      events.forEach((evt) => window.removeEventListener(evt, resetIdle));
+    };
+  }, [isAuthorized]);
+
+  if (status === 'loading') {
     return <div className="flex h-screen items-center justify-center text-gray-500">Checking access...</div>;
   }
 
-  if (role && userRole !== role) {
+  if (status === 'forbidden') {
     return (
       <div className="flex h-screen items-center justify-center bg-white px-4">
         <div className="w-full max-w-md rounded-lg border bg-white p-6 text-center">

@@ -7,17 +7,17 @@ const TAG_COLOR_MAP: Record<string, { selected: string; unselected: string; badg
     badge: 'border-red-200 bg-red-50 text-red-700',
   },
   Internal: {
-    selected: 'bg-indigo-600 border-indigo-600 text-white shadow-sm scale-105 transition-all',
+    selected: 'bg-blue-600 border-indigo-600 text-white shadow-sm scale-105 transition-all',
     unselected: 'border-indigo-100 bg-indigo-50/60 text-indigo-500 hover:border-indigo-200',
     badge: 'border-indigo-200 bg-indigo-50 text-indigo-700',
   },
   Finance: {
-    selected: 'bg-emerald-600 border-emerald-600 text-white shadow-sm scale-105 transition-all',
+    selected: 'bg-green-600 border-emerald-600 text-white shadow-sm scale-105 transition-all',
     unselected: 'border-emerald-100 bg-emerald-50/60 text-emerald-600 hover:border-emerald-200',
     badge: 'border-emerald-200 bg-emerald-50 text-emerald-700',
   },
   Backend: {
-    selected: 'bg-violet-600 border-violet-600 text-white shadow-sm scale-105 transition-all',
+    selected: 'bg-black border-violet-600 text-white shadow-sm scale-105 transition-all',
     unselected: 'border-violet-100 bg-violet-50/60 text-violet-600 hover:border-violet-200',
     badge: 'border-violet-200 bg-violet-50 text-violet-700',
   },

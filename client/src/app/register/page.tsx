@@ -9,8 +9,7 @@ import { generateCaptcha } from "@/lib/captcha";
 import { registerSchema, RegisterFormData } from "@/lib/auth-schema";
 import { TbRefresh } from "react-icons/tb";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { registerUser } from "@/lib/api/authApi";
-import { getToken, getUserRole, setToken } from "@/lib/auth";
+import { getProfile, registerUser } from "@/lib/api/authApi";
 import { getApiErrorMessage } from "@/lib/api";
 
 export default function RegisterPage() {
@@ -32,20 +31,20 @@ export default function RegisterPage() {
   });
 
   useEffect(() => {
-    const token = getToken();
-    const role = token ? getUserRole(token) : null;
-
-    if (role === "admin") {
-      router.replace("/admin/dashboard");
-      return;
-    }
-
-    if (role === "employee") {
-      router.replace("/employee/dashboard");
-      return;
-    }
-
-    // getToken already cleans up invalid/expired tokens.
+    const load = async () => {
+      try {
+        const profile = await getProfile();
+        const role = profile?.role;
+        if (role === "admin") {
+          router.replace("/admin/dashboard");
+        } else if (role === "employee") {
+          router.replace("/employee/dashboard");
+        }
+      } catch {
+        // Not logged in
+      }
+    };
+    load();
   }, [router]);
 
   useEffect(() => {
@@ -67,22 +66,24 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const res = await registerUser(data.name, data.email, data.password, data.workspaceName);
-
-      if (res?.token) {
-        setToken(res.token);
-
-        const role = res.user?.role;
-        if (role === "admin") {
-          router.replace("/admin/dashboard");
-          return;
-        }
-
-        if (role === "employee") {
-          router.replace("/employee/dashboard");
-          return;
-        }
+      const role = res.user?.role;
+      if (role === "admin") {
+        router.replace("/admin/dashboard");
+        return;
       }
-
+      if (role === "employee") {
+        router.replace("/employee/dashboard");
+        return;
+      }
+      const profile = await getProfile();
+      if (profile?.role === "admin") {
+        router.replace("/admin/dashboard");
+        return;
+      }
+      if (profile?.role === "employee") {
+        router.replace("/employee/dashboard");
+        return;
+      }
       router.replace("/login");
       return;
     } catch (e: unknown) {

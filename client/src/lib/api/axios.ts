@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { getToken, logout } from '@/lib/auth';
+import { logout } from '@/lib/auth';
 
 const resolvedBaseURL =
   process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
@@ -16,22 +16,27 @@ if (!resolvedBaseURL && process.env.NODE_ENV === 'production') {
 export const api = axios.create({
   baseURL: resolvedBaseURL || fallbackBaseURL,
   timeout: 15000,
-});
-
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  withCredentials: true,
 });
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      logout();
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname || '';
+        const isAuthPage =
+          path === '/login' ||
+          path === '/register' ||
+          path === '/set-password' ||
+          path === '/reset-password' ||
+          path === '/employee-verify';
+        if (!isAuthPage) {
+          logout();
+        }
+      } else {
+        logout();
+      }
     }
     return Promise.reject(error);
   },

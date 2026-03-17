@@ -22,6 +22,16 @@ const signToken = (user) => {
   });
 };
 
+const setAuthCookie = (res, token) => {
+  const isProd = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+};
+
 const resolveWorkspaceName = (fallback) => {
   const fromEnv = String(process.env.WORKSPACE_NAME || process.env.COMPANY_NAME || "").trim();
   return fromEnv || fallback || "TaskFlow";
@@ -111,6 +121,7 @@ export const register = async (req, res) => {
     await ensureWorkspaceForUser(user, workspaceName);
 
     const token = signToken(user);
+    setAuthCookie(res, token);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -143,7 +154,7 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail }).select("+password");
     if (!user) {
       console.log("Login failed: User not found", normalizedEmail);
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (user.role === "employee" && user.isVerified === false) {
@@ -156,7 +167,7 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log("Login failed: Password mismatch", normalizedEmail);
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Password incorrect" });
     }
 
     try {
@@ -187,6 +198,7 @@ export const login = async (req, res) => {
     }
 
     const token = signToken(user);
+    setAuthCookie(res, token);
 
     res.json({
       token,
@@ -198,6 +210,20 @@ export const login = async (req, res) => {
       },
     });
   } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const isProd = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "lax",
+    });
+    res.json({ message: "Logged out" });
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 };

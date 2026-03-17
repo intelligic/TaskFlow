@@ -2,7 +2,7 @@
 
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
-import type { Task } from "@/lib/api/taskApi";
+import type { Task } from "@/types/task";
 
 const priorityClasses: Record<string, string> = {
   low: "bg-slate-100 text-slate-700",

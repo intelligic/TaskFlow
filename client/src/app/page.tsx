@@ -2,32 +2,29 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken, getUserRole } from '@/lib/auth';
+import { getProfile } from '@/lib/api/authApi';
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = getToken();
-
-    if (!token) {
-      router.replace('/login');
-      return;
-    }
-
-    const role = getUserRole(token);
-
-    if (role === 'admin') {
-      router.replace('/admin/dashboard');
-      return;
-    }
-
-    if (role === 'employee') {
-      router.replace('/employee/dashboard');
-      return;
-    }
-
-    router.replace('/login');
+    const load = async () => {
+      try {
+        const profile = await getProfile();
+        if (profile?.role === 'admin') {
+          router.replace('/admin/dashboard');
+          return;
+        }
+        if (profile?.role === 'employee') {
+          router.replace('/employee/dashboard');
+          return;
+        }
+        router.replace('/login');
+      } catch {
+        router.replace('/login');
+      }
+    };
+    load();
   }, [router]);
 
   return (

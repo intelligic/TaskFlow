@@ -9,8 +9,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginFormData } from "@/lib/auth-schema";
-import { loginUser } from "@/lib/api/authApi";
-import { getToken, getUserRole, setToken } from "@/lib/auth";
+import { getProfile, loginUser } from "@/lib/api/authApi";
 import { getApiErrorMessage } from "@/lib/api";
 
 export default function LoginPage() {
@@ -30,21 +29,20 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    const token = getToken();
-
-    if (!token) return;
-
-    try {
-      const role = getUserRole(token);
-
-      if (role === "admin") {
-        router.replace("/admin/dashboard");
-      } else if (role === "employee") {
-        router.replace("/employee/dashboard");
+    const load = async () => {
+      try {
+        const profile = await getProfile();
+        const role = profile?.role;
+        if (role === "admin") {
+          router.replace("/admin/dashboard");
+        } else if (role === "employee") {
+          router.replace("/employee/dashboard");
+        }
+      } catch {
+        // Not logged in
       }
-    } catch {
-      // getToken already cleans up invalid/expired tokens.
-    }
+    };
+    load();
   }, [router]);
 
   useEffect(() => {
@@ -66,19 +64,24 @@ export default function LoginPage() {
     try {
       setLoading(true);
       const res = await loginUser(data.email, data.password);
-      const token = res?.token;
       const role = (res as { user?: { role?: unknown } })?.user?.role;
 
-      if (!token) {
+      if (!res) {
         setServerError("Invalid email or password");
         return;
       }
-
-      setToken(token);
-
       if (role === "admin") {
         router.replace("/admin/dashboard");
-      } else if (role === "employee") {
+        return;
+      }
+      if (role === "employee") {
+        router.replace("/employee/dashboard");
+        return;
+      }
+      const profile = await getProfile();
+      if (profile?.role === "admin") {
+        router.replace("/admin/dashboard");
+      } else if (profile?.role === "employee") {
         router.replace("/employee/dashboard");
       } else {
         router.replace("/login");

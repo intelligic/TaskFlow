@@ -30,21 +30,44 @@ export default function NotificationBell() {
     [items],
   );
 
-  const refresh = async () => {
+  const refresh = async (options?: { silent?: boolean }) => {
     try {
       setError(false);
-      setLoading(true);
+      if (!options?.silent) setLoading(true);
       const res = await getNotifications();
       setItems(Array.isArray(res) ? res : []);
     } catch {
       setError(true);
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     refresh();
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refresh({ silent: true });
+      }
+    }, 15000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refresh({ silent: true });
+      }
+    };
+
+    window.addEventListener("focus", handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleVisibility);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   useEffect(() => {
@@ -157,4 +180,3 @@ export default function NotificationBell() {
     </div>
   );
 }
-

@@ -1,5 +1,8 @@
 'use client';
 
+import { Calendar, Tag } from 'lucide-react';
+import { getTagClasses } from '@/lib/task-tags';
+
 type TaskStatus = 'pending' | 'completed' | 'closed';
 
 export default function TaskBubble({
@@ -7,13 +10,30 @@ export default function TaskBubble({
   role,
   onUpdateStatus,
 }: {
-  task: { id: string; text: string; status: TaskStatus };
+  task: { id: string; text: string; status: TaskStatus; dueDate?: string; tags?: string[] };
   role: 'admin' | 'employee';
   onUpdateStatus: (id: string, status: TaskStatus) => void;
 }) {
   return (
     <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
       <p className="whitespace-pre-wrap wrap-break-word text-sm font-medium text-black">{task.text}</p>
+
+      {(task.dueDate || (task.tags && task.tags.length > 0)) && (
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-600">
+          {task.dueDate && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-blue-700">
+              <Calendar size={12} />
+              {new Date(task.dueDate).toLocaleDateString()}
+            </span>
+          )}
+          {task.tags && task.tags.length > 0 && (
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${getTagClasses(task.tags[0], 'badge')}`}>
+              <Tag size={12} />
+              {task.tags[0]}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-2 text-xs">
         {/* Pending */}

@@ -1,5 +1,4 @@
 import { api } from '@/lib/api/axios';
-import { setToken } from '@/lib/auth';
 
 export type LoginResponse = {
   token: string;
@@ -15,9 +14,6 @@ export type RegisterResponse = {
 
 export const loginUser = async (email: string, password: string) => {
   const response = await api.post<LoginResponse>('/auth/login', { email, password });
-  if (response.data?.token) {
-    setToken(response.data.token);
-  }
   return response.data;
 };
 
@@ -37,6 +33,11 @@ export const getProfile = async () => {
     lastActive?: string;
     workspace?: { _id: string; name: string };
     isOnline?: boolean;
+    permissions?: {
+      role?: "admin" | "employee";
+      canAccess?: string[];
+      canManage?: string[];
+    };
   }>('/auth/profile');
   return response.data || null;
 };
