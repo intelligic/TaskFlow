@@ -88,8 +88,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-userSchema.index({ email: 1 }, { unique: true });
-
 userSchema.pre("save", async function setSlug() {
   if (!this.isNew || !this.name) return;
   if (this.slug) return;

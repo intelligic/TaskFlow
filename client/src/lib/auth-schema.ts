@@ -41,3 +41,18 @@ export const loginSchema = z
   });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
+
+/* FORGOT PASSWORD (DIRECT RESET) */
+
+export const forgotPasswordSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;

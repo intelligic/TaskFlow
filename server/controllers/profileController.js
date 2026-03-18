@@ -7,7 +7,7 @@ export const getProfile = async (req, res) => {
     }
 
     const user = await User.findById(req.user.id)
-      .select("_id name email role designation slug lastActive workspace status")
+      .select("_id name email role designation slug lastActive workspace status isOnline")
       .populate("workspace", "name");
 
     if (!user) {

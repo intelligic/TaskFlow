@@ -10,6 +10,7 @@ import NotificationBell from "@/components/layout/NotificationBell";
 import { logout } from "@/lib/auth";
 import { updateStatus } from "@/lib/api/employeeApi";
 import { getProfile } from "@/lib/api/authApi";
+import { getApiErrorMessage } from "@/lib/api";
 import { useEffect, useState } from "react";
 
 export default function EmployeeNavbar() {
@@ -37,6 +38,7 @@ export default function EmployeeNavbar() {
       setIsOnline(newStatus);
     } catch (error) {
       console.error("Failed to update status:", error);
+      alert(getApiErrorMessage(error, 'Failed to update status'));
     } finally {
       setStatusLoading(false);
     }

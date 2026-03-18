@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadData();
 
-    // Socket listeners for real-time updates
+    // Connection is handled by ProtectedRoute; just register listeners.
     socket.on("taskCreated", loadData);
     socket.on("taskUpdated", loadData);
     socket.on("taskDeleted", loadData);
@@ -151,7 +151,7 @@ export default function AdminDashboardPage() {
   }, [currentPage, filteredEmployees]);
 
   const recentTasks = useMemo(() => {
-    return tasks.slice(0, 5);
+    return tasks;
   }, [tasks]);
 
   return (

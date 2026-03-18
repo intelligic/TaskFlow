@@ -6,7 +6,7 @@ import { socket } from '@/lib/socket';
 
 export function useSocket() {
   useEffect(() => {
-    socket.connect();
+    // Connection is managed centrally by `ProtectedRoute` to avoid duplicate sockets.
 
     const onTaskUpdated = (payload: unknown) => {
       console.log('taskUpdated', payload);
@@ -28,7 +28,7 @@ export function useSocket() {
       socket.off('taskUpdated', onTaskUpdated);
       socket.off('newComment', onNewComment);
       socket.off('fileUploaded', onFileUploaded);
-      socket.disconnect();
+      // Do not disconnect here; keep global socket alive for the app lifecycle.
     };
   }, []);
 

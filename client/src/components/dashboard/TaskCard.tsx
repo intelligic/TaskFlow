@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Task, TaskComment, TaskStatus } from '@/types/task';
 import { updateTaskStatus, getTaskComments, createTaskComment } from '@/lib/api/taskApi';
+import { getApiErrorMessage } from '@/lib/api';
 import { MessageSquare, Send, Pencil, Tag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTagClasses } from '@/lib/task-tags';
@@ -78,7 +79,8 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
       await updateTaskStatus(task._id, newStatus);
       if (onRefresh) onRefresh();
     } catch (err) {
-      alert('Failed to update status');
+      console.error('Failed to update status', err);
+      alert(getApiErrorMessage(err, 'Failed to update status'));
     } finally {
       setIsUpdating(false);
     }
@@ -140,7 +142,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             {commentCount} Comments
           </button>
           
-          {role === 'admin' && (
+          {role === 'admin' && task.status !== 'archived' && (
             <button 
               onClick={() => router.push(`/admin/task/update?id=${task._id}`)}
               className="flex items-center gap-1 text-[14px] font-bold text-green-600 transition-colors"

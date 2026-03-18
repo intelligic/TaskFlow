@@ -18,7 +18,8 @@ export const createNotification = async ({
     isRead: false,
   });
 
-  emitRealtime("notificationCreated", notification);
+  const room = workspace ? `workspace:${workspace}` : undefined;
+  emitRealtime("notificationCreated", notification, room);
   return notification;
 };
 
@@ -42,6 +43,9 @@ export const createNotificationsForAdmins = async ({
     })),
   );
 
-  notifications.forEach((n) => emitRealtime("notificationCreated", n));
+  notifications.forEach((n) => {
+    const room = n.workspace ? `workspace:${n.workspace}` : undefined;
+    emitRealtime("notificationCreated", n, room);
+  });
   return notifications;
 };

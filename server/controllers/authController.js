@@ -24,6 +24,8 @@ const signToken = (user) => {
 
 const setAuthCookie = (res, token) => {
   const isProd = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+  // Use SameSite=Lax to ensure cookies work in development (localhost with different ports)
+  // and set `secure` only in production where HTTPS is used.
   res.cookie("token", token, {
     httpOnly: true,
     secure: isProd,
@@ -474,6 +476,40 @@ export const resetPassword = async (req, res) => {
     await user.save();
 
     res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const resetPasswordWithEmail = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body || {};
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({ message: "Valid email is required" });
+    }
+
+    if (!password || typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    user.isVerified = true;
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

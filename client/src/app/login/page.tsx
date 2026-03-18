@@ -28,6 +28,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -96,92 +97,95 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="w-105 rounded-xl bg-white p-8 shadow-md"
-      >
+      <div className="w-105 rounded-xl bg-white p-8 shadow-md">
         <h2 className="mb-6 font-serif text-2xl font-semibold text-black">
           Login
         </h2>
 
-        <div className="flex flex-col gap-3">
-          <div>
-            <input
-              type="email"
-              placeholder="Email"
-              autoComplete="email"
-              {...register("email")}
-              className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            />
-            {errors.email && (
-              <p className="mb-2 text-sm text-red-500">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              autoComplete="current-password"
-              {...register("password")}
-              className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-            </button>
-            {errors.password && (
-              <p className="mb-2 text-sm text-red-500">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-
-          <div className="mb-3 flex items-center gap-3">
-            <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">
-              {captcha}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex flex-col gap-3">
+            <div>
+              <input
+                type="email"
+                placeholder="Email"
+                autoComplete="email"
+                {...register("email")}
+                className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+              {errors.email && (
+                <p className="mb-2 text-sm text-red-500">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={refreshCaptcha}
-              className="text-sm text-blue-600"
-            >
-              <TbRefresh className="text-[25px]" />
-            </button>
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                autoComplete="current-password"
+                {...register("password")}
+                className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+              {errors.password && (
+                <p className="mb-2 text-sm text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-3 flex items-center gap-3">
+              <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">
+                {captcha}
+              </div>
+              <button
+                type="button"
+                onClick={refreshCaptcha}
+                className="text-sm text-blue-600"
+              >
+                <TbRefresh className="text-[25px]" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        <input
-          type="text"
-          placeholder="Enter captcha"
-          autoComplete="off"
-          {...register("captchaInput")}
-          className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-        />
-        {errors.captchaInput && (
-          <p className="mb-2 text-sm text-red-500">
-            {errors.captchaInput.message}
-          </p>
-        )}
+          <input
+            type="text"
+            placeholder="Enter captcha"
+            autoComplete="off"
+            {...register("captchaInput")}
+            className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          />
+          {errors.captchaInput && (
+            <p className="mb-2 text-sm text-red-500">
+              {errors.captchaInput.message}
+            </p>
+          )}
 
-        <input type="hidden" {...register("captchaGenerated")} />
+          <input type="hidden" {...register("captchaGenerated")} />
 
-        {serverError && (
-          <p className="mt-3 text-sm text-red-600">{serverError}</p>
-        )}
+          {serverError && (
+            <p className="mt-3 text-sm text-red-600">{serverError}</p>
+          )}
 
-        <button
-          disabled={loading}
-          className="mt-3 w-full rounded bg-blue-600 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
+          <button
+            disabled={loading}
+            className="mt-3 w-full rounded bg-blue-600 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <Link href="/forgot-password" className="mt-3 inline-block text-sm text-blue-600">
+          Forgot password?
+        </Link>
 
         <p className="mt-4 text-center font-serif text-sm text-gray-700">
           New user?
@@ -189,7 +193,7 @@ export default function LoginPage() {
             Register
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 }

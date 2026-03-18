@@ -23,3 +23,13 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Ensure the app root can stretch so flex layouts can fill available height */
+html, body, #__next {
+  height: 100%;
+}
+
+/* Make sure #__next children can use full height when needed */
+#__next > div {
+  min-height: 100%;
+}

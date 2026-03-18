@@ -5,6 +5,7 @@ import EmployeeList from "@/components/dashboard/EmployeeList";
 import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
 import { getApiErrorMessage } from "@/lib/api";
 import { FiSearch } from "react-icons/fi";
+import { socket } from "@/lib/socket";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -31,6 +32,13 @@ export default function AdminEmployeesPage() {
 
   useEffect(() => {
     refresh();
+
+    // `ProtectedRoute` manages socket connection; only register listener here.
+    socket.on("userStatusUpdated", refresh);
+
+    return () => {
+      socket.off("userStatusUpdated", refresh);
+    };
   }, []);
 
   const filteredEmployees = useMemo(() => {

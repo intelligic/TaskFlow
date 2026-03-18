@@ -39,7 +39,7 @@ export default function EmployeeDashboardPage() {
   useEffect(() => {
     loadData();
 
-    // Socket listeners for real-time updates
+    // Connection is handled by ProtectedRoute; just register listeners.
     socket.on("taskCreated", loadData);
     socket.on("taskUpdated", loadData);
     socket.on("taskDeleted", loadData);
@@ -93,7 +93,7 @@ export default function EmployeeDashboardPage() {
   }, [searchTerm, tasks]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 overflow-y-auto pb-10">
+    <div className="flex flex-col gap-6 flex-1 min-h-0 pb-10">
       <div className="w-full">
         <h2 className="text-lg font-bold text-black tracking-wide font-serif">
           Employee Dashboard
@@ -128,12 +128,12 @@ export default function EmployeeDashboardPage() {
         />
       </div>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+      <section className="flex flex-col gap-4 flex-1 min-h-0">
+        <div className="flex items-center justify-between bg-gray-200 p-3">
           <h3 className="text-md font-bold text-slate-800 uppercase tracking-wider">
             My Task Feed
           </h3>
-          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200">
+          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-black rounded-2xl">
             <input
               type="text"
               value={searchTerm}
@@ -145,7 +145,7 @@ export default function EmployeeDashboardPage() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex-1 min-h-0 space-y-4 overflow-auto pr-2">
           {loading ? (
             <p className="text-sm font-semibold text-gray-600">Loading...</p>
           ) : filteredTasks.length === 0 ? (

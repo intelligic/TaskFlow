@@ -105,8 +105,7 @@ export default function AdminChatPage({ params }: Props) {
   useEffect(() => {
     if (!employeeId) return;
 
-    socket.connect();
-
+    // Connection handled by ProtectedRoute; only register listener.
     const handleNewComment = () => {
       if (showTasks) {
         loadTasks();
@@ -120,6 +119,34 @@ export default function AdminChatPage({ params }: Props) {
       socket.off("newComment", handleNewComment);
     };
   }, [employeeId, showTasks, loadTasks]);
+
+  useEffect(() => {
+    if (!employeeId) return;
+
+    // Connection handled by ProtectedRoute; only register listener.
+    const handleStatusUpdated = (updated: {
+      _id?: string;
+      name?: string;
+      designation?: string;
+      lastActive?: string;
+      isOnline?: boolean;
+    }) => {
+      if (!updated?._id || String(updated._id) !== String(employeeId)) return;
+      setEmployee((prev) => ({
+        ...prev,
+        name: updated.name || prev.name,
+        designation: updated.designation ?? prev.designation,
+        lastActive: updated.lastActive || prev.lastActive,
+        isOnline: Boolean(updated.isOnline),
+      }));
+    };
+
+    socket.on("userStatusUpdated", handleStatusUpdated);
+
+    return () => {
+      socket.off("userStatusUpdated", handleStatusUpdated);
+    };
+  }, [employeeId]);
 
   const filteredTasks = useMemo(() => {
     const query = taskSearchTerm.trim().toLowerCase();

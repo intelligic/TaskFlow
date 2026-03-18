@@ -45,7 +45,9 @@ export const addComment = async (req, res) => {
       workspace: task.workspace,
     });
 
-    emitRealtime("newComment", comment);
+    const room = comment.workspace ? `workspace:${comment.workspace}` : undefined;
+    emitRealtime("newComment", comment, room);
+    console.log("[addComment] emitted newComment", { room, taskId });
 
     const taskTitle = task?.title || "a task";
 

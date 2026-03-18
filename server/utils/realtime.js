@@ -1,5 +1,9 @@
-export const emitRealtime = (eventName, payload) => {
+export const emitRealtime = (eventName, payload, room) => {
   if (!global.io) return;
-  global.io.emit(eventName, payload);
-  console.log("Realtime event emitted");
+  if (room) {
+    global.io.to(room).emit(eventName, payload);
+  } else {
+    global.io.emit(eventName, payload);
+  }
+  console.log("Realtime event emitted", { eventName, room: room || 'broadcast' });
 };

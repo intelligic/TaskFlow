@@ -7,6 +7,8 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { Server as SocketIOServer } from "socket.io";
+import jwt from "jsonwebtoken";
+import User from "./models/User.js";
 
 import env from "./config/env.js";
 import connectDB from "./config/db.js";
@@ -63,8 +65,44 @@ const corsOptions = {
 const io = new SocketIOServer(server, { cors: corsOptions });
 global.io = io;
 
+// Attempt to authenticate socket connections using the auth cookie (if present).
+io.use(async (socket, next) => {
+  try {
+    const cookieHeader = socket.handshake.headers.cookie || "";
+    const parts = cookieHeader.split(";").map((p) => p.trim());
+    const cookies = {};
+    parts.forEach((part) => {
+      const [k, ...rest] = part.split("=");
+      if (!k) return;
+      cookies[k.trim()] = decodeURIComponent(rest.join("=") || "");
+    });
+    const token = cookies.token;
+    if (!token) return next();
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || typeof decoded !== "object" || !decoded.id) return next();
+
+    const dbUser = await User.findById(decoded.id).select("_id workspace role");
+    if (!dbUser) return next();
+
+    // Attach user info to socket and join workspace room
+    socket.data.userId = String(dbUser._id);
+    if (dbUser.workspace) {
+      const room = `workspace:${String(dbUser.workspace)}`;
+      socket.join(room);
+      socket.data.workspace = String(dbUser.workspace);
+    }
+    return next();
+  } catch (err) {
+    // Don't prevent connections if cookie is missing or invalid; proceed unauthenticated
+    return next();
+  }
+});
+
 io.on("connection", (socket) => {
-  logger.info("Socket connected");
+  logger.info("Socket connected", { id: socket.id, headers: socket.handshake.headers });
+  console.log('[socket] handshake cookies:', socket.handshake.headers.cookie);
+  console.log('[socket] joined rooms:', Array.from(socket.rooms || []));
   socket.on("disconnect", () => {
     logger.info("Socket disconnected");
   });

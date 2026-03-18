@@ -61,3 +61,12 @@ export const setEmployeePassword = async (token: string, password: string, name?
   });
   return response.data;
 };
+
+export const resetPasswordWithEmail = async (email: string, password: string, confirmPassword: string) => {
+  const response = await api.post<{ message: string }>("/auth/forgot-password-direct", {
+    email,
+    password,
+    confirmPassword,
+  });
+  return response.data;
+};

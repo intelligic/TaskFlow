@@ -47,7 +47,11 @@ export const createTask = async (req, res) => {
       description: `Task "${title}" created and assigned`,
     });
 
-    emitRealtime("taskCreated", task);
+    {
+      const room = task.workspace ? `workspace:${String(task.workspace)}` : undefined;
+      emitRealtime("taskCreated", task, room);
+      console.log("[createTask] emitted taskCreated", { room });
+    }
     res.status(201).json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -130,12 +134,21 @@ export const updateTaskStatus = async (req, res) => {
 
     if (userRole === "employee") {
       if (currentStatus === "pending" && status === "completed") allowed = true;
-      if (currentStatus === "closed" && status === "archived") allowed = true;
+      // Allow employees to archive a task that is either closed or completed
+      // (some workflows mark completed tasks before admin closes them).
+      if ((currentStatus === "closed" || currentStatus === "completed") && status === "archived") allowed = true;
     } else if (userRole === "admin") {
       if (currentStatus === "completed" && (status === "closed" || status === "pending")) allowed = true;
     }
 
     if (!allowed) {
+      console.log("[updateTaskStatus] forbidden transition", {
+        userId: req.user.id,
+        role: req.user.role,
+        taskId: task._id,
+        currentStatus,
+        attemptedStatus: status,
+      });
       return res.status(403).json({ message: "Status transition not allowed for your role" });
     }
 
@@ -149,7 +162,11 @@ export const updateTaskStatus = async (req, res) => {
       targetId: task._id,
       description: `Task status moved to ${status}`,
     });
-    emitRealtime("taskUpdated", task);
+    {
+      const room = task.workspace ? `workspace:${String(task.workspace)}` : undefined;
+      emitRealtime("taskUpdated", task, room);
+      console.log("[updateTaskStatus] emitted taskUpdated", { room, status: task.status });
+    }
     res.json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -179,7 +196,11 @@ export const updateTask = async (req, res) => {
       description: `Task "${task.title}" updated by admin`,
     });
 
-    emitRealtime("taskUpdated", task);
+    {
+      const room = task.workspace ? `workspace:${String(task.workspace)}` : undefined;
+      emitRealtime("taskUpdated", task, room);
+      console.log("[updateTask] emitted taskUpdated", { room });
+    }
     res.json(task);
   } catch (error) {
     res.status(500).json({ message: error.message });
