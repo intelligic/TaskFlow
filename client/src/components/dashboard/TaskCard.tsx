@@ -134,7 +134,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
   return (
     <div className="rounded-lg border-gray-200 bg-white text-black p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
-        <div>
+        <div className='w-[88%]'>
           <h4 className="text-[16px] font-bold text-slate-900">{task.title}</h4>
           {task.description && (
             <div
@@ -180,7 +180,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             </div>
           )}
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col items-end gap-2 w-[12%]">
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider 
             ${task.status === 'pending' ? 'bg-orange-100 text-orange-600' : ''}
             ${task.status === 'completed' ? 'bg-blue-100 text-blue-600' : ''}
@@ -191,7 +191,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
           </span>
           <button 
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:underline"
+            className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:underline"
           >
             <MessageSquare size={14} />
             {commentCount} Comments

@@ -14,6 +14,9 @@ export default function TaskBubble({
   role: 'admin' | 'employee';
   onUpdateStatus: (id: string, status: TaskStatus) => void;
 }) {
+  const isPending = task.status === 'pending';
+  const isCompleted = task.status === 'completed';
+  const isClosed = task.status === 'closed';
   return (
     <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
       <p className="whitespace-pre-wrap wrap-break-word text-sm font-medium text-black">{task.text}</p>
@@ -38,11 +41,14 @@ export default function TaskBubble({
       <div className="flex items-center gap-2 text-xs">
         {/* Pending */}
         <button
-          disabled
+          onClick={() => role === 'admin' && onUpdateStatus(task.id, 'pending')}
+          disabled={!(role === 'admin' && !isPending)}
           className={`rounded px-3 py-1 text-[14px] ${
-            task.status === 'pending'
+            isPending
               ? 'bg-red-600 text-white'
-              : 'bg-red-100 text-red-400 hover:bg-red-200 cursor-not-allowed'
+              : role === 'admin'
+              ? 'bg-red-100 text-red-400 hover:bg-red-200'
+              : 'bg-red-100 text-red-400 cursor-not-allowed opacity-70'
           }`}
         >
           Pending
@@ -51,11 +57,11 @@ export default function TaskBubble({
         {/* Complete (Employee action) */}
         <button
           onClick={() => role === 'employee' && onUpdateStatus(task.id, 'completed')}
-          disabled={!(role === 'employee' && task.status === 'pending')}
+          disabled={!(role === 'employee' && isPending)}
           className={`rounded px-3 py-1 text-[14px] ${
-            task.status === 'completed'
+            isCompleted
               ? 'bg-blue-600 text-white'
-              : role === 'employee' && task.status === 'pending'
+              : role === 'employee' && isPending
               ? 'bg-blue-100 text-blue-400 hover:bg-blue-200'
               : 'bg-blue-100 text-blue-400 cursor-not-allowed opacity-70'
           }`}
@@ -66,11 +72,11 @@ export default function TaskBubble({
         {/* Close (Admin action) */}
         <button
           onClick={() => role === 'admin' && onUpdateStatus(task.id, 'closed')}
-          disabled={!(role === 'admin' && task.status === 'completed')}
+          disabled={!(role === 'admin' && isCompleted)}
           className={`rounded px-3 py-1 text-[14px] ${
-            task.status === 'closed'
+            isClosed
               ? 'bg-green-600 text-white'
-              : role === 'admin' && task.status === 'completed'
+              : role === 'admin' && isCompleted
               ? 'bg-green-100 text-green-400 hover:bg-green-200'
               : 'bg-green-100 text-green-400 cursor-not-allowed opacity-70'
           }`}

@@ -83,7 +83,7 @@ export default function AdminEmployeesPage() {
             </p>
           </div>
 
-          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200">
+          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200 rounded-xl">
             <input
               type="text"
               value={searchTerm}
@@ -117,7 +117,7 @@ export default function AdminEmployeesPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 border rounded-lg bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between">
         <p className="text-black text-[14px] font-bold">
           Showing {startItem}-{endItem} of {filteredEmployees.length} employees
         </p>

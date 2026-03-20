@@ -22,6 +22,10 @@ function UpdateTaskContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const today = new Date();
+  const minDueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+    today.getDate(),
+  ).padStart(2, '0')}`;
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -86,6 +90,10 @@ function UpdateTaskContent() {
     if (!taskId) return;
     if (!title.trim() || !assignee) {
       setError("Title and Assignee are required");
+      return;
+    }
+    if (dueDate && dueDate < minDueDate) {
+      setError("Due date cannot be in the past");
       return;
     }
 
@@ -192,6 +200,7 @@ function UpdateTaskContent() {
                 className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
+                min={minDueDate}
               />
               <Calendar size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
             </div>
@@ -216,13 +225,13 @@ function UpdateTaskContent() {
                 {tag}
               </button>
             ))}
-            <button
+            {/* <button
               type="button"
               className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-200 transition-colors"
             >
               <Plus size={12} />
               Add New
-            </button>
+            </button> */}
           </div>
         </div>
 

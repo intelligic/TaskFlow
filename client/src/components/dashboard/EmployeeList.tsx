@@ -49,7 +49,7 @@ export default function EmployeeList({ data }: EmployeeListProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm ml-3">
             <span
               className={`rounded px-3 py-1 text-xs ${
                 emp.status === "Active"

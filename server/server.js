@@ -100,9 +100,7 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  logger.info("Socket connected", { id: socket.id, headers: socket.handshake.headers });
-  console.log('[socket] handshake cookies:', socket.handshake.headers.cookie);
-  console.log('[socket] joined rooms:', Array.from(socket.rooms || []));
+  logger.info("Socket connected", { id: socket.id });
   socket.on("disconnect", () => {
     logger.info("Socket disconnected");
   });
