@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Task, TaskComment, TaskStatus } from '@/types/task';
 import { updateTaskStatus, getTaskComments, createTaskComment } from '@/lib/api/taskApi';
 import { getApiErrorMessage } from '@/lib/api';
@@ -22,6 +22,9 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [canExpandDescription, setCanExpandDescription] = useState(false);
+  const descriptionRef = useRef<HTMLParagraphElement | null>(null);
 
   const loadComments = async () => {
     try {
@@ -73,6 +76,30 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     }
   }, [commentsRefreshKey, showComments, task._id]);
 
+  const measureDescription = () => {
+    if (!descriptionRef.current) return;
+    const el = descriptionRef.current;
+    const hadClamp = el.classList.contains('line-clamp-2');
+    if (!hadClamp) {
+      el.classList.add('line-clamp-2');
+    }
+    const isOverflowing = el.scrollHeight > el.clientHeight + 1;
+    setCanExpandDescription(isOverflowing);
+    if (!hadClamp && isDescriptionExpanded) {
+      el.classList.remove('line-clamp-2');
+    }
+  };
+
+  useLayoutEffect(() => {
+    measureDescription();
+  }, [task.description]);
+
+  useEffect(() => {
+    const handleResize = () => measureDescription();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleStatusUpdate = async (newStatus: TaskStatus) => {
     try {
       setIsUpdating(true);
@@ -109,7 +136,35 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
       <div className="flex items-start justify-between">
         <div>
           <h4 className="text-[16px] font-bold text-slate-900">{task.title}</h4>
-          <p className="mt-1 text-[14px] text-slate-500 line-clamp-2">{task.description}</p>
+          {task.description && (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsDescriptionExpanded((current) => !current)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setIsDescriptionExpanded((current) => !current);
+                }
+              }}
+              className="mt-1 cursor-pointer"
+              title={isDescriptionExpanded ? 'Click to collapse' : 'Click to expand'}
+            >
+              <p
+                ref={descriptionRef}
+                className={`text-[14px] text-slate-500 ${
+                  isDescriptionExpanded ? '' : 'line-clamp-2'
+                }`}
+              >
+                {task.description}
+              </p>
+              {canExpandDescription && (
+                <span className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wide text-blue-600">
+                  {isDescriptionExpanded ? 'Show less' : 'Read more'}
+                </span>
+              )}
+            </div>
+          )}
           <div className="mt-2 flex items-center gap-3 text-xs font-semibold text-slate-400">
             <span className='font-semibold tracking-wider text-[12px] text-slate-600'>Assigned to: <span className="text-slate-900 font-bold tracking-wider text-[13px]">{assigneeName}</span></span>
             {task.dueDate && <span className="text-[12px] font-semibold tracking-wider text-slate-600">Due: <span className="text-slate-900 font-bold tracking-wider text-[13px]">{new Date(task.dueDate).toLocaleDateString()}</span></span>}

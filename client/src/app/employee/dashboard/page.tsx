@@ -93,7 +93,7 @@ export default function EmployeeDashboardPage() {
   }, [searchTerm, tasks]);
 
   return (
-    <div className="flex flex-col gap-6 flex-1 min-h-0 pb-10">
+    <div className="flex h-full min-h-0 flex-col gap-6 pb-10">
       <div className="w-full">
         <h2 className="text-lg font-bold text-black tracking-wide font-serif">
           Employee Dashboard
@@ -128,7 +128,7 @@ export default function EmployeeDashboardPage() {
         />
       </div>
 
-      <section className="flex flex-col gap-4 flex-1 min-h-0">
+      <section className="flex flex-1 min-h-0 flex-col gap-4">
         <div className="flex items-center justify-between bg-gray-200 p-3">
           <h3 className="text-md font-bold text-slate-800 uppercase tracking-wider">
             My Task Feed
@@ -145,7 +145,7 @@ export default function EmployeeDashboardPage() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 space-y-4 overflow-auto pr-2">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-2">
           {loading ? (
             <p className="text-sm font-semibold text-gray-600">Loading...</p>
           ) : filteredTasks.length === 0 ? (

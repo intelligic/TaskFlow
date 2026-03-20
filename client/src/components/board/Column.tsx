@@ -26,7 +26,7 @@ export default function Column({
 
       <div
         ref={setNodeRef}
-        className={`min-h-[180px] flex-1 space-y-3 p-3 transition-colors ${
+        className={`min-h-45 flex-1 space-y-3 p-3 transition-colors ${
           isOver ? "bg-blue-50" : "bg-white"
         }`}
       >

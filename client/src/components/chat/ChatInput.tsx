@@ -27,6 +27,10 @@ export default function ChatInput({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const today = new Date();
+  const minDueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+    today.getDate(),
+  ).padStart(2, '0')}`;
 
   // Close pickers when clicking outside
   useEffect(() => {
@@ -92,6 +96,10 @@ export default function ChatInput({
   const handleSend = () => {
     const message = text.trim();
     if (!message && selectedFiles.length === 0) return;
+
+    if (dueDate && dueDate < minDueDate) {
+      setDueDate('');
+    }
 
     onSend(message, selectedFiles, dueDate || undefined, selectedTag ? [selectedTag] : undefined);
     setText('');
@@ -191,7 +199,7 @@ export default function ChatInput({
       {(showDatePicker || showTagPicker) && (
         <div 
           ref={pickerRef}
-          className="absolute bg-black right-0 z-[100] mb-4 w-80 origin-bottom-right animate-in fade-in slide-in-from-bottom-150 zoom-in-95 duration-300"
+          className="absolute bg-black right-0 z-100 mb-4 w-80 origin-bottom-right animate-in fade-in slide-in-from-bottom-150 zoom-in-95 duration-300"
         >
           <div className="rounded-3xl border-2 border-blue-500 bg-white p-6 shadow-[0_25px_60px_-15px_rgba(59,130,246,0.5)] ring-1 ring-black/5">
             {showDatePicker && (
@@ -212,6 +220,7 @@ export default function ChatInput({
                     setDueDate(e.target.value);
                     if (e.target.value) setShowDatePicker(false);
                   }}
+                  min={minDueDate}
                   className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
                 />
               </div>
@@ -275,7 +284,7 @@ export default function ChatInput({
           {selectedFiles.map((file, i) => (
             <div key={i} className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 shadow-sm">
               <Paperclip size={13} className="text-slate-400" />
-              <span className="max-w-[100px] truncate text-[11px] font-bold text-slate-600">{file.name}</span>
+              <span className="max-w-25 truncate text-[11px] font-bold text-slate-600">{file.name}</span>
               <button onClick={() => removeFile(i)} className="rounded-full hover:bg-red-100 transition-colors">
                 <X size={13} className="text-slate-300 hover:text-red-500" />
               </button>
@@ -317,7 +326,7 @@ export default function ChatInput({
       )}
 
       {/* Main Bar (Premium Ultra Compact Design) */}
-      <div className="group relative flex items-center gap-2 rounded-[24px] border border-slate-200 bg-[#F9FAFB] p-2 pr-2.5 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/5 transition-all duration-300 shadow-sm hover:shadow-md">
+      <div className="group relative flex items-center gap-2 rounded-3xl border border-slate-200 bg-[#F9FAFB] p-2 pr-2.5 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/5 transition-all duration-300 shadow-sm hover:shadow-md">
         <button
           type="button"
           onClick={triggerFilePicker}
@@ -339,7 +348,6 @@ export default function ChatInput({
           type="file"
           className="hidden"
           accept="audio/*"
-          capture="microphone"
           onChange={handleAudioPick}
         />
 
