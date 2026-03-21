@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute role="admin">
-      <div className="flex h-screen flex-col overflow-hidden bg-white">
+      <div className="flex h-dvh flex-col overflow-hidden bg-slate-50">
         <AdminNavbar />
         <main className="flex-1 overflow-y-auto px-14 pt-10">{children}</main>
         <Footer />

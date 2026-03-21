@@ -187,16 +187,16 @@ export default function AdminChatPage({ params }: Props) {
 
   return (
     <div className="flex h-[calc(100vh-9rem)] min-h-0 flex-col gap-6 overflow-visible pb-2">
-      <div className="flex items-center justify-between rounded-lg bg-white">
+      <div className="flex items-center justify-between rounded-lg">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center text-[22px] justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
             {getInitials(employee.name)}
           </div>
           <div>
-            <h2 className="text-lg font-bold text-black">
+            <h2 className="text-2xl font-extrabold text-slate-800 tracking-wide font-heading">
               Chat with {employee.name}
             </h2>
-            <p className="text-[12px] font-semibold tracking-wide text-gray-500">
+            <p className="text-sm font-semibold font-sans text-slate-500 tracking-wide">
               {employee.designation || "Employee"}
               <span className="mx-2">|</span>
               <span
@@ -227,16 +227,19 @@ export default function AdminChatPage({ params }: Props) {
       </div>
 
       {!showTasks && (
-        <div className="flex items-center justify-end">
-          <div className="relative flex items-center gap-2 outline-none focus-within:ring-1 pr-3 focus-within:ring-blue-500 border border-slate-200 rounded-md bg-white">
+        <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
+          <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
+            Tasks assigned to {employee.name}
+          </h3>
+          <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
             <input
               type="text"
-              value={chatSearchTerm}
-              onChange={(e) => setChatSearchTerm(e.target.value)}
-              placeholder="Search chat by title, description, date, tag..."
-              className="w-72 px-3 py-1.5 text-[12px] text-slate-700 outline-none rounded-md"
+              value={taskSearchTerm}
+              onChange={(e) => setTaskSearchTerm(e.target.value)}
+              placeholder="Search tasks, comments..."
+              className="w-56 md:w-72 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
             />
-            <FiSearch className="text-[16px] text-black" />
+            <FiSearch className="text-[16px] text-slate-500" />
           </div>
         </div>
       )}
@@ -244,19 +247,19 @@ export default function AdminChatPage({ params }: Props) {
       {showTasks ? (
         /* Tasks with Comments View */
         <div className="min-h-0 flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="flex items-center justify-between flex-none">
-            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+          <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
+            <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
               Tasks assigned to {employee.name}
             </h3>
-            <div className="relative flex items-center gap-2 outline-none focus-within:ring-1 pr-3 focus-within:ring-blue-500 border border-slate-200 rounded-md bg-white">
+            <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
               <input
                 type="text"
                 value={taskSearchTerm}
                 onChange={(e) => setTaskSearchTerm(e.target.value)}
                 placeholder="Search tasks, comments..."
-                className="w-64 px-3 py-1.5 text-[12px] text-slate-700 outline-none rounded-md"
+                className="w-56 md:w-72 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
               />
-              <FiSearch className="text-[16px] text-black" />
+              <FiSearch className="text-[16px] text-slate-500" />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
@@ -265,8 +268,36 @@ export default function AdminChatPage({ params }: Props) {
                 Loading tasks...
               </div>
             ) : tasks.length === 0 ? (
-              <div className="rounded-lg border bg-white px-4 py-8 text-center text-sm text-slate-400 font-medium italic">
-                No tasks assigned to this employee.
+              // <div className="rounded-lg border bg-white px-4 py-8 text-center text-sm text-slate-400 font-medium italic">
+              //   No tasks assigned to this employee.
+              // </div>
+
+              <div className="flex flex-1 items-center justify-center py-10">
+                <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
+                  <div className="w-130 mx-auto">
+                    <img
+                      src="/NoTaskImg.webp"
+                      className="h-80 w-full object-cover"
+                      alt="NO Task Image"
+                    />
+                  </div>
+                  <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
+                    <h4 className="text-3xl font-extrabold text-slate-800">
+                       No tasks assigned to this employee.
+                    </h4>
+                    <p className="text-[16px] text-slate-500 text-center">
+                      You currently have no tasks assigned to you.
+                      <br />
+                      Enjoy your productive day!
+                    </p>
+                    <button
+                      onClick={loadTasks}
+                      className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : filteredTasks.length === 0 ? (
               <div className="rounded-lg border bg-white px-4 py-8 text-center text-sm text-slate-400 font-medium italic">

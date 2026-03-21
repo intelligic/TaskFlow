@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Calendar, Tag } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { getTagClasses } from '@/lib/task-tags';
 
 type TaskStatus = 'pending' | 'completed' | 'closed';
@@ -15,6 +16,7 @@ export default function TaskBubble({
     id: string;
     text: string;
     status: TaskStatus;
+    description?: string;
     dueDate?: string;
     tags?: string[];
     attachments?: {
@@ -27,9 +29,14 @@ export default function TaskBubble({
   role: 'admin' | 'employee';
   onUpdateStatus: (id: string, status: TaskStatus) => void;
 }) {
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const isPending = task.status === 'pending';
   const isCompleted = task.status === 'completed';
   const isClosed = task.status === 'closed';
+  const hasLongDescription = useMemo(() => {
+    const text = task.description || '';
+    return text.trim().length > 140;
+  }, [task.description]);
 
   const resolveAssetUrl = (url: string) => {
     if (!url) return url;
@@ -45,7 +52,23 @@ export default function TaskBubble({
   };
   return (
     <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
-      <p className="whitespace-pre-wrap wrap-break-word text-sm font-medium text-black">{task.text}</p>
+      <p className="whitespace-pre-wrap wrap-break-word text-sm font-bold text-black">{task.text}</p>
+      {task.description && task.description.trim() !== "" && (
+        <div>
+          <p className={`text-[13px] text-slate-500 ${isDescriptionExpanded ? "" : "line-clamp-2"}`}>
+            {task.description}
+          </p>
+          {hasLongDescription && (
+            <button
+              type="button"
+              onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+              className="mt-1 text-[10px] font-bold uppercase tracking-wide text-blue-600"
+            >
+              {isDescriptionExpanded ? "Show less" : "Read more"}
+            </button>
+          )}
+        </div>
+      )}
 
       {task.attachments && task.attachments.length > 0 && (
         <div className="space-y-2">
@@ -113,12 +136,12 @@ export default function TaskBubble({
         </div>
       )}
 
-      <div className="flex items-center gap-2 text-xs">
+      <div className="flex items-center gap-5 text-[12px]">
         {/* Pending */}
         <button
           onClick={() => role === 'admin' && onUpdateStatus(task.id, 'pending')}
           disabled={!(role === 'admin' && !isPending)}
-          className={`rounded px-3 py-1 text-[14px] ${
+          className={`rounded px-5 py-1 text-[14px] ${
             isPending
               ? 'bg-red-600 text-white'
               : role === 'admin'
@@ -133,7 +156,7 @@ export default function TaskBubble({
         <button
           onClick={() => role === 'employee' && onUpdateStatus(task.id, 'completed')}
           disabled={!(role === 'employee' && isPending)}
-          className={`rounded px-3 py-1 text-[14px] ${
+          className={`rounded px-5 py-1 text-[14px] ${
             isCompleted
               ? 'bg-blue-600 text-white'
               : role === 'employee' && isPending
@@ -148,7 +171,7 @@ export default function TaskBubble({
         <button
           onClick={() => role === 'admin' && onUpdateStatus(task.id, 'closed')}
           disabled={!(role === 'admin' && isCompleted)}
-          className={`rounded px-3 py-1 text-[14px] ${
+          className={`rounded px-5 py-1 text-[14px] ${
             isClosed
               ? 'bg-green-600 text-white'
               : role === 'admin' && isCompleted

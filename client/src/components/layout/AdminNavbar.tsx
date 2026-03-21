@@ -41,20 +41,14 @@ export default function AdminNavbar() {
   };
 
   return (
-    <div className="h-14 bg-white shadow-lg font-sans flex items-center justify-between px-6">
-      <div className="flex items-center gap-5 pt-3">
-        {/* <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
-          <ClipboardList size={25} className="text-black" />
-          TaskManager
-        </div> */}
-        <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
-          <Image src="/TaskFlowLogo.png" alt="logo" width={200} height={200} />
-        </div>
-
-        <div className="flex items-center gap-6">
+    <div className="h-14 bg-slate-100/80 shadow-[0_2px_10px_rgba(15,23,42,0.08)] font-sans flex items-center justify-between px-8">
+      <div className="flex items-center gap-6">
+          <Image src="/TaskFlowLogo.png" alt="logo" width={160} height={40} />
+          
+        <div className="flex items-center gap-4">
           <Link
             href="/admin/dashboard"
-            className={`text-[16px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${isActive("/admin/dashboard")
+            className={`relative text-[15px] font-semibold tracking-wide transition-colors ${isActive("/admin/dashboard")
               ? "text-indigo-700"
               : "text-slate-500 hover:text-indigo-600"
               }`}
@@ -63,7 +57,7 @@ export default function AdminNavbar() {
           </Link>
           <Link
             href="/admin/employees"
-            className={`text-[16px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${isActive("/admin/employees")
+            className={`relative text-[15px] font-semibold tracking-wide transition-colors ${isActive("/admin/employees")
               ? "text-indigo-700"
               : "text-slate-500 hover:text-indigo-600"
               }`}
@@ -72,23 +66,17 @@ export default function AdminNavbar() {
           </Link>
           <Link
             href="/admin/archive"
-            className={`text-[16px] font-semibold tracking-wide transition-colors duration-300 ease-in-out ${isActive("/admin/archive")
+            className={`relative text-[15px] font-semibold tracking-wide transition-colors ${isActive("/admin/archive")
               ? "text-indigo-700"
               : "text-slate-500 hover:text-indigo-600"
               }`}
           >
             Archive
           </Link>
-          {/* <button
-            onClick={handleCreateTask}
-            className={`text-[14px] font-semibold tracking-wide transition-colors duration-300 ease-in-out text-slate-500 hover:text-indigo-600`}
-          >
-            Create Task
-          </button> */}
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <NotificationBell />
         <Link
           href="/admin/employees/invite"
@@ -115,7 +103,7 @@ export default function AdminNavbar() {
 
         <button
           onClick={handleLogout}
-          className="rounded p-1.5 text-red-800 hover:text-red-400 font-bold"
+          className="rounded text-red-600 hover:text-red-500 font-bold"
           aria-label="Logout"
           title="Logout"
         >

@@ -93,12 +93,12 @@ export default function EmployeeDashboardPage() {
   }, [searchTerm, tasks]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 pb-10">
+    <div className="flex h-full min-h-0 flex-col gap-6 pb-4">
       <div className="w-full">
-        <h2 className="text-lg font-bold text-black tracking-wide font-heading">
+        <h2 className="text-2xl font-extrabold text-slate-800 tracking-wide font-heading">
           Employee Dashboard
         </h2>
-        <p className="text-sm font-semibold font-sans text-gray-500 tracking-wide">
+        <p className="text-sm font-semibold font-sans text-slate-500 tracking-wide">
           {employeeProfile.name} | {employeeProfile.designation}
         </p>
       </div>
@@ -110,10 +110,12 @@ export default function EmployeeDashboardPage() {
           desc="Tasks assigned to you"
           icon={<ClipboardList className="h-5 w-5 text-blue-600" />}
           iconBg="bg-blue-100"
-          cardClassName="shadow-lg border-none"
-          titleClassName="text-[14px] font-bold uppercase text-gray-900"
-          valueClassName="mt-2 text-3xl font-bold text-slate-900"
-          descClassName="mt-2 text-[14px] text-gray-600"
+          cardClassName="shadow-[0_8px_20px_rgba(15,23,42,0.08)] border border-slate-100"
+          titleClassName="text-[13px] font-bold uppercase text-slate-600 tracking-wider"
+          valueClassName="mt-2 text-4xl font-bold text-slate-900"
+          descClassName="mt-2 text-[14px] text-slate-500"
+          showAvatar
+          avatarText={employeeProfile.name}
         />
         <SummaryCard
           title="Finished"
@@ -121,37 +123,58 @@ export default function EmployeeDashboardPage() {
           desc="Completed tasks"
           icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
           iconBg="bg-green-100"
-          cardClassName="shadow-lg border-none"
-          titleClassName="text-[14px] font-bold uppercase text-gray-900"
-          valueClassName="mt-2 text-3xl font-bold text-slate-900"
-          descClassName="mt-2 text-[14px] text-gray-600"
+          cardClassName="shadow-[0_8px_20px_rgba(15,23,42,0.08)] border border-slate-100"
+          titleClassName="text-[13px] font-bold uppercase text-slate-600 tracking-wider"
+          valueClassName="mt-2 text-4xl font-bold text-slate-900"
+          descClassName="mt-2 text-[14px] text-slate-500"
         />
       </div>
 
-      <section className="flex flex-1 min-h-0 flex-col gap-4">
-        <div className="flex items-center justify-between bg-gray-200 p-3">
-          <h3 className="text-md font-bold text-slate-800 uppercase tracking-wider">
+      <section className="flex flex-1 min-h-0 flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
+        <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
+          <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
             My Task Feed
           </h3>
-          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-gray-500 rounded-2xl">
+          <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
+            <FiSearch className="text-[16px] text-slate-500" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search tasks..."
-              className="w-80 rounded-md  px-3 py-1.5 text-[12px] text-slate-700 pr-8 outline-none focus:ring-none focus:border-none"
+              className="w-56 md:w-72 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
             />
-            <FiSearch className="text-[16px] text-black" />
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-2">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 px-5 pb-5">
           {loading ? (
-            <p className="text-sm font-semibold text-gray-600">Loading...</p>
+            <p className="text-sm font-semibold text-slate-600">Loading...</p>
           ) : filteredTasks.length === 0 ? (
-            <p className="text-sm font-semibold text-gray-600 italic">
-              No tasks assigned yet.
-            </p>
+            <div className="flex flex-1 items-center justify-center py-10">
+              <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
+                <div className="w-130 mx-auto">
+                    <img src='/NoTaskImg.webp' className="h-80 w-full object-cover" alt="NO Task Image"/>
+                </div>
+                
+                <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
+                  <h4 className="text-3xl font-extrabold text-slate-800">
+                    No tasks assigned yet
+                  </h4>
+                  <p className="text-[16px] text-slate-500 text-center">
+                    You currently have no tasks assigned to you.
+                    <br />
+                    Enjoy your productive day!
+                  </p>
+                  <button
+                    onClick={loadData}
+                    className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
             filteredTasks.map((task) => (
               <TaskCard
@@ -178,18 +201,34 @@ function SummaryCard({
   titleClassName,
   valueClassName,
   descClassName,
+  showAvatar,
+  avatarText,
 }: any) {
+  const initials = String(avatarText || "Employee")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part: string) => part[0]?.toUpperCase())
+    .join("");
+
   return (
     <div
-      className={`flex items-center justify-between rounded-xl border bg-white p-5 ${cardClassName || ""}`}
+      className={`flex items-center justify-between rounded-2xl bg-white p-6 ${cardClassName || ""}`}
     >
-      <div>
+      <div className="flex items-center gap-4">
+        {showAvatar && (
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700 shadow-inner">
+            {initials || "E"}
+          </div>
+        )}
+        <div>
         <p className={titleClassName}>{title}</p>
         <p className={valueClassName}>{value}</p>
         <p className={descClassName}>{desc}</p>
+        </div>
       </div>
       <div
-        className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}
+        className={`flex h-12 w-12 items-center justify-center rounded-2xl ${iconBg}`}
       >
         {icon}
       </div>

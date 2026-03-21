@@ -60,21 +60,16 @@ export default function EmployeeNavbar() {
   };
 
   const linkClass = (path: string) =>
-    `text-[16px] border-none font-semibold tracking-wide transition-colors ${
+    `relative text-[15px] font-semibold tracking-wide transition-colors ${
       isActive(path)
-        ? "text-indigo-700"
-        : "text-slate-500 hover:text-indigo-600"
+        ? "text-blue-700"
+        : "text-slate-500 hover:text-blue-700"
     }`;
 
   return (
-    <header className="h-12 bg-gray-100 shadow-lg font-sans flex items-center justify-between px-6">
-      <div className="flex items-center gap-5 pt-3">
-        {/* <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
-          <ClipboardList size={25} className="text-black" />
-          TaskManager
-        </div> */}
-
-          <Image src="/TaskFlowLogo.png" alt="logo" width={200} height={200}/>
+    <header className="h-14 bg-slate-100/80 shadow-[0_2px_10px_rgba(15,23,42,0.08)] font-sans flex items-center justify-between px-8">
+      <div className="flex items-center gap-6">
+        <Image src="/TaskFlowLogo.png" alt="logo" width={160} height={40} />
 
         <div className="flex items-center gap-4">
           <Link
@@ -82,25 +77,31 @@ export default function EmployeeNavbar() {
             className={linkClass("/employee/dashboard")}
           >
             Dashboard
+            {isActive("/employee/dashboard") && (
+              <span className="absolute left-0 -bottom-4 h-0.5 w-full rounded-full bg-blue-600" />
+            )}
           </Link>
           <Link
             href="/employee/archive"
             className={linkClass("/employee/archive")}
           >
             Archive
+            {isActive("/employee/archive") && (
+              <span className="absolute left-0 -bottom-4 h-0.5 w-full rounded-full bg-blue-600" />
+            )}
           </Link>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 mr-2">
-          <span className={`text-[12px] font-bold ${isOnline ? "text-green-600" : "text-gray-500"}`}>
+          <span className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}>
             {isOnline ? "ONLINE" : "OFFLINE"}
           </span>
           <button
             onClick={handleToggleStatus}
             disabled={statusLoading}
-            className={`text-3xl transition-colors duration-300 ${
+            className={`text-[34px] transition-colors duration-300 ${
               isOnline ? "text-green-600" : "text-gray-400"
             } disabled:opacity-50`}
             title={isOnline ? "Go Offline" : "Go Online"}
@@ -109,19 +110,19 @@ export default function EmployeeNavbar() {
           </button>
         </div>
         <NotificationBell />
-        <div
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-600"
+        {/* <div
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm"
           aria-label="User profile"
           title="User"
         >
           <FaUserAlt size={18} />
-        </div>
+        </div> */}
 
         <button
           onClick={() => {
             logout();
           }}
-          className="rounded text-red-800 hover:text-red-400 font-bold"
+          className="rounded text-red-600 hover:text-red-500 font-bold"
           aria-label="Logout"
           title="Logout"
         >

@@ -233,7 +233,7 @@ export default function ChatInput({
   const formattedTimer = `${String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:${String(recordingSeconds % 60).padStart(2, '0')}`;
 
   return (
-    <div className="relative border-t bg-white/80 p-1 backdrop-blur-md border-slate-200">
+    <div className="relative border-t p-1 backdrop-blur-md border-slate-200">
       {/* Selection Pickers (Anchor strictly ABOVE the input bar) */}
       {(showDatePicker || showTagPicker) && (
         <div 

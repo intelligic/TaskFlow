@@ -72,18 +72,19 @@ export default function AdminEmployeesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-lg border bg-white">
-        <div className="flex flex-col items-start justify-between gap-3 border-b border-b-gray-100 px-4 py-3 md:flex-row md:items-end">
+      <div className="flex flex-1 min-h-0 flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
+        <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
           <div className="flex flex-col gap-1 items-start justify-start">
-            <h2 className="text-lg font-bold text-black tracking-wide font-heading">
+            <h2 className="text-2xl font-extrabold text-slate-800 tracking-wide font-heading">
               All Employees
             </h2>
-            <p className="text-[12px] font-semibold text-gray-500 tracking-wider">
+            <p className="text-sm font-semibold font-sans text-slate-700 tracking-wide">
               A Text only Historical record of your complete and close tasks.
             </p>
           </div>
 
-          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200 rounded-xl">
+          <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
+            <FiSearch className="text-[16px] text-slate-500" />
             <input
               type="text"
               value={searchTerm}
@@ -92,9 +93,8 @@ export default function AdminEmployeesPage() {
                 setCurrentPage(1);
               }}
               placeholder="Search by name, email or designation..."
-              className="w-80 rounded-md  px-3 py-1.5 text-[12px] text-slate-700 pr-8 outline-none focus:ring-none focus:border-none"
+              className="w-56 md:w-72 bg-transparent text-[13px] text-slate-7200 outline-none placeholder:text-slate-400"
             />
-            <FiSearch className="text-[16px] text-black" />
           </div>
         </div>
 
@@ -108,9 +108,36 @@ export default function AdminEmployeesPage() {
               {error}
             </p>
           ) : paginatedEmployees.length === 0 ? (
-            <p className="px-2 py-3 text-sm font-semibold text-slate-600">
-              No employees yet.
-            </p>
+            // <p className="px-2 py-3 text-sm font-semibold text-slate-600">
+            //   No employees yet.
+            // </p>
+            <div className="flex flex-1 items-center justify-center py-10">
+              <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
+                <div className="w-130 mx-auto">
+                  <img
+                    src="/NoTaskImg.webp"
+                    className="h-80 w-full object-cover"
+                    alt="NO Task Image"
+                  />
+                </div>
+                <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
+                  <h4 className="text-3xl font-extrabold text-slate-800">
+                    No tasks assigned yet
+                  </h4>
+                  <p className="text-[16px] text-slate-500 text-center">
+                    You currently have No employees yet.
+                    <br />
+                    Please Add employees to manage your workspace effectively!
+                  </p>
+                  <button
+                    onClick={refresh}
+                    className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
             <EmployeeList data={paginatedEmployees} />
           )}
@@ -118,7 +145,7 @@ export default function AdminEmployeesPage() {
       </div>
 
       <div className="flex flex-col gap-3 rounded-lg bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between">
-        <p className="text-black text-[14px] font-bold">
+        <p className="text-md font-extrabold text-slate-800 tracking-wide font-heading">
           Showing {startItem}-{endItem} of {filteredEmployees.length} employees
         </p>
 

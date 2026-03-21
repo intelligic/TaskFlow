@@ -132,12 +132,40 @@ export default function ChatBox({
   };
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col rounded-lg bg-white overflow-visible">
+    <div className="relative flex h-full min-h-0 flex-col rounded-lg overflow-visible">
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
         {loading ? (
           <div className="px-3 py-2 text-sm font-semibold text-gray-600">Loading...</div>
         ) : messages.length === 0 ? (
-          <div className="px-3 py-2 text-sm font-semibold text-gray-600">No tasks yet.</div>
+          // <div className="px-3 py-2 text-sm font-semibold text-gray-600">No tasks yet.</div>
+
+                        <div className="flex flex-1 items-center justify-center py-10">
+                <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
+                  <div className="w-130 mx-auto">
+                    <img
+                      src="/NoTaskImg.webp"
+                      className="h-80 w-full object-cover"
+                      alt="NO Task Image"
+                    />
+                  </div>
+                  <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
+                    <h4 className="text-3xl font-extrabold text-slate-800">
+                       No tasks assigned to this employee.
+                    </h4>
+                    <p className="text-[16px] text-slate-500 text-center">
+                      You currently have no tasks assigned to you.
+                      <br />
+                      Enjoy your productive day!
+                    </p>
+                    <button
+                      onClick={loadTasks}
+                      className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              </div>
         ) : (
           (searchTerm
             ? messages.filter((item) => {

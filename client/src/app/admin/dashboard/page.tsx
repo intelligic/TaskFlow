@@ -42,8 +42,8 @@ export default function AdminDashboardPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   };
 
@@ -60,7 +60,9 @@ export default function AdminDashboardPage() {
       ]);
 
       setStats(statsRes);
-      setEmployees(Array.isArray(employeesRes.employees) ? employeesRes.employees : []);
+      setEmployees(
+        Array.isArray(employeesRes.employees) ? employeesRes.employees : [],
+      );
       setWorkspaceName(profileRes?.workspace?.name || "");
       setTasks(tasksRes.tasks || []);
     } catch {
@@ -187,13 +189,13 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 overflow-hidden pb-4">
-      <div className="flex flex-none items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-500 tracking-wider font-heading">Admin Dashboard</h2>
-          <p className="text-[18px] tracking-wider font-semibold font-sans text-slate-900">
+      <div className="w-full">
+          <h2 className="text-2xl font-extrabold text-slate-800 tracking-wide font-heading">
+            Admin Dashboard
+          </h2>
+          <p className="text-sm font-semibold font-sans text-slate-500 tracking-wide">
             {workspaceName || "Workspace"} overview
           </p>
-        </div>
       </div>
 
       {successMessage && (
@@ -209,62 +211,132 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="grid flex-none grid-cols-1 gap-4 md:grid-cols-4">
-        <SummaryCard className="text-md text-black" title="Total Tasks" value={stats?.totalTasks ?? 0} icon={<PlayCircle className="h-5 w-5 text-orange-600" />} iconBg="bg-orange-100" />
-        <SummaryCard className="text-md text-black" title="Completed Tasks" value={stats?.completedTasks ?? 0} icon={<CheckCircle2 className="h-5 w-5 text-green-600" />} iconBg="bg-green-100" />
-        <SummaryCard className="text-md text-black" title="Active Employees" value={stats?.activeEmployees ?? 0} icon={<Activity className="h-5 w-5 text-blue-600" />} iconBg="bg-blue-100" />
-        <SummaryCard className="text-md text-black" title="Total Employees" value={stats?.totalEmployees ?? 0} icon={<Users className="h-5 w-5 text-purple-600" />} iconBg="bg-purple-100" />
+        <SummaryCard
+          className="text-md text-black"
+          title="Total Tasks"
+          value={stats?.totalTasks ?? 0}
+          icon={<PlayCircle className="h-5 w-5 text-orange-600" />}
+          iconBg="bg-orange-100"
+        />
+        <SummaryCard
+          className="text-md text-black"
+          title="Completed Tasks"
+          value={stats?.completedTasks ?? 0}
+          icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
+          iconBg="bg-green-100"
+        />
+        <SummaryCard
+          className="text-md text-black"
+          title="Active Employees"
+          value={stats?.activeEmployees ?? 0}
+          icon={<Activity className="h-5 w-5 text-blue-600" />}
+          iconBg="bg-blue-100"
+        />
+        <SummaryCard
+          className="text-md text-black"
+          title="Total Employees"
+          value={stats?.totalEmployees ?? 0}
+          icon={<Users className="h-5 w-5 text-purple-600" />}
+          iconBg="bg-purple-100"
+        />
       </div>
 
-      <div className="grid flex-1 grid-cols-1 gap-8 lg:grid-cols-2 min-h-0">
+      <div className="w-full flex-1 flex flex-wrap flex-col md:flex-row justify-between gap-10  min-h-0 border">
         {/* Recent Tasks Section */}
-        <section className="flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm h-full">
-          <div className="flex items-center justify-between border-b px-4 py-3 bg-slate-50 sticky top-0 z-10">
-            <h3 className="text-[14px] font-extrabold text-slate-700 uppercase tracking-widest">Recent Tasks</h3>
-            <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200 bg-white rounded-md">
+        <div className="flex flex-1 w-full min-h-0 max-h-[65vh] flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
+          <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
+            <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
+              Recent Tasks
+            </h3>
+            <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
+              <FiSearch className="text-[16px] text-black" />
               <input
                 type="text"
                 value={taskSearchTerm}
                 onChange={(e) => setTaskSearchTerm(e.target.value)}
                 placeholder="Search tasks..."
-                className="w-72 rounded-md px-3 py-1.5 text-[12px] text-slate-700 pr-8 outline-none focus:ring-none focus:border-none"
+                className="w-56 md:w-72 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
               />
-              <FiSearch className="text-[16px] text-black" />
             </div>
           </div>
+
           <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
             {loading ? (
-              <p className="text-sm text-slate-500 font-medium">Loading tasks...</p>
+              <p className="text-sm text-slate-500 font-medium">
+                Loading tasks...
+              </p>
             ) : recentTasks.length === 0 ? (
-              <p className="text-sm text-slate-500 font-medium italic">No tasks created yet.</p>
+              <div className="flex flex-1 items-center justify-center py-10">
+                <div className="grid w-full max-w-5xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
+                  <div className="w-130 mx-auto">
+                    <img
+                      src="/NoTaskImg.webp"
+                      className="h-80 w-full object-cover"
+                      alt="NO Task Image"
+                    />
+                  </div>
+                  <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
+                    <h4 className="text-2xl font-extrabold text-slate-800">
+                      No tasks assigned yet
+                    </h4>
+                    <p className="text-[14px] text-slate-500 text-center">
+                      You currently have no tasks assigned to you.
+                      <br />
+                      Enjoy your productive day!
+                    </p>
+                    <button
+                      onClick={loadData}
+                      className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
               recentTasks.map((task) => (
-                <TaskCard key={task._id} task={task} role="admin" onRefresh={loadData} />
+                <TaskCard
+                  key={task._id}
+                  task={task}
+                  role="admin"
+                  onRefresh={loadData}
+                />
               ))
             )}
           </div>
-        </section>
+        </div>
 
         {/* Employees Section */}
-        <section className="flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm h-full">
-          <div className="flex items-center justify-between border-b px-4 py-3 bg-slate-50 sticky top-0 z-10">
-            <h3 className="text-[14px] font-extrabold text-slate-700 uppercase tracking-widest">Employees</h3>
-            <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200">
+        <div className="flex w-150 min-h-0 flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
+          <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
+            <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
+              Employees
+            </h3>
+            <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
+              <FiSearch className="text-[16px] text-black" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search..."
-                className="w-80 rounded-md  px-3 py-1.5 text-[12px] text-slate-700 pr-8 outline-none focus:ring-none focus:border-none "
+                className="w-50 md:w-50 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
               />
-              <FiSearch className="text-[16px] text-black" />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
             <div className="divide-y">
               {paginatedEmployees.map((emp) => (
-                <div key={emp._id} className="flex justify-between items-center px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200" onClick={() => router.push(`/admin/chat/${emp.slug || emp._id}`)}>
+                <div
+                  key={emp._id}
+                  className="flex justify-between items-center px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                  onClick={() =>
+                    router.push(`/admin/chat/${emp.slug || emp._id}`)
+                  }
+                >
                   <div className="w-1/3 text-left">
-                    <p className="text-[14px] font-bold text-slate-900">{emp.name}</p>
+                    <p className="text-[14px] font-bold text-slate-900">
+                      {emp.name}
+                    </p>
                   </div>
                   <div className="w-1/3 flex justify-center items-center gap-3">
                     <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
@@ -277,51 +349,94 @@ export default function AdminDashboardPage() {
                     </span>
                   </div>
                   <div className="w-1/3 text-right flex items-center justify-end gap-2">
-                    <span className={`inline-block h-2 w-2 rounded-full ${emp.isOnline ? 'bg-green-500' : 'bg-slate-300'}`}></span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${emp.isOnline ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                      {emp.isOnline ? 'Active' : 'Offline'}
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${emp.isOnline ? "bg-green-500" : "bg-slate-300"}`}
+                    ></span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${emp.isOnline ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}
+                    >
+                      {emp.isOnline ? "Active" : "Offline"}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
       </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-xl border bg-white p-6 shadow-2xl">
             <div className="mb-6 flex items-center justify-between border-b pb-4">
-              <h3 className="text-lg font-bold text-slate-900">Create New Task</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+              <h3 className="text-lg font-bold text-slate-900">
+                Create New Task
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
             </div>
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Title</label>
-                <input required type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600" />
+                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                  Title
+                </label>
+                <input
+                  required
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600"
+                />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Description</label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="h-24 w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600 resize-none" />
+                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="h-24 w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600 resize-none"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Assign To</label>
-                  <select required value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm bg-white outline-none focus:ring-1 focus:ring-blue-600">
+                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                    Assign To
+                  </label>
+                  <select
+                    required
+                    value={assigneeId}
+                    onChange={(e) => setAssigneeId(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm bg-white outline-none focus:ring-1 focus:ring-blue-600"
+                  >
                     <option value="">Select</option>
                     {employees.map((e) => (
-                      <option key={e._id} value={e._id}>{e.name}</option>
+                      <option key={e._id} value={e._id}>
+                        {e.name}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Due Date</label>
-                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600" />
+                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600"
+                  />
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Tags</label>
+                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                  Tags
+                </label>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {TASK_TAGS.map((tag) => (
                     <button
@@ -340,10 +455,24 @@ export default function AdminDashboardPage() {
                   ))}
                 </div>
               </div>
-              {formError && <p className="text-xs font-bold text-red-600">{formError}</p>}
+              {formError && (
+                <p className="text-xs font-bold text-red-600">{formError}</p>
+              )}
               <div className="flex gap-3 pt-6">
-                <button type="submit" disabled={formLoading} className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50">{formLoading ? "Creating..." : "Create Task"}</button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {formLoading ? "Creating..." : "Create Task"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -353,14 +482,36 @@ export default function AdminDashboardPage() {
   );
 }
 
-function SummaryCard({ title, value, icon, iconBg, className }: { title: string; value: number; icon: React.ReactNode; iconBg: string; className?: string }) {
+function SummaryCard({
+  title,
+  value,
+  icon,
+  iconBg,
+  className,
+}: {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  iconBg: string;
+  className?: string;
+}) {
   return (
-    <div className={`flex items-center justify-between rounded-xl border-gray-200 bg-white p-5 shadow-sm transition-transform hover:-translate-y-1 ${className}`}>
+    <div
+      className={`flex items-center justify-between rounded-xl border-gray-200 bg-white p-5 shadow-sm transition-transform hover:-translate-y-1 ${className}`}
+    >
       <div>
-        <p className="text-[14px] font-bold uppercase tracking-widest text-gray-500">{title}</p>
-        <p className="mt-2 text-2xl font-black text-slate-900 leading-none">{value}</p>
+        <p className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
+          {title}
+        </p>
+        <p className="mt-2 text-2xl font-black text-slate-900 leading-none">
+          {value}
+        </p>
       </div>
-      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}
+      >
+        {icon}
+      </div>
     </div>
   );
 }
