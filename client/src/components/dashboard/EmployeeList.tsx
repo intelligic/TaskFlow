@@ -31,7 +31,7 @@ export default function EmployeeList({ data }: EmployeeListProps) {
         >
           <div className="flex flex-1 items-center justify-between">
             <div className="flex flex-col gap-1">
-              <p className="text-sm font-bold font-serif text-black">{emp.name}</p>
+              <p className="text-sm font-bold font-sans text-black">{emp.name}</p>
               <p className="text-xs font-medium text-gray-500">
                 {emp.email} | {emp.designation || "Employee"}
               </p>

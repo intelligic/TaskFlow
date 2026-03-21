@@ -49,13 +49,25 @@ const allowedOrigins = originRaw
   .map((o) => o.trim())
   .filter(Boolean);
 
+const isDev = env.NODE_ENV !== "production";
+const isLocalhostOrigin = (origin) =>
+  typeof origin === "string" &&
+  (origin.startsWith("http://localhost:") ||
+    origin.startsWith("http://127.0.0.1:"));
+
 const corsOptions = {
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (allowedOrigins.length === 0) {
-      return cb(null, env.NODE_ENV !== "production");
+      return cb(null, isDev);
     }
-    return cb(null, allowedOrigins.includes(origin));
+    if (allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    if (isDev && isLocalhostOrigin(origin)) {
+      return cb(null, true);
+    }
+    return cb(null, false);
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
@@ -109,10 +121,33 @@ io.on("connection", (socket) => {
 connectDB();
 
 app.use(cors(corsOptions));
-app.use(helmet());
+app.use(
+  helmet({
+    // Allow loading media (audio/image) from the backend in the frontend app.
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(express.json({ limit: "1mb" }));
 app.use(limiter);
-app.use("/uploads", express.static(uploadsDir));
+app.use(
+  "/uploads",
+  express.static(uploadsDir, {
+    acceptRanges: true,
+    setHeaders: (res, filePath) => {
+      const lower = filePath.toLowerCase();
+      if (lower.endsWith(".webm")) {
+        res.setHeader("Content-Type", "audio/webm");
+      } else if (lower.endsWith(".m4a") || lower.endsWith(".mp4")) {
+        res.setHeader("Content-Type", "audio/mp4");
+      } else if (lower.endsWith(".mp3")) {
+        res.setHeader("Content-Type", "audio/mpeg");
+      } else if (lower.endsWith(".wav")) {
+        res.setHeader("Content-Type", "audio/wav");
+      }
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    },
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);

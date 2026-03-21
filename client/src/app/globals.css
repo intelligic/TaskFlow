@@ -24,6 +24,17 @@ body {
   color: var(--foreground);
 }
 
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-manrope);
+  }
+}
+
 /* Ensure the app root can stretch so flex layouts can fill available height */
 html, body, #__next {
   height: 100%;

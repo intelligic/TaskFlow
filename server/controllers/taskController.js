@@ -15,6 +15,13 @@ export const createTask = async (req, res) => {
     }
 
     const { title, description, assignedTo, dueDate, tags } = req.body;
+    const files = Array.isArray(req.files) ? req.files : [];
+    const attachments = files.map((file) => ({
+      name: file.originalname || file.filename,
+      url: `/uploads/tasks/${file.filename}`,
+      mimeType: file.mimetype || "application/octet-stream",
+      size: typeof file.size === "number" ? file.size : 0,
+    }));
 
     if (!title || !assignedTo) {
       return res.status(400).json({ message: "Title and assignedTo are required" });
@@ -26,6 +33,7 @@ export const createTask = async (req, res) => {
       assignedTo,
       dueDate,
       tags,
+      attachments,
       createdBy: req.user.id,
       workspace: req.user.workspace,
       status: "pending",

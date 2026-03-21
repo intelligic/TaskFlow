@@ -55,7 +55,7 @@ export default function AdminProjectsPage() {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
         <div className="flex flex-col gap-1 items-start justify-start">
-          <h2 className="text-lg font-bold text-black tracking-wide font-serif">
+          <h2 className="text-lg font-bold text-black tracking-wide font-heading">
             Projects
           </h2>
           <p className="text-[12px] font-semibold text-gray-500 tracking-wider">
@@ -160,4 +160,3 @@ export default function AdminProjectsPage() {
     </div>
   );
 }
-

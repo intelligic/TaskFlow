@@ -1,7 +1,7 @@
 'use client';
 
 import { type ChangeEvent, useRef, useState, useEffect } from 'react';
-import { Mic, Plus, Send, X, Calendar, Tag, Paperclip } from 'lucide-react';
+import { Mic, Plus, SendHorizontal, X, Calendar, Tag, Paperclip } from 'lucide-react';
 import { TASK_TAGS, getTagClasses } from '@/lib/task-tags';
 
 export default function ChatInput({
@@ -23,6 +23,10 @@ export default function ChatInput({
   const chunksRef = useRef<Blob[]>([]);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
   const selectedFilesRef = useRef<File[]>([]);
+  const textRef = useRef(text);
+  const dueDateRef = useRef(dueDate);
+  const selectedTagRef = useRef<string | null>(selectedTag);
+  const pendingSendRef = useRef(false);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -61,6 +65,15 @@ export default function ChatInput({
   useEffect(() => {
     selectedFilesRef.current = selectedFiles;
   }, [selectedFiles]);
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
+  useEffect(() => {
+    dueDateRef.current = dueDate;
+  }, [dueDate]);
+  useEffect(() => {
+    selectedTagRef.current = selectedTag;
+  }, [selectedTag]);
 
   const triggerFilePicker = () => {
     fileInputRef.current?.click();
@@ -93,21 +106,35 @@ export default function ChatInput({
     setSelectedTag((current) => (current === tag ? null : tag));
   };
 
-  const handleSend = () => {
-    const message = text.trim();
-    if (!message && selectedFiles.length === 0) return;
+  const finalizeSend = (filesToSend: File[]) => {
+    const message = textRef.current.trim();
+    if (!message && filesToSend.length === 0) return;
 
-    if (dueDate && dueDate < minDueDate) {
+    if (dueDateRef.current && dueDateRef.current < minDueDate) {
       setDueDate('');
     }
 
-    onSend(message, selectedFiles, dueDate || undefined, selectedTag ? [selectedTag] : undefined);
+    onSend(
+      message,
+      filesToSend,
+      dueDateRef.current || undefined,
+      selectedTagRef.current ? [selectedTagRef.current] : undefined,
+    );
     setText('');
     setDueDate('');
     setSelectedTag(null);
     setShowDatePicker(false);
     setShowTagPicker(false);
     setSelectedFiles([]);
+  };
+
+  const handleSend = () => {
+    if (isRecording) {
+      pendingSendRef.current = true;
+      stopRecording();
+      return;
+    }
+    finalizeSend(selectedFiles);
   };
 
   const getSupportedMimeType = () => {
@@ -127,8 +154,15 @@ export default function ChatInput({
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
       mediaStreamRef.current = stream;
+      const audioTrack = stream.getAudioTracks()[0];
+      if (!audioTrack || audioTrack.readyState !== 'live') {
+        throw new Error('Microphone is not available');
+      }
+      if (!audioTrack.enabled) audioTrack.enabled = true;
       chunksRef.current = [];
       setRecordingSeconds(0);
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
@@ -137,7 +171,10 @@ export default function ChatInput({
       }, 1000);
 
       const mimeType = getSupportedMimeType();
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const recorderOptions = mimeType
+        ? { mimeType, audioBitsPerSecond: 128000 }
+        : { audioBitsPerSecond: 128000 };
+      const recorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (event) => {
@@ -148,20 +185,22 @@ export default function ChatInput({
 
       recorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-        const ext = recorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
-        const file = new File([blob], `voice-note-${Date.now()}.${ext}`, {
-          type: recorder.mimeType || 'audio/webm',
-        });
-        setSelectedFiles((prev) => [...prev, file]);
+        let createdFile: File | null = null;
+        if (blob.size > 0) {
+          const ext = recorder.mimeType.includes('mp4') ? 'm4a' : 'webm';
+          createdFile = new File([blob], `voice-note-${Date.now()}.${ext}`, {
+            type: recorder.mimeType || 'audio/webm',
+          });
+          setSelectedFiles((prev) => [...prev, createdFile as File]);
+        }
 
-        const mergedFiles = [...selectedFilesRef.current, file];
-        onSend(text.trim(), mergedFiles, dueDate || undefined, selectedTag ? [selectedTag] : undefined);
-        setText('');
-        setDueDate('');
-        setSelectedTag(null);
-        setShowDatePicker(false);
-        setShowTagPicker(false);
-        setSelectedFiles([]);
+        const mergedFiles = createdFile
+          ? [...selectedFilesRef.current, createdFile]
+          : [...selectedFilesRef.current];
+        if (pendingSendRef.current) {
+          pendingSendRef.current = false;
+          finalizeSend(mergedFiles);
+        }
 
         if (mediaStreamRef.current) {
           mediaStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -194,23 +233,23 @@ export default function ChatInput({
   const formattedTimer = `${String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:${String(recordingSeconds % 60).padStart(2, '0')}`;
 
   return (
-    <div className="relative border-t bg-white/80 p-3 backdrop-blur-md">
+    <div className="relative border-t bg-white/80 p-1 backdrop-blur-md border-slate-200">
       {/* Selection Pickers (Anchor strictly ABOVE the input bar) */}
       {(showDatePicker || showTagPicker) && (
         <div 
           ref={pickerRef}
-          className="absolute bg-black right-0 z-100 mb-4 w-80 origin-bottom-right animate-in fade-in slide-in-from-bottom-150 zoom-in-95 duration-300"
+          className="absolute bottom-10 right-30 z-100 w-50 origin-bottom-right animate-in fade-in slide-in-from-bottom-150 zoom-in-95 duration-300"
         >
-          <div className="rounded-3xl border-2 border-blue-500 bg-white p-6 shadow-[0_25px_60px_-15px_rgba(59,130,246,0.5)] ring-1 ring-black/5">
+          <div className="rounded-xl  bg-white p-4 shadow-[0_25px_60px_-15px_rgba(59,130,246,0.5)] ring-1 ring-black/5">
             {showDatePicker && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
-                  <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-                    <Calendar size={14} className="text-blue-500" />
+                  <h4 className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-900">
+                    <Calendar size={18} className="text-slate-900" />
                     Due Date
                   </h4>
                   <button onClick={() => setShowDatePicker(false)} className="rounded-full p-1 hover:bg-slate-100 transition-colors">
-                    <X size={14} className="text-slate-400" />
+                    <X size={18} className="text-slate-900" />
                   </button>
                 </div>
                 <input
@@ -221,19 +260,19 @@ export default function ChatInput({
                     if (e.target.value) setShowDatePicker(false);
                   }}
                   min={minDueDate}
-                  className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all font-sans"
+                  className="w-full border border-slate-100 bg-slate-50 px-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/10 transition-all font-sans"
                 />
               </div>
             )}
             {showTagPicker && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
-                  <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-                    <Tag size={14} className="text-indigo-500" />
+                  <h4 className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-indigo-900">
+                    <Tag size={18} className="text-indigo-900" />
                     Task Tags
                   </h4>
                   <button onClick={() => setShowTagPicker(false)} className="rounded-full p-1 hover:bg-slate-100 transition-colors">
-                    <X size={14} className="text-slate-400" />
+                    <X size={18} className="text-slate-400" />
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -295,7 +334,7 @@ export default function ChatInput({
       )}
 
       {(voiceFallback || isRecording) && (
-        <div className="mb-2 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-600">
+        <div className="mb-2 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-900">
           <div className="flex items-center gap-2">
             {isRecording ? (
               <span className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
@@ -326,14 +365,14 @@ export default function ChatInput({
       )}
 
       {/* Main Bar (Premium Ultra Compact Design) */}
-      <div className="group relative flex items-center gap-2 rounded-3xl border border-slate-200 bg-[#F9FAFB] p-2 pr-2.5 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/5 transition-all duration-300 shadow-sm hover:shadow-md">
+      <div className="group relative flex items-center gap-2 rounded-xl border border-slate-200 bg-[#F9FAFB] pr-2.5 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/5 transition-all duration-300 shadow-sm hover:shadow-md">
         <button
           type="button"
           onClick={triggerFilePicker}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all active:scale-90"
           title="Attach files"
         >
-          <Plus size={22} className="transition-transform group-focus-within:rotate-90" />
+          <Plus size={22} className="transition-transform group-focus-within:rotate-90 text-slate-900" />
         </button>
 
         <input
@@ -356,7 +395,7 @@ export default function ChatInput({
           onChange={(e) => setText(e.target.value)}
           placeholder="Type message or task title..."
           rows={1}
-          className="flex-1 resize-none bg-transparent py-2.5 px-1 text-[15px] font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none scrollbar-hide"
+          className="flex-1 resize-none bg-transparent py-2.5 px-1 text-[14px] font-medium text-slate-700 placeholder:text-slate-900 focus:outline-none scrollbar-hide"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -373,7 +412,7 @@ export default function ChatInput({
             className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${dueDate ? 'bg-blue-100 text-blue-600 scale-105 shadow-sm' : 'text-slate-400 hover:bg-slate-200/60'}`}
             title="Set Due Date"
           >
-            <Calendar size={20} />
+            <Calendar size={20} className='text-slate-900' />
           </button>
 
           <button
@@ -382,7 +421,7 @@ export default function ChatInput({
             className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${selectedTag ? 'bg-indigo-100 text-indigo-600 scale-105 shadow-sm' : 'text-slate-400 hover:bg-slate-200/60'}`}
             title="Assing Tags"
           >
-            <Tag size={20} />
+            <Tag size={20} className='text-slate-900' />
           </button>
 
           <button
@@ -391,17 +430,17 @@ export default function ChatInput({
             className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${isRecording ? 'bg-red-500 text-white shadow-lg shadow-red-200 animate-pulse' : 'text-slate-400 hover:bg-slate-200/60'}`}
             title={isRecording ? 'Stop Recording' : 'Record Voice Note'}
           >
-            <Mic size={20} />
+            <Mic size={20} className='text-slate-900' />
           </button>
 
           <button
             type="button"
             onClick={handleSend}
             disabled={!text.trim() && selectedFiles.length === 0}
-            className="ml-1.5 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-md transition-all duration-200 hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-40 disabled:bg-slate-400 disabled:shadow-none"
+            className="ml-1.5 flex h-8 w-8 items-center justify-center text-center rounded-full bg-blue-600 text-white shadow-md transition-all duration-200 hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95"
             title="Send Message/Task"
           >
-            <Send size={18} className="translate-x-0.5" />
+            <SendHorizontal size={16} className="-translate-y-0.7" />
           </button>
         </div>
       </div>

@@ -137,7 +137,7 @@ function UpdateTaskContent() {
       <div className="relative z-10 flex h-full items-center justify-center p-6">
         <div className="w-full max-w-190 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
       <div className="space-y-3">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-slate-900">Update Task</h1>
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">Update Task</h1>
         <p className="w-160 text-md text-slate-500 font-medium">
           Modify the task details and reassign if necessary.
         </p>

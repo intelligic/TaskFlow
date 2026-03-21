@@ -22,6 +22,7 @@ export default function AdminDashboardPage() {
   const searchParams = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [taskSearchTerm, setTaskSearchTerm] = useState("");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -151,15 +152,45 @@ export default function AdminDashboardPage() {
   }, [currentPage, filteredEmployees]);
 
   const recentTasks = useMemo(() => {
-    return tasks;
-  }, [tasks]);
+    const query = taskSearchTerm.trim().toLowerCase();
+    if (!query) return tasks;
+    return tasks.filter((task) => {
+      const title = task.title.toLowerCase();
+      const description = (task.description || "").toLowerCase();
+      const tags = (task.tags || []).join(" ").toLowerCase();
+      const assigneeName =
+        typeof task.assignedTo === "object"
+          ? (task.assignedTo.name || "").toLowerCase()
+          : "";
+      const assigneeEmail =
+        typeof task.assignedTo === "object"
+          ? (task.assignedTo.email || "").toLowerCase()
+          : "";
+      const dueDateText = task.dueDate
+        ? new Date(task.dueDate).toLocaleDateString().toLowerCase()
+        : "";
+      const createdText = task.createdAt
+        ? new Date(task.createdAt).toLocaleDateString().toLowerCase()
+        : "";
+
+      return (
+        title.includes(query) ||
+        description.includes(query) ||
+        tags.includes(query) ||
+        assigneeName.includes(query) ||
+        assigneeEmail.includes(query) ||
+        dueDateText.includes(query) ||
+        createdText.includes(query)
+      );
+    });
+  }, [tasks, taskSearchTerm]);
 
   return (
     <div className="flex h-full flex-col gap-6 overflow-hidden pb-4">
       <div className="flex flex-none items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-500 tracking-wider font-serif">Admin Dashboard</h2>
-          <p className="text-[18px] tracking-wider font-semibold font-serif text-slate-900">
+          <h2 className="text-2xl font-bold text-slate-500 tracking-wider font-heading">Admin Dashboard</h2>
+          <p className="text-[18px] tracking-wider font-semibold font-sans text-slate-900">
             {workspaceName || "Workspace"} overview
           </p>
         </div>
@@ -188,7 +219,17 @@ export default function AdminDashboardPage() {
         {/* Recent Tasks Section */}
         <section className="flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm h-full">
           <div className="flex items-center justify-between border-b px-4 py-3 bg-slate-50 sticky top-0 z-10">
-            <h3 className="text-[14px] font-bold text-slate-700 uppercase tracking-widest">Recent Tasks</h3>
+            <h3 className="text-[14px] font-extrabold text-slate-700 uppercase tracking-widest">Recent Tasks</h3>
+            <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200 bg-white rounded-md">
+              <input
+                type="text"
+                value={taskSearchTerm}
+                onChange={(e) => setTaskSearchTerm(e.target.value)}
+                placeholder="Search tasks..."
+                className="w-72 rounded-md px-3 py-1.5 text-[12px] text-slate-700 pr-8 outline-none focus:ring-none focus:border-none"
+              />
+              <FiSearch className="text-[16px] text-black" />
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
             {loading ? (
@@ -206,7 +247,7 @@ export default function AdminDashboardPage() {
         {/* Employees Section */}
         <section className="flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm h-full">
           <div className="flex items-center justify-between border-b px-4 py-3 bg-slate-50 sticky top-0 z-10">
-            <h3 className="text-[14px] font-bold text-slate-700 uppercase tracking-widest">Employees</h3>
+            <h3 className="text-[14px] font-extrabold text-slate-700 uppercase tracking-widest">Employees</h3>
             <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-slate-200">
               <input
                 type="text"

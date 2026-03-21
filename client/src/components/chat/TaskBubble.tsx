@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Calendar, Tag } from 'lucide-react';
 import { getTagClasses } from '@/lib/task-tags';
 
@@ -10,16 +11,90 @@ export default function TaskBubble({
   role,
   onUpdateStatus,
 }: {
-  task: { id: string; text: string; status: TaskStatus; dueDate?: string; tags?: string[] };
+  task: {
+    id: string;
+    text: string;
+    status: TaskStatus;
+    dueDate?: string;
+    tags?: string[];
+    attachments?: {
+      name: string;
+      url: string;
+      mimeType?: string;
+      size?: number;
+    }[];
+  };
   role: 'admin' | 'employee';
   onUpdateStatus: (id: string, status: TaskStatus) => void;
 }) {
   const isPending = task.status === 'pending';
   const isCompleted = task.status === 'completed';
   const isClosed = task.status === 'closed';
+
+  const resolveAssetUrl = (url: string) => {
+    if (!url) return url;
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
+      return url;
+    }
+    const base =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
+    const origin = base.replace(/\/api\/?$/, '');
+    return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
   return (
     <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
       <p className="whitespace-pre-wrap wrap-break-word text-sm font-medium text-black">{task.text}</p>
+
+      {task.attachments && task.attachments.length > 0 && (
+        <div className="space-y-2">
+          {task.attachments.map((item) => {
+            const isImage = (item.mimeType || '').startsWith('image/');
+            const isAudio = (item.mimeType || '').startsWith('audio/');
+            const prettySize =
+              (item.size || 0) < 1024 * 1024
+                ? `${Math.max(1, Math.round((item.size || 0) / 1024))} KB`
+                : `${((item.size || 0) / (1024 * 1024)).toFixed(1)} MB`;
+
+            const assetUrl = resolveAssetUrl(item.url);
+            return (
+              <div key={item.url} className="max-w-xl rounded-lg border bg-white p-3">
+                {isImage ? (
+                  <a href={assetUrl} target="_blank" rel="noreferrer" className="block">
+                    <div className="relative h-64 w-full max-w-xl overflow-hidden rounded-md bg-white">
+                      <Image
+                        src={assetUrl}
+                        alt={item.name}
+                        fill
+                        unoptimized
+                        className="object-contain"
+                        sizes="(max-width: 768px) 100vw, 600px"
+                      />
+                    </div>
+                  </a>
+                ) : isAudio ? (
+                  <audio controls className="w-full">
+                    <source src={assetUrl} type={item.mimeType || 'audio/webm'} />
+                    Your browser does not support the audio element.
+                  </audio>
+                ) : (
+                  <a
+                    href={assetUrl}
+                    download={item.name}
+                    className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-blue-600 hover:underline"
+                  >
+                    {item.name}
+                  </a>
+                )}
+                <p className="mt-2 text-xs text-slate-500">
+                  {item.name} - {prettySize}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {(task.dueDate || (task.tags && task.tags.length > 0)) && (
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-600">

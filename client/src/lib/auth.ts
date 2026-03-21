@@ -35,9 +35,13 @@ export function setToken(_token: string) {
 export function logout() {
   if (typeof window === 'undefined') return;
   try {
+    const normalizeApiBase = (base?: string) => {
+      if (!base) return base;
+      const trimmed = base.replace(/\/+$/, '');
+      return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+    };
     const base =
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
+      normalizeApiBase(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL) ||
       (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
     fetch(`${base}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
   } finally {
@@ -48,9 +52,13 @@ export function logout() {
 
 export function logoutSilent() {
   if (typeof window === 'undefined') return;
+  const normalizeApiBase = (base?: string) => {
+    if (!base) return base;
+    const trimmed = base.replace(/\/+$/, '');
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  };
   const base =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
+    normalizeApiBase(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL) ||
     (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
   const url = `${base}/auth/logout`;
   try {

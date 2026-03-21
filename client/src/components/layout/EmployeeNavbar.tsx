@@ -67,7 +67,7 @@ export default function EmployeeNavbar() {
     }`;
 
   return (
-    <header className="h-12 bg-gray-100 shadow-lg font-serif flex items-center justify-between px-6">
+    <header className="h-12 bg-gray-100 shadow-lg font-sans flex items-center justify-between px-6">
       <div className="flex items-center gap-5 pt-3">
         {/* <div className="flex justify-center items-center gap-2 text-md text-black font-bold tracking-wider">
           <ClipboardList size={25} className="text-black" />

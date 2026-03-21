@@ -120,7 +120,7 @@ export default function EmployeeVerify() {
         </div>
 
         <div className="flex items-center gap-3 mb-3">
-          <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">
+          <div className="bg-gray-200 px-4 py-2 font-sans text-lg tracking-widest text-black">
             {captcha}
           </div>
 

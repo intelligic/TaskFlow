@@ -2,9 +2,9 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Task, TaskComment, TaskStatus } from '@/types/task';
-import { updateTaskStatus, getTaskComments, createTaskComment } from '@/lib/api/taskApi';
+import { updateTaskStatus, getTaskComments, createTaskComment, deleteTask } from '@/lib/api/taskApi';
 import { getApiErrorMessage } from '@/lib/api';
-import { MessageSquare, Send, Pencil, Tag } from 'lucide-react';
+import { MessageSquare, Send, SquarePen, Tag, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTagClasses } from '@/lib/task-tags';
 
@@ -22,6 +22,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [canExpandDescription, setCanExpandDescription] = useState(false);
   const descriptionRef = useRef<HTMLParagraphElement | null>(null);
@@ -113,6 +114,19 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     }
   };
 
+  const handleDeleteTask = async () => {
+    try {
+      setIsUpdating(true);
+      await deleteTask(task._id);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      alert(getApiErrorMessage(err, 'Failed to delete task'));
+    } finally {
+      setIsUpdating(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
     try {
@@ -130,6 +144,19 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
   // Use the local comments state if it's been loaded, otherwise fall back to task.comments.length
   const backendCount = Array.isArray(task.comments) ? task.comments.length : 0;
   const commentCount = comments.length > 0 ? comments.length : backendCount;
+
+  const resolveAssetUrl = (url?: string) => {
+    if (!url) return url || '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
+      return url;
+    }
+    const base =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
+    const origin = base.replace(/\/api\/?$/, '');
+    return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   return (
     <div className="rounded-lg border-gray-200 bg-white text-black p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -179,6 +206,48 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
               ))}
             </div>
           )}
+
+          {task.attachments && task.attachments.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {task.attachments.map((item) => {
+                const isImage = (item.mimeType || '').startsWith('image/');
+                const isAudio = (item.mimeType || '').startsWith('audio/');
+                const prettySize =
+                  (item.size || 0) < 1024 * 1024
+                    ? `${Math.max(1, Math.round((item.size || 0) / 1024))} KB`
+                    : `${((item.size || 0) / (1024 * 1024)).toFixed(1)} MB`;
+                const assetUrl = resolveAssetUrl(item.url);
+
+                return (
+                  <div key={`${task._id}-${item.url}`} className="max-w-xl rounded-lg bg-slate-50 p-3">
+                    {isImage ? (
+                      <a href={assetUrl} target="_blank" rel="noreferrer" className="block">
+                        <div className="relative h-48 w-full max-w-xl overflow-hidden rounded-md bg-white">
+                          <img src={assetUrl} alt={item.name} className="h-full w-full object-contain" />
+                        </div>
+                      </a>
+                    ) : isAudio ? (
+                      <audio controls className="w-full">
+                        <source src={assetUrl} type={item.mimeType || 'audio/webm'} />
+                        Your browser does not support the audio element.
+                      </audio>
+                    ) : (
+                      <a
+                        href={assetUrl}
+                        download={item.name}
+                        className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-blue-600 hover:underline"
+                      >
+                        {item.name}
+                      </a>
+                    )}
+                    <p className="mt-2 text-xs text-slate-500">
+                      {item.name} - {prettySize}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-end gap-2 w-[12%]">
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider 
@@ -198,13 +267,25 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
           </button>
           
           {role === 'admin' && task.status !== 'archived' && (
-            <button 
-              onClick={() => router.push(`/admin/task/update?id=${task._id}`)}
-              className="flex items-center gap-1 text-[14px] font-bold text-green-600 transition-colors"
-            >
-              <Pencil size={14} className='text-green-600' />
-              Edit
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => router.push(`/admin/task/update?id=${task._id}`)}
+                className="rounded-full p-1.5 text-blue-600 hover:bg-blue-50 transition-colors"
+                title="Edit task"
+              >
+                <SquarePen size={16} className="text-blue-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="rounded-full p-1.5 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                title="Delete task"
+                disabled={isUpdating}
+              >
+                <Trash2 size={16} className="text-red-600" />
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -291,6 +372,35 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             >
               <Send size={14} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-lg border bg-white p-5 shadow-xl">
+            <h4 className="text-sm font-bold text-slate-900">Delete Task</h4>
+            <p className="mt-2 text-xs text-slate-600">
+              Are you sure you want to delete this task? This action cannot be undone.
+            </p>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                disabled={isUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteTask}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                disabled={isUpdating}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -5,6 +5,12 @@ import { logout } from '@/lib/auth';
 const resolvedBaseURL =
   process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
 
+const normalizeApiBase = (base?: string) => {
+  if (!base) return base;
+  const trimmed = base.replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+};
+
 const fallbackBaseURL =
   process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api';
 
@@ -14,7 +20,7 @@ if (!resolvedBaseURL && process.env.NODE_ENV === 'production') {
 }
 
 export const api = axios.create({
-  baseURL: resolvedBaseURL || fallbackBaseURL,
+  baseURL: normalizeApiBase(resolvedBaseURL) || fallbackBaseURL,
   timeout: 15000,
   withCredentials: true,
 });

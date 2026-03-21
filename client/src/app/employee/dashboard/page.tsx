@@ -95,10 +95,10 @@ export default function EmployeeDashboardPage() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-6 pb-10">
       <div className="w-full">
-        <h2 className="text-lg font-bold text-black tracking-wide font-serif">
+        <h2 className="text-lg font-bold text-black tracking-wide font-heading">
           Employee Dashboard
         </h2>
-        <p className="text-sm font-semibold font-serif text-gray-500 tracking-wide">
+        <p className="text-sm font-semibold font-sans text-gray-500 tracking-wide">
           {employeeProfile.name} | {employeeProfile.designation}
         </p>
       </div>
@@ -133,7 +133,7 @@ export default function EmployeeDashboardPage() {
           <h3 className="text-md font-bold text-slate-800 uppercase tracking-wider">
             My Task Feed
           </h3>
-          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-black rounded-2xl">
+          <div className="relative flex justify-between items-center gap-2 outline-none focus:ring-1 pr-3 focus:ring-blue-500 border border-gray-500 rounded-2xl">
             <input
               type="text"
               value={searchTerm}

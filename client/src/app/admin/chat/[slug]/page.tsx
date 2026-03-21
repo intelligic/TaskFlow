@@ -43,6 +43,7 @@ export default function AdminChatPage({ params }: Props) {
   const [tasksLoading, setTasksLoading] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
   const [taskSearchTerm, setTaskSearchTerm] = useState("");
+  const [chatSearchTerm, setChatSearchTerm] = useState("");
   const [commentsRefreshKey, setCommentsRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -151,25 +152,29 @@ export default function AdminChatPage({ params }: Props) {
   const filteredTasks = useMemo(() => {
     const query = taskSearchTerm.trim().toLowerCase();
     if (!query) return tasks;
-    return tasks.filter(task => {
+    return tasks.filter((task) => {
       const title = task.title.toLowerCase();
       const description = (task.description || "").toLowerCase();
       const tags = (task.tags || []).join(" ").toLowerCase();
 
       // Search within comments
       const commentTexts = Array.isArray(task.comments)
-        ? task.comments.map((c) => {
-            if (typeof c === 'string') return '';
-            const comment = c as TaskComment;
-            const authorName = comment.author?.name || '';
-            return `${authorName} ${comment.message || ''}`.toLowerCase();
-          }).join(' ')
-        : '';
+        ? task.comments
+            .map((c) => {
+              if (typeof c === "string") return "";
+              const comment = c as TaskComment;
+              const authorName = comment.author?.name || "";
+              return `${authorName} ${comment.message || ""}`.toLowerCase();
+            })
+            .join(" ")
+        : "";
 
-      return title.includes(query) ||
-             description.includes(query) ||
-             tags.includes(query) ||
-             commentTexts.includes(query);
+      return (
+        title.includes(query) ||
+        description.includes(query) ||
+        tags.includes(query) ||
+        commentTexts.includes(query)
+      );
     });
   }, [taskSearchTerm, tasks]);
 
@@ -181,14 +186,16 @@ export default function AdminChatPage({ params }: Props) {
   const online = employee.isOnline;
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] min-h-0 flex-col gap-6 overflow-visible pb-12">
+    <div className="flex h-[calc(100vh-9rem)] min-h-0 flex-col gap-6 overflow-visible pb-2">
       <div className="flex items-center justify-between rounded-lg bg-white">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center text-[22px] justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
             {getInitials(employee.name)}
           </div>
           <div>
-            <h2 className="text-lg font-bold text-black">Chat with {employee.name}</h2>
+            <h2 className="text-lg font-bold text-black">
+              Chat with {employee.name}
+            </h2>
             <p className="text-[12px] font-semibold tracking-wide text-gray-500">
               {employee.designation || "Employee"}
               <span className="mx-2">|</span>
@@ -218,6 +225,21 @@ export default function AdminChatPage({ params }: Props) {
           {showTasks ? "Hide Tasks & Comments" : "View Tasks & Comments"}
         </button>
       </div>
+
+      {!showTasks && (
+        <div className="flex items-center justify-end">
+          <div className="relative flex items-center gap-2 outline-none focus-within:ring-1 pr-3 focus-within:ring-blue-500 border border-slate-200 rounded-md bg-white">
+            <input
+              type="text"
+              value={chatSearchTerm}
+              onChange={(e) => setChatSearchTerm(e.target.value)}
+              placeholder="Search chat by title, description, date, tag..."
+              className="w-72 px-3 py-1.5 text-[12px] text-slate-700 outline-none rounded-md"
+            />
+            <FiSearch className="text-[16px] text-black" />
+          </div>
+        </div>
+      )}
 
       {showTasks ? (
         /* Tasks with Comments View */
@@ -267,9 +289,16 @@ export default function AdminChatPage({ params }: Props) {
         /* Chat View */
         <div className="min-h-0 flex-1">
           {!loading && conversationKey ? (
-            <ChatBox conversationKey={conversationKey} role="admin" targetEmployeeId={employeeId} />
+            <ChatBox
+              conversationKey={conversationKey}
+              role="admin"
+              targetEmployeeId={employeeId}
+              searchTerm={chatSearchTerm}
+            />
           ) : (
-            <div className="text-sm font-semibold text-gray-600">Loading...</div>
+            <div className="text-sm font-semibold text-gray-600">
+              Loading...
+            </div>
           )}
         </div>
       )}

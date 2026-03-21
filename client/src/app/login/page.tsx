@@ -98,7 +98,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="w-105 rounded-xl bg-white p-8 shadow-md">
-        <h2 className="mb-6 font-serif text-2xl font-semibold text-black">
+        <h2 className="mb-6 font-heading text-2xl font-semibold text-black">
           Login
         </h2>
 
@@ -143,7 +143,7 @@ export default function LoginPage() {
             </div>
 
             <div className="mb-3 flex items-center gap-3">
-              <div className="bg-gray-200 px-4 py-2 font-serif text-lg tracking-widest text-black">
+              <div className="bg-gray-200 px-4 py-2 font-sans text-lg tracking-widest text-black">
                 {captcha}
               </div>
               <button
@@ -187,7 +187,7 @@ export default function LoginPage() {
           Forgot password?
         </Link>
 
-        <p className="mt-4 text-center font-serif text-sm text-gray-700">
+        <p className="mt-4 text-center font-sans text-sm text-gray-700">
           New user?
           <Link href="/register" className="ml-1 text-blue-600">
             Register

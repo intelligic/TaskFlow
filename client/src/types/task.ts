@@ -25,6 +25,12 @@ export interface Task {
   comments?: string[] | TaskComment[];
   dueDate?: string;
   tags?: string[];
+  attachments?: {
+    name: string;
+    url: string;
+    mimeType?: string;
+    size?: number;
+  }[];
   isArchived?: boolean;
   createdAt: string;
   updatedAt: string;

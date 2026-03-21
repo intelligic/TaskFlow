@@ -171,7 +171,7 @@ export default function RegisterPage() {
         {errors.confirmPassword && <p className="mb-2 text-sm text-red-500">{errors.confirmPassword.message}</p>}
 
         <div className="mb-3 flex items-center gap-3">
-          <div className="font-serif bg-gray-200 px-4 py-2 text-lg tracking-widest text-black">{captcha}</div>
+          <div className="font-sans bg-gray-200 px-4 py-2 text-lg tracking-widest text-black">{captcha}</div>
           <button type="button" onClick={refreshCaptcha} className="text-sm text-blue-600">
             <TbRefresh className="text-[25px]" />
           </button>

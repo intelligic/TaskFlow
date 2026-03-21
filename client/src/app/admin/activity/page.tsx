@@ -69,7 +69,7 @@ export default function AdminActivityPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1 items-start justify-start">
-        <h2 className="text-lg font-bold text-black tracking-wide font-serif">Activity</h2>
+        <h2 className="text-lg font-bold text-black tracking-wide font-heading">Activity</h2>
         <p className="text-[12px] font-semibold text-gray-500 tracking-wider">
           System-wide activity timeline.
         </p>
@@ -117,7 +117,7 @@ export default function AdminActivityPage() {
                 key={activity._id || `${userName}-${activity.createdAt}-${message}`}
                 className="grid grid-cols-12 px-4 py-3 border-b border-b-gray-100 last:border-b-0 text-[12px] font-semibold text-black"
               >
-                <span className="col-span-3 text-left text-[14px] font-bold font-serif">
+                <span className="col-span-3 text-left text-[14px] font-bold font-sans">
                   {userName}
                 </span>
                 <span className="col-span-6 text-left opacity-80">{message}</span>

@@ -57,6 +57,14 @@ const taskSchema = new mongoose.Schema(
         trim: true,
       },
     ],
+    attachments: [
+      {
+        name: { type: String, required: true },
+        url: { type: String, required: true },
+        mimeType: { type: String, default: "application/octet-stream" },
+        size: { type: Number, default: 0 },
+      },
+    ],
   },
   { timestamps: true }
 );
