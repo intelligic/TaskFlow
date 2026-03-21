@@ -15,7 +15,6 @@ const SOCKET_URL = normalizeSocketUrl(rawSocketUrl);
 export const socket = io(SOCKET_URL ?? undefined, {
   autoConnect: false,
   withCredentials: true,
-  transports: ['websocket'],
 });
 
 // Helpful client-side logs for socket lifecycle to aid debugging
@@ -26,5 +25,10 @@ socket.on('disconnect', (reason) => {
   console.info('[socket] disconnected', reason);
 });
 socket.on('connect_error', (err) => {
-  console.error('[socket] connect_error', err);
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[socket] connect_error', err);
+  } else {
+    // Avoid triggering the Next.js dev overlay for expected local connectivity blips.
+    console.warn('[socket] connect_error', err);
+  }
 });
