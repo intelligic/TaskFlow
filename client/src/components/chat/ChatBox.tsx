@@ -18,6 +18,7 @@ type TaskMessage = {
   dueDate?: string;
   createdAt?: string;
   tags?: string[];
+  comments?: Task["comments"];
   attachments?: {
     name: string;
     url: string;
@@ -50,6 +51,29 @@ export default function ChatBox({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const normalizeText = (value: string) => {
+    return value.toLowerCase().replace(/[^a-z0-9]+/gi, " ").trim();
+  };
+
+  const getQueryTokens = (value: string) => {
+    const normalized = normalizeText(value);
+    return normalized.split(/\s+/).filter(Boolean);
+  };
+
+  const getDateTokens = (value?: string) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value).toLowerCase();
+    return [
+      value,
+      date.toISOString(),
+      date.toLocaleDateString(),
+      date.toLocaleString(),
+    ]
+      .join(" ")
+      .toLowerCase();
+  };
+
   const loadTasks = async () => {
     try {
       setLoading(true);
@@ -66,6 +90,7 @@ export default function ChatBox({
         dueDate: task.dueDate,
         createdAt: task.createdAt,
         tags: task.tags,
+        comments: task.comments,
         attachments: task.attachments || [],
       }));
       setMessages(items);
@@ -169,23 +194,40 @@ export default function ChatBox({
         ) : (
           (searchTerm
             ? messages.filter((item) => {
-                const q = searchTerm.trim().toLowerCase();
-                if (!q) return true;
+                const normalizedQuery = normalizeText(searchTerm);
+                const tokens = getQueryTokens(searchTerm);
+                if (!normalizedQuery || tokens.length === 0) return true;
                 const title = item.text?.toLowerCase() || "";
                 const description = item.description?.toLowerCase() || "";
                 const tags = (item.tags || []).join(" ").toLowerCase();
-                const dateText = item.dueDate
-                  ? new Date(item.dueDate).toLocaleDateString().toLowerCase()
+                const dateText = getDateTokens(item.dueDate);
+                const createdText = getDateTokens(item.createdAt);
+                const commentText = Array.isArray(item.comments)
+                  ? item.comments
+                      .map((comment) => {
+                        if (!comment || typeof comment === "string") return "";
+                        const author = comment.author?.name || "";
+                        const message = comment.message || "";
+                        const commentDate = getDateTokens(comment.createdAt);
+                        return `${author} ${message} ${commentDate}`.toLowerCase();
+                      })
+                      .join(" ")
                   : "";
-                const createdText = item.createdAt
-                  ? new Date(item.createdAt).toLocaleDateString().toLowerCase()
-                  : "";
+
+                const haystack = normalizeText(
+                  [
+                    title,
+                    description,
+                    tags,
+                    dateText,
+                    createdText,
+                    commentText,
+                  ].join(" "),
+                );
+
                 return (
-                  title.includes(q) ||
-                  description.includes(q) ||
-                  tags.includes(q) ||
-                  dateText.includes(q) ||
-                  createdText.includes(q)
+                  haystack.includes(normalizedQuery) ||
+                  tokens.some((token) => haystack.includes(token))
                 );
               })
             : messages

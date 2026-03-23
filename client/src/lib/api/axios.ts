@@ -29,6 +29,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
+      const requestUrl = String(error?.config?.url || "");
+      if (requestUrl.includes("auth/profile")) {
+        // Treat unauthenticated profile checks as a normal "not logged in" state.
+        return Promise.resolve({ ...error.response, data: null });
+      }
       if (typeof window !== 'undefined') {
         const path = window.location.pathname || '';
         const isAuthPage =

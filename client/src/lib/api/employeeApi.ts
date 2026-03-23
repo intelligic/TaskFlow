@@ -2,7 +2,7 @@ import { api } from "@/lib/api/axios";
 
 export const inviteEmployee = async (name: string, email: string, designation?: string) => {
   const response = await api.post<{ message: string; user?: { _id: string; name: string; email: string } }>(
-    "/auth/invite",
+    "auth/invite",
     { name, email, designation },
   );
   return response.data;
@@ -33,14 +33,14 @@ export const getEmployees = async (params?: { search?: string; page?: number; li
 
   const suffix = searchParams.toString();
   const response = await api.get<{ total: number; page: number; employees: EmployeeItem[] }>(
-    `/users${suffix ? `?${suffix}` : ""}`,
+    `users${suffix ? `?${suffix}` : ""}`,
   );
   return response.data;
 };
 
 export const getEmployeeById = async (id: string) => {
   const response = await api.get<{ _id: string; name: string; email: string; role: string; designation?: string; isOnline?: boolean }>(
-    `/users/${id}`,
+    `users/${id}`,
   );
   return response.data;
 };
@@ -55,11 +55,11 @@ export const getEmployeeBySlug = async (slug: string) => {
     slug?: string;
     lastActive?: string;
     isOnline?: boolean;
-  }>(`/users/slug/${encodeURIComponent(slug)}`);
+  }>(`users/slug/${encodeURIComponent(slug)}`);
   return response.data;
 };
 
 export const updateStatus = async (isOnline: boolean) => {
-  const response = await api.patch<EmployeeItem>("/users/status", { isOnline });
+  const response = await api.patch<EmployeeItem>("users/status", { isOnline });
   return response.data;
 };

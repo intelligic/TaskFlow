@@ -13,12 +13,12 @@ export type RegisterResponse = {
 };
 
 export const loginUser = async (email: string, password: string) => {
-  const response = await api.post<LoginResponse>('/auth/login', { email, password });
+  const response = await api.post<LoginResponse>('auth/login', { email, password });
   return response.data;
 };
 
 export const registerUser = async (name: string, email: string, password: string, workspaceName?: string) => {
-  const response = await api.post<RegisterResponse>('/auth/register', { name, email, password, workspaceName });
+  const response = await api.post<RegisterResponse>('auth/register', { name, email, password, workspaceName });
   return response.data;
 };
 
@@ -38,7 +38,7 @@ export const getProfile = async () => {
       canAccess?: string[];
       canManage?: string[];
     };
-  }>('/auth/profile');
+  }>('auth/profile');
   return response.data || null;
 };
 
@@ -47,13 +47,13 @@ export const verifyInviteToken = async (token: string) => {
     valid: boolean;
     user?: { name?: string; email?: string; designation?: string };
   }>(
-    `/auth/verify-invite?token=${encodeURIComponent(token)}`,
+    `auth/verify-invite?token=${encodeURIComponent(token)}`,
   );
   return response.data;
 };
 
 export const setEmployeePassword = async (token: string, password: string, name?: string, designation?: string) => {
-  const response = await api.post<{ message: string }>("/auth/set-password", {
+  const response = await api.post<{ message: string }>("auth/set-password", {
     token,
     password,
     name,
@@ -63,7 +63,7 @@ export const setEmployeePassword = async (token: string, password: string, name?
 };
 
 export const resetPasswordWithEmail = async (email: string, password: string, confirmPassword: string) => {
-  const response = await api.post<{ message: string }>("/auth/forgot-password-direct", {
+  const response = await api.post<{ message: string }>("auth/forgot-password-direct", {
     email,
     password,
     confirmPassword,

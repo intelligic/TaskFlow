@@ -9,7 +9,7 @@ export type DashboardStats = {
 };
 
 export const getDashboardStats = async () => {
-  const response = await api.get<DashboardStats>('/dashboard/stats');
+  const response = await api.get<DashboardStats>('dashboard/stats');
   return response.data;
 };
 
@@ -21,6 +21,6 @@ export type ActivityItem = {
 };
 
 export const getRecentActivity = async () => {
-  const response = await api.get<ActivityItem[]>('/activity');
+  const response = await api.get<ActivityItem[]>('activity');
   return response.data;
 };

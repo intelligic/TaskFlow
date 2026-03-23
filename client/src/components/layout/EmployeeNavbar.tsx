@@ -1,22 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { RiLogoutCircleRLine } from "react-icons/ri";
 import { FaUserAlt } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { MdToggleOn, MdToggleOff } from "react-icons/md";
+import { FiMenu, FiX } from "react-icons/fi";
 import NotificationBell from "@/components/layout/NotificationBell";
 import { logout } from "@/lib/auth";
 import { updateStatus } from "@/lib/api/employeeApi";
 import { getProfile } from "@/lib/api/authApi";
 import { getApiErrorMessage } from "@/lib/api";
-import { useEffect, useState } from "react";
 
 export default function EmployeeNavbar() {
   const pathname = usePathname();
   const [isOnline, setIsOnline] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -38,7 +40,7 @@ export default function EmployeeNavbar() {
       setIsOnline(newStatus);
     } catch (error) {
       console.error("Failed to update status:", error);
-      alert(getApiErrorMessage(error, 'Failed to update status'));
+      alert(getApiErrorMessage(error, "Failed to update status"));
     } finally {
       setStatusLoading(false);
     }
@@ -61,74 +63,155 @@ export default function EmployeeNavbar() {
 
   const linkClass = (path: string) =>
     `relative text-[15px] font-semibold tracking-wide transition-colors ${
-      isActive(path)
-        ? "text-blue-700"
-        : "text-slate-500 hover:text-blue-700"
+      isActive(path) ? "text-blue-700" : "text-slate-500 hover:text-blue-700"
     }`;
 
   return (
-    <header className="h-14 bg-slate-100/80 shadow-[0_2px_10px_rgba(15,23,42,0.08)] font-sans flex items-center justify-between px-8">
-      <div className="flex items-center gap-6">
-        <Image src="/TaskFlowLogo.png" alt="logo" width={160} height={40} />
+    <header className="bg-slate-100/80 shadow-[0_2px_10px_rgba(15,23,42,0.08)] font-sans">
+      <div className="h-14 flex items-center justify-between px-4 lg:px-6">
+        <div className="flex items-center gap-3 lg:gap-4">
+          <Image
+            src="/TaskFlowLogo.png"
+            alt="logo"
+            width={160}
+            height={40}
+            className="h-auto w-50 md:w-55"
+          />
 
-        <div className="flex items-center gap-4">
-          <Link
-            href="/employee/dashboard"
-            className={linkClass("/employee/dashboard")}
-          >
-            Dashboard
-            {isActive("/employee/dashboard") && (
-              <span className="absolute left-0 -bottom-4 h-0.5 w-full rounded-full bg-blue-600" />
-            )}
-          </Link>
-          <Link
-            href="/employee/archive"
-            className={linkClass("/employee/archive")}
-          >
-            Archive
-            {isActive("/employee/archive") && (
-              <span className="absolute left-0 -bottom-4 h-0.5 w-full rounded-full bg-blue-600" />
-            )}
-          </Link>
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link
+              href="/employee/dashboard"
+              className={`${linkClass("/employee/dashboard")} lg:text-[16px]`}
+            >
+              Dashboard
+              {isActive("/employee/dashboard") && (
+                <span className="absolute left-0 -bottom-4 h-0.5 w-full rounded-full bg-blue-600" />
+              )}
+            </Link>
+            <Link
+              href="/employee/archive"
+              className={`${linkClass("/employee/archive")} lg:text-[16px]`}
+            >
+              Archive
+              {isActive("/employee/archive") && (
+                <span className="absolute left-0 -bottom-4 h-0.5 w-full rounded-full bg-blue-600" />
+              )}
+            </Link>
+          </nav>
         </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 mr-2">
-          <span className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}>
-            {isOnline ? "ONLINE" : "OFFLINE"}
-          </span>
-          <button
-            onClick={handleToggleStatus}
-            disabled={statusLoading}
-            className={`text-[34px] transition-colors duration-300 ${
-              isOnline ? "text-green-600" : "text-gray-400"
-            } disabled:opacity-50`}
-            title={isOnline ? "Go Offline" : "Go Online"}
+        <div className="hidden lg:flex items-center gap-3">
+          <div className="flex items-center gap-2 mr-2">
+            <span
+              className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}
+            >
+              {isOnline ? "ONLINE" : "OFFLINE"}
+            </span>
+            <button
+              onClick={handleToggleStatus}
+              disabled={statusLoading}
+              className={`text-[34px] transition-colors duration-300 ${
+                isOnline ? "text-green-600" : "text-gray-400"
+              } disabled:opacity-50`}
+              title={isOnline ? "Go Offline" : "Go Online"}
+            >
+              {isOnline ? <MdToggleOn /> : <MdToggleOff />}
+            </button>
+          </div>
+          <NotificationBell />
+          {/* <div
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm"
+            aria-label="User profile"
+            title="User"
           >
-            {isOnline ? <MdToggleOn /> : <MdToggleOff />}
+            <FaUserAlt size={18} />
+          </div> */}
+          <button
+            onClick={() => {
+              logout();
+            }}
+            className="rounded text-red-600 hover:text-red-500 font-bold"
+            aria-label="Logout"
+            title="Logout"
+          >
+            <RiLogoutCircleRLine size={22} />
           </button>
         </div>
-        <NotificationBell />
-        {/* <div
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm"
-          aria-label="User profile"
-          title="User"
-        >
-          <FaUserAlt size={18} />
-        </div> */}
 
         <button
-          onClick={() => {
-            logout();
-          }}
-          className="rounded text-red-600 hover:text-red-500 font-bold"
-          aria-label="Logout"
-          title="Logout"
+          onClick={() => setMobileOpen((prev) => !prev)}
+          className="lg:hidden flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700"
+          aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
         >
-          <RiLogoutCircleRLine size={22} />
+          {mobileOpen ? <FiX size={20} /> : <FiMenu size={20} />}
         </button>
       </div>
+
+      {mobileOpen && (
+        <div className="lg:hidden border-t border-slate-200 bg-white  px-4 sm:px-14 py-3 ">
+          <div className="flex justify-center items-center ">
+            <div className="flex flex-wrap w-full items-center gap-3 sm:gap-6">
+              <Link
+                href="/employee/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                  isActive("/employee/dashboard")
+                    ? "text-blue-700"
+                    : "text-slate-600 hover:text-blue-700"
+                }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/employee/archive"
+                onClick={() => setMobileOpen(false)}
+                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                  isActive("/employee/archive")
+                    ? "text-blue-700"
+                    : "text-slate-600 hover:text-blue-700"
+                }`}
+              >
+                Archive
+              </Link>
+            </div>
+
+
+            <div className="w-full relative flex items-center justify-end gap-3 sm:gap-6 flex-nowrap">
+              <NotificationBell />
+              <span
+                className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}
+              >
+                {isOnline ? "ONLINE" : "OFFLINE"}
+              </span>
+              <button
+                onClick={handleToggleStatus}
+                disabled={statusLoading}
+                className={`text-[32px] transition-colors duration-300 ${
+                  isOnline ? "text-green-600" : "text-gray-400"
+                } disabled:opacity-50`}
+                title={isOnline ? "Go Offline" : "Go Online"}
+              >
+                {isOnline ? <MdToggleOn /> : <MdToggleOff />}
+              </button>
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  logout();
+                }}
+                className=" flex items-center gap-2 rounded text-red-600 hover:text-red-500 font-bold right-0"
+                aria-label="Logout"
+                title="Logout"
+              >
+                <RiLogoutCircleRLine size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
+
+
+            // <div className="h-px w-full bg-slate-200" />

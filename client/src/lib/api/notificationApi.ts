@@ -13,7 +13,7 @@ export type NotificationItem = {
 
 export const getNotifications = async () => {
   const response = await api.get<NotificationItem[] | { data?: NotificationItem[] }>(
-    "/notifications",
+    "notifications",
   );
   const payload = response.data;
   if (Array.isArray(payload)) return payload;
@@ -22,16 +22,16 @@ export const getNotifications = async () => {
 };
 
 export const markNotificationRead = async (id: string) => {
-  const response = await api.patch<NotificationItem>(`/notifications/${id}/read`);
+  const response = await api.patch<NotificationItem>(`notifications/${id}/read`);
   return response.data;
 };
 
 export const markAllNotificationsRead = async () => {
-  const response = await api.patch<{ message: string }>("/notifications/read-all");
+  const response = await api.patch<{ message: string }>("notifications/read-all");
   return response.data;
 };
 
 export const clearNotifications = async () => {
-  const response = await api.delete<{ message: string }>("/notifications/clear");
+  const response = await api.delete<{ message: string }>("notifications/clear");
   return response.data;
 };

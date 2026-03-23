@@ -1,18 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { RiLogoutCircleRLine } from "react-icons/ri";
 import { FaUserAlt } from "react-icons/fa";
-// import { ClipboardList } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { MdPersonAddAlt1, MdOutlineAddTask } from "react-icons/md";
+import { FiMenu, FiX } from "react-icons/fi";
 import NotificationBell from "@/components/layout/NotificationBell";
 import { logout } from "@/lib/auth";
 
 export default function AdminNavbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const normalizePath = (path: string) => {
     const normalized = path.replace(/\/+$/, "");
@@ -41,75 +43,224 @@ export default function AdminNavbar() {
   };
 
   return (
-    <div className="h-14 bg-slate-100/80 shadow-[0_2px_10px_rgba(15,23,42,0.08)] font-sans flex items-center justify-between px-8">
-      <div className="flex items-center gap-6">
-          <Image src="/TaskFlowLogo.png" alt="logo" width={160} height={40} />
-          
-        <div className="flex items-center gap-4">
-          <Link
-            href="/admin/dashboard"
-            className={`relative text-[15px] font-semibold tracking-wide transition-colors ${isActive("/admin/dashboard")
-              ? "text-indigo-700"
-              : "text-slate-500 hover:text-indigo-600"
+    <header className="bg-slate-100/80 shadow-[0_2px_10px_rgba(15,23,42,0.08)] font-sans">
+      <div className="h-14 flex items-center justify-between px-4 lg:px-6">
+        <div className="flex items-center gap-3 lg:gap-4">
+          <Image
+            src="/TaskFlowLogo.png"
+            alt="logo"
+            width={160}
+            height={40}
+            className="h-auto w-50 md:w-55"
+          />
+
+          <nav className="hidden lg:flex items-center gap-3">
+            <Link
+              href="/admin/dashboard"
+              className={`relative text-[15px] lg:text-[16px] font-semibold tracking-wide transition-colors ${
+                isActive("/admin/dashboard")
+                  ? "text-indigo-700"
+                  : "text-slate-500 hover:text-indigo-600"
               }`}
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/admin/employees"
-            className={`relative text-[15px] font-semibold tracking-wide transition-colors ${isActive("/admin/employees")
-              ? "text-indigo-700"
-              : "text-slate-500 hover:text-indigo-600"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/admin/employees"
+              className={`relative text-[15px] lg:text-[16px] font-semibold tracking-wide transition-colors ${
+                isActive("/admin/employees")
+                  ? "text-indigo-700"
+                  : "text-slate-500 hover:text-indigo-600"
               }`}
-          >
-            Employees
-          </Link>
-          <Link
-            href="/admin/archive"
-            className={`relative text-[15px] font-semibold tracking-wide transition-colors ${isActive("/admin/archive")
-              ? "text-indigo-700"
-              : "text-slate-500 hover:text-indigo-600"
+            >
+              Employees
+            </Link>
+            <Link
+              href="/admin/archive"
+              className={`relative text-[15px] lg:text-[16px] font-semibold tracking-wide transition-colors ${
+                isActive("/admin/archive")
+                  ? "text-indigo-700"
+                  : "text-slate-500 hover:text-indigo-600"
               }`}
-          >
-            Archive
-          </Link>
+            >
+              Archive
+            </Link>
+          </nav>
         </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <NotificationBell />
-        <Link
-          href="/admin/employees/invite"
-          className="border border-gray-500 px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm hover:bg-gray-200 duration-700 ease-in-out flex items-center gap-2 text-gray-900"
-        >
-          <MdPersonAddAlt1 className="text-lg" />
-          Add Employee
-        </Link>
-        <Link
-          href="/admin/task/create"
-          className="bg-blue-600 text-white px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm flex items-center gap-2 transition-colors hover:bg-blue-700"
-        >
-          <MdOutlineAddTask className="text-lg" />
-          Create Task
-        </Link>
+        <div className="hidden lg:flex items-center gap-3">
+          <NotificationBell />
+          <Link
+            href="/admin/employees/invite"
+            className="border border-gray-500 px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm lg:text-[15px] hover:bg-gray-200 duration-700 ease-in-out flex items-center gap-2 text-gray-900"
+          >
+            <MdPersonAddAlt1 className="text-lg" />
+            Add Employee
+          </Link>
+          <button
+            onClick={handleCreateTask}
+            className="bg-blue-600 text-white px-3 py-1.5 font-bold tracking-wide rounded-lg text-sm lg:text-[15px] flex items-center gap-2 transition-colors hover:bg-blue-700"
+          >
+            <MdOutlineAddTask className="text-lg" />
+            Create Task
+          </button>
 
-        <div
-          className="ml-2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-600"
-          aria-label="User profile"
-          title="User"
-        >
-          <FaUserAlt size={18} />
+          <div
+            className="ml-2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-600"
+            aria-label="User profile"
+            title="User"
+          >
+            <FaUserAlt size={18} />
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="rounded text-red-600 hover:text-red-500 font-bold"
+            aria-label="Logout"
+            title="Logout"
+          >
+            <RiLogoutCircleRLine size={22} />
+          </button>
         </div>
 
         <button
-          onClick={handleLogout}
-          className="rounded text-red-600 hover:text-red-500 font-bold"
-          aria-label="Logout"
-          title="Logout"
+          onClick={() => setMobileOpen((prev) => !prev)}
+          className="lg:hidden flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700"
+          aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
         >
-          <RiLogoutCircleRLine size={22} />
+          {mobileOpen ? <FiX size={20} /> : <FiMenu size={20} />}
         </button>
       </div>
-    </div>
+
+      {mobileOpen && (
+        <div className="lg:hidden border-t border-slate-200 bg-white px-4 sm:px-14 py-3">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/admin/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                  isActive("/admin/dashboard")
+                    ? "text-indigo-700"
+                    : "text-slate-600 hover:text-indigo-600"
+                }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/admin/employees"
+                onClick={() => setMobileOpen(false)}
+                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                  isActive("/admin/employees")
+                    ? "text-indigo-700"
+                    : "text-slate-600 hover:text-indigo-600"
+                }`}
+              >
+                Employees
+              </Link>
+              <Link
+                href="/admin/archive"
+                onClick={() => setMobileOpen(false)}
+                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                  isActive("/admin/archive")
+                    ? "text-indigo-700"
+                    : "text-slate-600 hover:text-indigo-600"
+                }`}
+              >
+                Archive
+              </Link>
+            </div>
+
+            <div className="h-px w-full bg-slate-200" />
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="w-full flex flex-col sm:flex-row gap-6 ">
+                <div className=" relative w-full flex  items-center justify-start gap-5 sm:w-95">
+                  <NotificationBell />
+                  <div
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-600"
+                    aria-label="User profile"
+                    title="User"
+                  >
+                    <FaUserAlt size={18} />
+
+                      <button
+                        onClick={() => {
+                          setMobileOpen(false);
+                          router.push("/admin/employees/invite");
+                        }}
+                       className="flex absolute right-0 sm:hidden items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all duration-200 ease-in-out"
+                      >
+                        <MdPersonAddAlt1 className="text-lg" />
+                        Add Employee
+                      </button>
+                  </div>
+                </div>
+                <div className="w-full flex  items-center justify-end gap-5 relative sm:static">
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        router.push("/admin/employees/invite");
+                      }}
+                      className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all duration-200 ease-in-out"
+                    >
+                      <MdPersonAddAlt1 className="text-lg" />
+                      Add Employee
+                    </button>
+
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      handleCreateTask();
+                    }}
+                    className="absolute left-0 sm:static bg-blue-600 text-white px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    <MdOutlineAddTask className="text-lg" />
+                    Create Task
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex items-center gap-2 rounded text-red-600 hover:text-red-500 font-bold"
+                    aria-label="Logout"
+                    title="Logout"
+                  >
+                    <RiLogoutCircleRLine size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
   );
 }
+
+// <div className="flex flex-wrap gap-4">
+//   <button
+//     onClick={() => {
+//       setMobileOpen(false);
+//       handleCreateTask();
+//     }}
+//     className="flex-1 min-w-35 bg-blue-600 text-white px-3 py-2 font-bold tracking-wide rounded-lg text-sm flex items-center justify-center gap-2 transition-colors hover:bg-blue-700"
+//   >
+//     <MdOutlineAddTask className="text-lg" />
+//     Create Task
+//   </button>
+
+//   <button
+//     onClick={() => {
+//       setMobileOpen(false);
+//       handleLogout();
+//     }}
+//     className="flex items-center gap-2 rounded text-red-600 hover:text-red-500 font-bold"
+//     aria-label="Logout"
+//     title="Logout"
+//   >
+//     <RiLogoutCircleRLine size={20} />
+//   </button>
+// </div>

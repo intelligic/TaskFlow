@@ -21,7 +21,7 @@ export type ActivityItem = {
 };
 
 export const getActivities = async () => {
-  const response = await api.get<ActivityItem[] | { data: ActivityItem[] }>("/activity");
+  const response = await api.get<ActivityItem[] | { data: ActivityItem[] }>("activity");
   const payload = response.data;
 
   if (Array.isArray(payload)) return payload;

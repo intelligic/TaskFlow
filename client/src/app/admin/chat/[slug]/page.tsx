@@ -46,6 +46,32 @@ export default function AdminChatPage({ params }: Props) {
   const [chatSearchTerm, setChatSearchTerm] = useState("");
   const [commentsRefreshKey, setCommentsRefreshKey] = useState(0);
 
+  const normalizeText = useCallback((value: string) => {
+    return value.toLowerCase().replace(/[^a-z0-9]+/gi, " ").trim();
+  }, []);
+
+  const getQueryTokens = useCallback(
+    (value: string) => {
+      const normalized = normalizeText(value);
+      return normalized.split(/\s+/).filter(Boolean);
+    },
+    [normalizeText],
+  );
+
+  const getDateTokens = useCallback((value?: string) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value).toLowerCase();
+    return [
+      value,
+      date.toISOString(),
+      date.toLocaleDateString(),
+      date.toLocaleString(),
+    ]
+      .join(" ")
+      .toLowerCase();
+  }, []);
+
   useEffect(() => {
     Promise.resolve(params).then((resolved) => setSlug(resolved.slug));
   }, [params]);
@@ -150,12 +176,15 @@ export default function AdminChatPage({ params }: Props) {
   }, [employeeId]);
 
   const filteredTasks = useMemo(() => {
-    const query = taskSearchTerm.trim().toLowerCase();
-    if (!query) return tasks;
+    const normalizedQuery = normalizeText(taskSearchTerm);
+    const tokens = getQueryTokens(taskSearchTerm);
+    if (!normalizedQuery || tokens.length === 0) return tasks;
     return tasks.filter((task) => {
       const title = task.title.toLowerCase();
       const description = (task.description || "").toLowerCase();
       const tags = (task.tags || []).join(" ").toLowerCase();
+      const dueDateText = getDateTokens(task.dueDate);
+      const createdText = getDateTokens(task.createdAt);
 
       // Search within comments
       const commentTexts = Array.isArray(task.comments)
@@ -164,19 +193,29 @@ export default function AdminChatPage({ params }: Props) {
               if (typeof c === "string") return "";
               const comment = c as TaskComment;
               const authorName = comment.author?.name || "";
-              return `${authorName} ${comment.message || ""}`.toLowerCase();
+              const commentDate = getDateTokens(comment.createdAt);
+              return `${authorName} ${comment.message || ""} ${commentDate}`.toLowerCase();
             })
             .join(" ")
         : "";
 
+      const haystack = normalizeText(
+        [
+          title,
+          description,
+          tags,
+          dueDateText,
+          createdText,
+          commentTexts,
+        ].join(" "),
+      );
+
       return (
-        title.includes(query) ||
-        description.includes(query) ||
-        tags.includes(query) ||
-        commentTexts.includes(query)
+        haystack.includes(normalizedQuery) ||
+        tokens.some((token) => haystack.includes(token))
       );
     });
-  }, [taskSearchTerm, tasks]);
+  }, [taskSearchTerm, tasks, getDateTokens, getQueryTokens, normalizeText]);
 
   const conversationKey = useMemo(() => {
     if (!employeeId) return "";
@@ -232,14 +271,14 @@ export default function AdminChatPage({ params }: Props) {
             Tasks assigned to {employee.name}
           </h3>
           <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
+            <FiSearch className="text-[16px] text-slate-500" />
             <input
               type="text"
-              value={taskSearchTerm}
-              onChange={(e) => setTaskSearchTerm(e.target.value)}
+              value={chatSearchTerm}
+              onChange={(e) => setChatSearchTerm(e.target.value)}
               placeholder="Search tasks, comments..."
               className="w-56 md:w-72 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
             />
-            <FiSearch className="text-[16px] text-slate-500" />
           </div>
         </div>
       )}
@@ -252,6 +291,7 @@ export default function AdminChatPage({ params }: Props) {
               Tasks assigned to {employee.name}
             </h3>
             <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
+              <FiSearch className="text-[16px] text-slate-500" />
               <input
                 type="text"
                 value={taskSearchTerm}
@@ -259,7 +299,6 @@ export default function AdminChatPage({ params }: Props) {
                 placeholder="Search tasks, comments..."
                 className="w-56 md:w-72 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
               />
-              <FiSearch className="text-[16px] text-slate-500" />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-slate-200">

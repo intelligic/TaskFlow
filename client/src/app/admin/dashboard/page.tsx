@@ -241,9 +241,9 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      <div className="w-full flex-1 flex flex-wrap flex-col md:flex-row justify-between gap-10  min-h-0 border">
+      <div className="w-full flex-1 flex flex-wrap flex-col md:flex-row justify-between gap-10  min-h-0">
         {/* Recent Tasks Section */}
-        <div className="flex flex-1 w-full min-h-0 max-h-[65vh] flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
+        <div className="flex flex-1 w-full min-h-0 h-full flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
           <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
             <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
               Recent Tasks

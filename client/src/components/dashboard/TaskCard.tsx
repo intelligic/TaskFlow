@@ -206,7 +206,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-400">
             <span className="font-semibold tracking-wider text-[12px] text-slate-600">
               Assigned to:{' '}
-              <span className="text-slate-900 font-bold tracking-wider text-[13px]">{assigneeName}</span>
+              <span className="text-slate-900 font-bold tracking-wider text-[14px]">{assigneeName}</span>
             </span>
             {task.dueDate && (
               <span className="text-[12px] font-semibold tracking-wider text-slate-600">
@@ -267,7 +267,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
           )}
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2 min-w-[120px]">
+        <div className="flex flex-col items-end gap-2 min-w-30">
           <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider 
             ${task.status === 'pending' ? 'bg-orange-100 text-orange-600 py-1 px-3 text-[12px]' : ''}
             ${task.status === 'completed' ? 'bg-blue-100 text-blue-600 py-1 px-3 text-[12px]' : ''}
