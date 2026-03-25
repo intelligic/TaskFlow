@@ -13,10 +13,12 @@ import { logout } from "@/lib/auth";
 import { updateStatus } from "@/lib/api/employeeApi";
 import { getProfile } from "@/lib/api/authApi";
 import { getApiErrorMessage } from "@/lib/api";
+import { isRecentlyActive } from "@/lib/online";
 
 export default function EmployeeNavbar() {
   const pathname = usePathname();
   const [isOnline, setIsOnline] = useState(false);
+  const [lastActive, setLastActive] = useState<string | undefined>(undefined);
   const [statusLoading, setStatusLoading] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -24,7 +26,8 @@ export default function EmployeeNavbar() {
     const fetchStatus = async () => {
       try {
         const profile = await getProfile();
-        setIsOnline(profile.isOnline || false);
+        setIsOnline(profile?.isOnline || false);
+        setLastActive(profile?.lastActive);
       } catch (error) {
         console.error("Failed to fetch profile:", error);
       }
@@ -36,8 +39,13 @@ export default function EmployeeNavbar() {
     try {
       setStatusLoading(true);
       const newStatus = !isOnline;
-      await updateStatus(newStatus);
+      const updated = await updateStatus(newStatus);
       setIsOnline(newStatus);
+      if (updated?.lastActive) {
+        setLastActive(updated.lastActive);
+      } else {
+        setLastActive(new Date().toISOString());
+      }
     } catch (error) {
       console.error("Failed to update status:", error);
       alert(getApiErrorMessage(error, "Failed to update status"));
@@ -102,20 +110,25 @@ export default function EmployeeNavbar() {
 
         <div className="hidden lg:flex items-center gap-3">
           <div className="flex items-center gap-2 mr-2">
+            {(() => {
+              const online = isRecentlyActive(lastActive, isOnline);
+              return (
             <span
-              className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}
+              className={`text-[12px] font-bold tracking-wider ${online ? "text-green-600" : "text-gray-500"}`}
             >
-              {isOnline ? "ONLINE" : "OFFLINE"}
+              {online ? "ONLINE" : "OFFLINE"}
             </span>
+              );
+            })()}
             <button
               onClick={handleToggleStatus}
               disabled={statusLoading}
               className={`text-[34px] transition-colors duration-300 ${
-                isOnline ? "text-green-600" : "text-gray-400"
+                isRecentlyActive(lastActive, isOnline) ? "text-green-600" : "text-gray-400"
               } disabled:opacity-50`}
-              title={isOnline ? "Go Offline" : "Go Online"}
+              title={isRecentlyActive(lastActive, isOnline) ? "Go Offline" : "Go Online"}
             >
-              {isOnline ? <MdToggleOn /> : <MdToggleOff />}
+              {isRecentlyActive(lastActive, isOnline) ? <MdToggleOn /> : <MdToggleOff />}
             </button>
           </div>
           <NotificationBell />
@@ -183,20 +196,25 @@ export default function EmployeeNavbar() {
                 <div className="flex items-center gap-3">
                   <NotificationBell />
                   <div className="flex items-center gap-2">
+                    {(() => {
+                      const online = isRecentlyActive(lastActive, isOnline);
+                      return (
                     <span
-                      className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}
+                      className={`text-[12px] font-bold tracking-wider ${online ? "text-green-600" : "text-gray-500"}`}
                     >
-                      {isOnline ? "ONLINE" : "OFFLINE"}
+                      {online ? "ONLINE" : "OFFLINE"}
                     </span>
+                      );
+                    })()}
                     <button
                       onClick={handleToggleStatus}
                       disabled={statusLoading}
                       className={`text-[32px] transition-colors duration-300 ${
-                        isOnline ? "text-green-600" : "text-gray-400"
+                        isRecentlyActive(lastActive, isOnline) ? "text-green-600" : "text-gray-400"
                       } disabled:opacity-50`}
-                      title={isOnline ? "Go Offline" : "Go Online"}
+                      title={isRecentlyActive(lastActive, isOnline) ? "Go Offline" : "Go Online"}
                     >
-                      {isOnline ? <MdToggleOn /> : <MdToggleOff />}
+                      {isRecentlyActive(lastActive, isOnline) ? <MdToggleOn /> : <MdToggleOff />}
                     </button>
                   </div>
                 </div>

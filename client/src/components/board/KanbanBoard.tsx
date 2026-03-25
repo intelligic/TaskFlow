@@ -18,26 +18,31 @@ import Column from "./Column";
 
 const COLUMNS = [
   { id: "pending", title: "Pending" },
-  { id: "in-progress", title: "In Progress" },
   { id: "completed", title: "Completed" },
   { id: "closed", title: "Closed" },
+  { id: "archived", title: "Archived" },
 ] as const;
 
 type ColumnId = (typeof COLUMNS)[number]["id"];
 
 const statusToColumn = (status?: string, isArchived?: boolean): ColumnId => {
-  if (isArchived) return "closed";
+  if (isArchived) return "archived";
   const value = String(status || "").toLowerCase();
+  if (value === "archived") return "archived";
   if (value === "closed") return "closed";
   if (value === "completed" || value === "done") return "completed";
-  if (value === "in_progress" || value === "in-progress" || value === "review") return "in-progress";
   if (value === "pending" || value === "todo") return "pending";
   return "pending";
 };
 
 const columnToStatus = (columnId: ColumnId) => {
-  if (columnId === "in-progress") return "in-progress";
   return columnId;
+};
+
+const isAdminTransitionAllowed = (from: ColumnId, to: ColumnId) => {
+  if (from === to) return true;
+  if (from === "completed" && to === "closed") return true;
+  return false;
 };
 
 export default function KanbanBoard() {
@@ -83,7 +88,7 @@ export default function KanbanBoard() {
           ? {
               ...task,
               status: columnToStatus(nextColumn),
-              isArchived: nextColumn === "closed",
+              isArchived: nextColumn === "archived",
             }
           : task,
       ),
@@ -145,6 +150,9 @@ export default function KanbanBoard() {
     }
 
     if (activeColumn !== overColumn) {
+      if (!isAdminTransitionAllowed(activeColumn, overColumn)) {
+        return;
+      }
       const previousTasks = tasks;
       updateTaskInState(activeId, overColumn);
 

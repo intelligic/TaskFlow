@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { PlayCircle, CheckCircle2, Users, Activity, X } from "lucide-react";
+import Image from "next/image";
 import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboardApi";
 import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
 import { getProfile } from "@/lib/api/authApi";
@@ -14,6 +15,7 @@ import TaskCard from "@/components/dashboard/TaskCard";
 import { FiSearch } from "react-icons/fi";
 import { Tag } from "lucide-react";
 import { getTagClasses, TASK_TAGS } from "@/lib/task-tags";
+import { isRecentlyActive } from "@/lib/online";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -129,7 +131,7 @@ export default function AdminDashboardPage() {
       setAssigneeId("");
       setDueDate("");
       setSelectedTags([]);
-      setSuccessMessage("Task Created Successfully");
+      setSuccessMessage("Task created successfully");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       setFormError("Failed to create task");
@@ -269,10 +271,12 @@ export default function AdminDashboardPage() {
               <div className="flex flex-1 items-center justify-center py-10">
                 <div className="grid w-full max-w-5xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
                   <div className="w-full max-w-sm mx-auto">
-                    <img
+                    <Image
                       src="/NoTaskImg.webp"
+                      width={420}
+                      height={320}
                       className="h-80 w-full object-cover"
-                      alt="NO Task Image"
+                      alt="No tasks"
                     />
                   </div>
                   <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
@@ -325,41 +329,50 @@ export default function AdminDashboardPage() {
           </div>
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
             <div className="divide-y">
-              {paginatedEmployees.map((emp) => (
-                <div
-                  key={emp._id}
-                  className="flex justify-between items-center px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
-                  onClick={() =>
-                    router.push(`/admin/chat/${emp.slug || emp._id}`)
-                  }
-                >
-                  <div className="w-1/3 text-left">
-                    <p className="text-[14px] font-bold text-slate-900">
-                      {emp.name}
-                    </p>
-                  </div>
-                  <div className="w-1/3 flex justify-center items-center gap-3">
-                    <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
-                      <RiArrowDownBoxFill size={20} className="text-red-500" />
-                      {emp.pending ?? 0}
-                    </span>
-                    <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
-                      <RiArrowUpBoxFill size={20} className="text-green-500" />
-                      {emp.completed ?? 0}
-                    </span>
-                  </div>
-                  <div className="w-1/3 text-right flex items-center justify-end gap-2">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${emp.isOnline ? "bg-green-500" : "bg-slate-300"}`}
-                    ></span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${emp.isOnline ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}
-                    >
-                      {emp.isOnline ? "Active" : "Offline"}
-                    </span>
-                  </div>
+              {paginatedEmployees.length === 0 ? (
+                <div className="px-4 py-6 text-sm font-semibold text-slate-600">
+                  No employees found
                 </div>
-              ))}
+              ) : (
+                paginatedEmployees.map((emp) => {
+                  const online = isRecentlyActive(emp.lastActive, emp.isOnline);
+                  return (
+                    <div
+                      key={emp._id}
+                      className="flex justify-between items-center px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                      onClick={() =>
+                        router.push(`/admin/chat/${emp.slug || emp._id}`)
+                      }
+                    >
+                      <div className="w-1/3 text-left">
+                        <p className="text-[14px] font-bold text-slate-900">
+                          {emp.name}
+                        </p>
+                      </div>
+                      <div className="w-1/3 flex justify-center items-center gap-3">
+                        <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
+                          <RiArrowDownBoxFill size={20} className="text-red-500" />
+                          {emp.pending ?? 0}
+                        </span>
+                        <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
+                          <RiArrowUpBoxFill size={20} className="text-green-500" />
+                          {emp.completed ?? 0}
+                        </span>
+                      </div>
+                      <div className="w-1/3 text-right flex items-center justify-end gap-2">
+                        <span
+                          className={`inline-block h-2 w-2 rounded-full ${online ? "bg-green-500" : "bg-slate-300"}`}
+                        ></span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${online ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}
+                        >
+                          {online ? "Active" : "Offline"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

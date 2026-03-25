@@ -8,17 +8,9 @@ export function useSocket() {
   useEffect(() => {
     // Connection is managed centrally by `ProtectedRoute` to avoid duplicate sockets.
 
-    const onTaskUpdated = (payload: unknown) => {
-      console.log('taskUpdated', payload);
-    };
-
-    const onNewComment = (payload: unknown) => {
-      console.log('newComment', payload);
-    };
-
-    const onFileUploaded = (payload: unknown) => {
-      console.log('fileUploaded', payload);
-    };
+    const onTaskUpdated = () => {};
+    const onNewComment = () => {};
+    const onFileUploaded = () => {};
 
     socket.on('taskUpdated', onTaskUpdated);
     socket.on('newComment', onNewComment);
@@ -34,4 +26,3 @@ export function useSocket() {
 
   return socket;
 }
-

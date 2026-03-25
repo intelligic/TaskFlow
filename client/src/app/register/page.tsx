@@ -66,6 +66,11 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const res = await registerUser(data.name, data.email, data.password, data.workspaceName);
+      if (!res) {
+        setServerError("Registration failed. Try again.");
+        refreshCaptcha();
+        return;
+      }
       const role = res.user?.role;
       if (role === "admin") {
         router.replace("/admin/dashboard");

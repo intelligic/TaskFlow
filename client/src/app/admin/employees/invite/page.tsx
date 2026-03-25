@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Info, Mail, User, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { inviteEmployee } from "@/lib/api/employeeApi";
+import { getApiErrorMessage } from "@/lib/api";
 
 export default function InviteEmployeePage() {
   const [name, setName] = useState("");
@@ -46,13 +47,16 @@ export default function InviteEmployeePage() {
               setSuccess("");
               setLoading(true);
               const res = await inviteEmployee(name.trim(), email.trim(), designation);
+              if (!res) {
+                setError("Failed to send invite");
+                return;
+              }
               setSuccess(res.message || "Invite sent");
               setName("");
               setEmail("");
               setDesignation("Senior Developer");
-            } catch (err: any) {
-              const apiMessage = err?.response?.data?.message;
-              setError(apiMessage || "Failed to send invite");
+            } catch (err: unknown) {
+              setError(getApiErrorMessage(err, "Failed to send invite"));
             } finally {
               setLoading(false);
             }

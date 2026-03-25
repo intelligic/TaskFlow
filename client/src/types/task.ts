@@ -1,4 +1,4 @@
-export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'closed' | 'archived';
+export type TaskStatus = 'pending' | 'completed' | 'closed' | 'archived';
 
 export interface TaskCommentAuthor {
   _id?: string;

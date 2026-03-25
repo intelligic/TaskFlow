@@ -59,6 +59,11 @@ function UpdateTaskContent() {
 
         setEmployees(Array.isArray(empRes.employees) ? empRes.employees : []);
         
+        if (!taskData) {
+          setError("Task not found");
+          return;
+        }
+
         // Pre-fill task data
         setTitle(taskData.title || "");
         setDescription(taskData.description || "");

@@ -9,6 +9,8 @@ import TaskCard from "@/components/dashboard/TaskCard";
 import { FiSearch } from "react-icons/fi";
 import { MessageSquare } from "lucide-react";
 import { socket } from "@/lib/socket";
+import Image from "next/image";
+import { isRecentlyActive } from "@/lib/online";
 
 type Props = {
   params: { slug: string } | Promise<{ slug: string }>;
@@ -85,6 +87,11 @@ export default function AdminChatPage({ params }: Props) {
         setLoading(true);
         const res = await getEmployeeBySlug(slug);
         if (cancelled) return;
+        if (!res) {
+          setEmployee({ name: `Employee ${slug}`, designation: "" });
+          setEmployeeId("");
+          return;
+        }
         setEmployee({
           name: res.name || "Employee",
           designation: res.designation || "",
@@ -222,7 +229,7 @@ export default function AdminChatPage({ params }: Props) {
     return `employee-${employeeId}`;
   }, [employeeId]);
 
-  const online = employee.isOnline;
+  const online = isRecentlyActive(employee.lastActive, employee.isOnline);
 
   return (
     <div className="flex h-[calc(100vh-9rem)] min-h-0 flex-col gap-6 overflow-visible pb-2">
@@ -314,10 +321,12 @@ export default function AdminChatPage({ params }: Props) {
               <div className="flex flex-1 items-center justify-center py-10">
                 <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
                   <div className="w-130 mx-auto">
-                    <img
+                    <Image
                       src="/NoTaskImg.webp"
+                      width={420}
+                      height={320}
                       className="h-80 w-full object-cover"
-                      alt="NO Task Image"
+                      alt="No tasks"
                     />
                   </div>
                   <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">

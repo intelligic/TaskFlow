@@ -12,26 +12,42 @@ export type NotificationItem = {
 };
 
 export const getNotifications = async () => {
-  const response = await api.get<NotificationItem[] | { data?: NotificationItem[] }>(
-    "notifications",
-  );
-  const payload = response.data;
-  if (Array.isArray(payload)) return payload;
-  if (payload && Array.isArray(payload.data)) return payload.data;
-  return [];
+  try {
+    const response = await api.get<NotificationItem[] | { data?: NotificationItem[] }>(
+      "notifications",
+    );
+    const payload = response.data;
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.data)) return payload.data;
+    return [];
+  } catch {
+    return [];
+  }
 };
 
 export const markNotificationRead = async (id: string) => {
-  const response = await api.patch<NotificationItem>(`notifications/${id}/read`);
-  return response.data;
+  try {
+    const response = await api.patch<NotificationItem>(`notifications/${id}/read`);
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const markAllNotificationsRead = async () => {
-  const response = await api.patch<{ message: string }>("notifications/read-all");
-  return response.data;
+  try {
+    const response = await api.patch<{ message: string }>("notifications/read-all");
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const clearNotifications = async () => {
-  const response = await api.delete<{ message: string }>("notifications/clear");
-  return response.data;
+  try {
+    const response = await api.delete<{ message: string }>("notifications/clear");
+    return response.data;
+  } catch {
+    return null;
+  }
 };

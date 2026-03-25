@@ -1,11 +1,15 @@
 import { api } from "@/lib/api/axios";
 
 export const inviteEmployee = async (name: string, email: string, designation?: string) => {
-  const response = await api.post<{ message: string; user?: { _id: string; name: string; email: string } }>(
-    "auth/invite",
-    { name, email, designation },
-  );
-  return response.data;
+  try {
+    const response = await api.post<{ message: string; user?: { _id: string; name: string; email: string } }>(
+      "auth/invite",
+      { name, email, designation },
+    );
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export type EmployeeItem = {
@@ -32,34 +36,50 @@ export const getEmployees = async (params?: { search?: string; page?: number; li
   if (params?.role) searchParams.set("role", params.role);
 
   const suffix = searchParams.toString();
-  const response = await api.get<{ total: number; page: number; employees: EmployeeItem[] }>(
-    `users${suffix ? `?${suffix}` : ""}`,
-  );
-  return response.data;
+  try {
+    const response = await api.get<{ total: number; page: number; employees: EmployeeItem[] }>(
+      `users${suffix ? `?${suffix}` : ""}`,
+    );
+    return response.data;
+  } catch {
+    return { total: 0, page: params?.page || 1, employees: [] as EmployeeItem[] };
+  }
 };
 
 export const getEmployeeById = async (id: string) => {
-  const response = await api.get<{ _id: string; name: string; email: string; role: string; designation?: string; isOnline?: boolean }>(
-    `users/${id}`,
-  );
-  return response.data;
+  try {
+    const response = await api.get<{ _id: string; name: string; email: string; role: string; designation?: string; isOnline?: boolean }>(
+      `users/${id}`,
+    );
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const getEmployeeBySlug = async (slug: string) => {
-  const response = await api.get<{
-    _id: string;
-    name: string;
-    email: string;
-    role: string;
-    designation?: string;
-    slug?: string;
-    lastActive?: string;
-    isOnline?: boolean;
-  }>(`users/slug/${encodeURIComponent(slug)}`);
-  return response.data;
+  try {
+    const response = await api.get<{
+      _id: string;
+      name: string;
+      email: string;
+      role: string;
+      designation?: string;
+      slug?: string;
+      lastActive?: string;
+      isOnline?: boolean;
+    }>(`users/slug/${encodeURIComponent(slug)}`);
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const updateStatus = async (isOnline: boolean) => {
-  const response = await api.patch<EmployeeItem>("users/status", { isOnline });
-  return response.data;
+  try {
+    const response = await api.patch<EmployeeItem>("users/status", { isOnline });
+    return response.data;
+  } catch {
+    return null;
+  }
 };

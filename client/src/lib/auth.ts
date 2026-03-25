@@ -22,14 +22,13 @@ export function isTokenValid(token: string): boolean {
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) return null;
-  localStorage.removeItem(TOKEN_KEY);
-  return null;
+  return token || null;
 }
 
-export function setToken(_token: string) {
+export function setToken(token: string) {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(TOKEN_KEY);
+  if (!token) return;
+  localStorage.setItem(TOKEN_KEY, token);
 }
 
 export function logout() {
@@ -40,10 +39,10 @@ export function logout() {
       const trimmed = base.replace(/\/+$/, '');
       return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
     };
-    const base =
-      normalizeApiBase(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL) ||
-      (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
-    fetch(`${base}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    const base = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL);
+    if (base) {
+      fetch(`${base}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    }
   } finally {
     localStorage.removeItem(TOKEN_KEY);
     window.location.href = '/login';
@@ -57,22 +56,29 @@ export function logoutSilent() {
     const trimmed = base.replace(/\/+$/, '');
     return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
   };
-  const base =
-    normalizeApiBase(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL) ||
-    (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
-  const url = `${base}/auth/logout`;
+  const base = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL);
+  const url = base ? `${base}/auth/logout` : '';
   try {
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob([], { type: 'application/json' }));
-      return;
+      if (url) {
+        navigator.sendBeacon(url, new Blob([], { type: 'application/json' }));
+        return;
+      }
     }
   } catch {
     // ignore
   }
-  fetch(url, { method: 'POST', credentials: 'include', keepalive: true }).catch(() => {});
+  if (url) {
+    fetch(url, { method: 'POST', credentials: 'include', keepalive: true }).catch(() => {});
+  }
 }
 
 export function getUserRole(_token: string): 'admin' | 'employee' | null {
-  return null;
+  try {
+    const decoded = jwtDecode<JWTPayload>(_token);
+    return decoded?.role || null;
+  } catch {
+    return null;
+  }
 }
 

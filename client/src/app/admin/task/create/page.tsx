@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { MdOutlineAddTask } from "react-icons/md";
 import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
 import { createTask } from "@/lib/api/taskApi";
+import { getApiErrorMessage } from "@/lib/api";
 
 export default function CreateTaskPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function CreateTaskPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState("");
   const today = new Date();
   const minDueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
     today.getDate(),
@@ -67,9 +69,10 @@ export default function CreateTaskPage() {
 
     try {
       setError("");
+      setSuccess("");
       setSubmitting(true);
 
-      await createTask({
+      const created = await createTask({
         title: title.trim(),
         description: description.trim(),
         assignedTo: assignee,
@@ -77,14 +80,19 @@ export default function CreateTaskPage() {
         tags: selectedTag ? [selectedTag] : [],
       });
 
+      if (!created) {
+        setError("Failed to create task");
+        return;
+      }
+
       setTitle("");
       setDescription("");
       setAssignee("");
       setDueDate("");
       setSelectedTag(null);
-      router.push("/admin/dashboard");
+      setSuccess("Task created successfully");
     } catch {
-      setError("Failed to create task");
+      setError(getApiErrorMessage(undefined, "Failed to create task"));
     } finally {
       setSubmitting(false);
     }
@@ -105,6 +113,11 @@ export default function CreateTaskPage() {
       {error && (
         <p className="mt-4 rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-red-600">
           {error}
+        </p>
+      )}
+      {success && (
+        <p className="mt-4 rounded-lg border bg-white px-4 py-3 text-sm font-semibold text-green-600">
+          {success}
         </p>
       )}
 

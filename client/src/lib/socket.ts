@@ -2,7 +2,7 @@
 
 const rawSocketUrl =
   process.env.NEXT_PUBLIC_SOCKET_URL ||
-  (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com' : 'http://localhost:5000');
+  process.env.NEXT_PUBLIC_API_URL;
 
 const normalizeSocketUrl = (value?: string) => {
   if (!value) return value;

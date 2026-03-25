@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import TaskBubble from "./TaskBubble";
 import ChatInput from "./ChatInput";
 import { socket } from "@/lib/socket";
@@ -77,9 +78,12 @@ export default function ChatBox({
   const loadTasks = async () => {
     try {
       setLoading(true);
-      const res = await getTasks({
-        assignedTo: role === "employee" ? "currentUser" : targetEmployeeId,
-      });
+      const res =
+        role === "employee"
+          ? await getTasks()
+          : await getTasks({
+              assignedTo: targetEmployeeId,
+            });
       const list = Array.isArray(res) ? res : (res as { tasks: Task[] }).tasks;
       const items = (list || []).map((task) => ({
         id: task._id,
@@ -162,35 +166,33 @@ export default function ChatBox({
         {loading ? (
           <div className="px-3 py-2 text-sm font-semibold text-gray-600">Loading...</div>
         ) : messages.length === 0 ? (
-          // <div className="px-3 py-2 text-sm font-semibold text-gray-600">No tasks yet.</div>
-
-                        <div className="flex flex-1 items-center justify-center py-10">
-                <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
-                  <div className="w-130 mx-auto">
-                    <img
-                      src="/NoTaskImg.webp"
-                      className="h-80 w-full object-cover"
-                      alt="NO Task Image"
-                    />
-                  </div>
-                  <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
-                    <h4 className="text-3xl font-extrabold text-slate-800">
-                       No tasks assigned to this employee.
-                    </h4>
-                    <p className="text-[16px] text-slate-500 text-center">
-                      You currently have no tasks assigned to you.
-                      <br />
-                      Enjoy your productive day!
-                    </p>
-                    <button
-                      onClick={loadTasks}
-                      className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
-                    >
-                      Refresh
-                    </button>
-                  </div>
-                </div>
+          <div className="flex flex-1 items-center justify-center py-10">
+            <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
+              <div className="w-130 mx-auto">
+                <Image
+                  src="/NoTaskImg.webp"
+                  width={420}
+                  height={320}
+                  className="h-80 w-full object-cover"
+                  alt="No tasks"
+                />
               </div>
+              <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
+                <h4 className="text-3xl font-extrabold text-slate-800">No tasks yet.</h4>
+                <p className="text-[16px] text-slate-500 text-center">
+                  You currently have no tasks assigned to you.
+                  <br />
+                  Enjoy your productive day!
+                </p>
+                <button
+                  onClick={loadTasks}
+                  className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+          </div>
         ) : (
           (searchTerm
             ? messages.filter((item) => {

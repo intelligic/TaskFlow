@@ -43,10 +43,8 @@ export default function TaskBubble({
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
       return url;
     }
-    const base =
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
+    const base = process.env.NEXT_PUBLIC_API_URL;
+    if (!base) return url;
     const origin = base.replace(/\/api\/?$/, '');
     return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
   };
@@ -137,21 +135,6 @@ export default function TaskBubble({
       )}
 
       <div className="flex items-center gap-5 text-[12px]">
-        {/* Pending */}
-        <button
-          onClick={() => role === 'admin' && onUpdateStatus(task.id, 'pending')}
-          disabled={!(role === 'admin' && !isPending)}
-          className={`rounded px-5 py-1 text-[14px] ${
-            isPending
-              ? 'bg-red-600 text-white'
-              : role === 'admin'
-              ? 'bg-red-100 text-red-400 hover:bg-red-200'
-              : 'bg-red-100 text-red-400 cursor-not-allowed opacity-70'
-          }`}
-        >
-          Pending
-        </button>
-
         {/* Complete (Employee action) */}
         <button
           onClick={() => role === 'employee' && onUpdateStatus(task.id, 'completed')}

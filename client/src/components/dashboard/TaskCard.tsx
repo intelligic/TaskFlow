@@ -150,10 +150,8 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
       return url;
     }
-    const base =
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
+    const base = process.env.NEXT_PUBLIC_API_URL;
+    if (!base) return url || '';
     const origin = base.replace(/\/api\/?$/, '');
     return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
   };
@@ -358,13 +356,6 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
               className="rounded bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 disabled:opacity-50"
             >
               Close
-            </button>
-            <button
-              disabled={isUpdating}
-              onClick={() => handleStatusUpdate('pending')}
-              className="rounded bg-orange-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-600 disabled:opacity-50"
-            >
-              Pending
             </button>
           </div>
         )}

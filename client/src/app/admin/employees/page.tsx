@@ -6,6 +6,7 @@ import { getEmployees, type EmployeeItem } from "@/lib/api/employeeApi";
 import { getApiErrorMessage } from "@/lib/api";
 import { FiSearch } from "react-icons/fi";
 import { socket } from "@/lib/socket";
+import Image from "next/image";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -108,26 +109,25 @@ export default function AdminEmployeesPage() {
               {error}
             </p>
           ) : paginatedEmployees.length === 0 ? (
-            // <p className="px-2 py-3 text-sm font-semibold text-slate-600">
-            //   No employees yet.
-            // </p>
             <div className="flex flex-1 items-center justify-center py-10">
               <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
                 <div className="w-full max-w-sm mx-auto">
-                  <img
+                  <Image
                     src="/NoTaskImg.webp"
+                    width={420}
+                    height={320}
                     className="h-80 w-full object-cover"
-                    alt="NO Task Image"
+                    alt="No employees"
                   />
                 </div>
                 <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
                   <h4 className="text-3xl font-extrabold text-slate-800">
-                    No tasks assigned yet
+                    No employees found
                   </h4>
                   <p className="text-[16px] text-slate-500 text-center">
-                    You currently have No employees yet.
+                    You currently have no employees.
                     <br />
-                    Please Add employees to manage your workspace effectively!
+                    Please add employees to manage your workspace effectively.
                   </p>
                   <button
                     onClick={refresh}

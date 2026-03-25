@@ -2,6 +2,7 @@
 
 import { CheckCircle2, ClipboardList } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { getTasks } from "@/lib/api/taskApi";
 import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboardApi";
 import { Task } from "@/types/task";
@@ -154,7 +155,13 @@ export default function EmployeeDashboardPage() {
             <div className="flex flex-1 items-center justify-center py-10">
               <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
                 <div className="w-full max-w-sm mx-auto">
-                    <img src='/NoTaskImg.webp' className="h-80 w-full object-cover" alt="NO Task Image"/>
+                    <Image
+                      src="/NoTaskImg.webp"
+                      width={420}
+                      height={320}
+                      className="h-80 w-full object-cover"
+                      alt="No tasks"
+                    />
                 </div>
                 
                 <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">

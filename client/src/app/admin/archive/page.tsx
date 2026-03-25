@@ -5,6 +5,8 @@ import { getArchivedTasks } from "@/lib/api/taskApi";
 import { Task, TaskComment } from "@/types/task";
 import { FiSearch } from "react-icons/fi";
 import TaskCard from "@/components/dashboard/TaskCard";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function AdminArchivePage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -99,10 +101,12 @@ export default function AdminArchivePage() {
           <div className="flex flex-1 items-center justify-center py-10">
             <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
               <div className="w-130 mx-auto">
-                <img
+                <Image
                   src="/NoTaskImg.webp"
+                  width={420}
+                  height={320}
                   className="h-80 w-full object-cover"
-                  alt="NO Task Image"
+                  alt="No archived tasks"
                 />
               </div>
               <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
@@ -114,12 +118,12 @@ export default function AdminArchivePage() {
                   <br />
                   Keep up the good work and complete some tasks to see them here!
                 </p>
-                <link
+                <Link
                   href="/admin/dashboard"
                   className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
                 >
                   Go to Dashboard
-                </link>
+                </Link>
               </div>
             </div>
           </div>
