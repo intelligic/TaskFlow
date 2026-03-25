@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.use(protect, updateLastActive);
 
+router.get("/", getDashboardStats);
 router.get("/stats", getDashboardStats);
 
 export default router;

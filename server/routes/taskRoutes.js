@@ -14,6 +14,7 @@ import {
   deleteTask,
   getDashboardStats,
   getArchivedTasks,
+  getAssignedTasks,
   getTaskById,
   getTasks,
   updateTaskStatus,
@@ -75,6 +76,7 @@ const normalizeTaskBody = (req, _res, next) => {
 
 router.post("/", requireRole("admin"), maybeUploadAttachments, normalizeTaskBody, validate(createTaskSchema), createTask);
 router.get("/", getTasks);
+router.get("/assigned", getAssignedTasks);
 router.get("/stats/dashboard", getDashboardStats);
 router.get("/archived", getArchivedTasks);
 router.post("/:id/comments", addComment);

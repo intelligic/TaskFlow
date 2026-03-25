@@ -5,5 +5,4 @@ export const emitRealtime = (eventName, payload, room) => {
   } else {
     global.io.emit(eventName, payload);
   }
-  console.log("Realtime event emitted", { eventName, room: room || 'broadcast' });
 };

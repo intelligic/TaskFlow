@@ -1,4 +1,4 @@
-import http from "http";
+﻿import http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -6,6 +6,7 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import morgan from "morgan";
 import { Server as SocketIOServer } from "socket.io";
 import jwt from "jsonwebtoken";
 import User from "./models/User.js";
@@ -25,8 +26,8 @@ import errorHandler from "./middleware/errorHandler.js";
 import logger from "./utils/logger.js";
 
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 1000, // 1000 requests per minute
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per 15 minutes per IP
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many requests, please try again later." },
@@ -38,40 +39,9 @@ const server = http.createServer(app);
 const serverDir = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(serverDir, "uploads");
 
-const originRaw =
-  process.env.CORS_ORIGIN ||
-  process.env.FRONTEND_URL ||
-  process.env.CLIENT_ORIGIN ||
-  "";
-
-const allowedOrigins = originRaw
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
-
-const isDev = env.NODE_ENV !== "production";
-const isLocalhostOrigin = (origin) =>
-  typeof origin === "string" &&
-  (origin.startsWith("http://localhost:") ||
-    origin.startsWith("http://127.0.0.1:"));
-
 const corsOptions = {
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (allowedOrigins.length === 0) {
-      return cb(null, isDev);
-    }
-    if (allowedOrigins.includes(origin)) {
-      return cb(null, true);
-    }
-    if (isDev && isLocalhostOrigin(origin)) {
-      return cb(null, true);
-    }
-    return cb(null, false);
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  origin: process.env.FRONTEND_URL,
   credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 
 const io = new SocketIOServer(server, { cors: corsOptions });
@@ -127,6 +97,7 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
+app.use(morgan("dev"));
 app.use(express.json({ limit: "1mb" }));
 app.use(limiter);
 app.use(
@@ -160,7 +131,11 @@ app.use("/api/audit", auditRoutes);
 app.use("/api/users", userRoutes);
 
 app.get("/", (req, res) => {
-  res.send("TaskManager API running");
+  res.send("TaskFlow API is running 🚀");
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", uptime: process.uptime() });
 });
 
 app.use((req, res) => {
@@ -169,18 +144,21 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-const PORT = env.PORT || process.env.PORT || 5000;
+const PORT = process.env.PORT || env.PORT || 5000;
 
 server.on("error", (error) => {
   if (error && error.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use. Set PORT to a free port and retry.`);
     logger.error(`Port ${PORT} is already in use. Set PORT to a free port and retry.`);
   } else {
+    console.error(`Server error: ${error?.message || String(error)}`);
     logger.error(`Server error: ${error?.message || String(error)}`);
   }
   process.exit(1);
 });
 
 server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
   logger.info(`Server running on port ${PORT}`);
 });
 
@@ -193,3 +171,6 @@ process.on("uncaughtException", (error) => {
   logger.error(`Uncaught exception: ${error?.stack || error?.message || String(error)}`);
   server.close(() => process.exit(1));
 });
+
+
+

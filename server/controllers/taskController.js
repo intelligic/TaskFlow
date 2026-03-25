@@ -5,6 +5,9 @@ import { emitRealtime } from "../utils/realtime.js";
 import User from "../models/User.js";
 import { createNotification, createNotificationsForAdmins } from "../services/notificationService.js";
 
+const allowedStatuses = new Set(["pending", "completed", "closed", "archived"]);
+const isValidStatus = (value) => typeof value === "string" && allowedStatuses.has(value);
+
 /**
  * Admin creates task -> status = pending
  */
@@ -58,7 +61,6 @@ export const createTask = async (req, res) => {
     {
       const room = task.workspace ? `workspace:${String(task.workspace)}` : undefined;
       emitRealtime("taskCreated", task, room);
-      console.log("[createTask] emitted taskCreated", { room });
     }
     res.status(201).json(task);
   } catch (error) {
@@ -101,6 +103,32 @@ export const getTasks = async (req, res) => {
   }
 };
 
+export const getAssignedTasks = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(200).json([]);
+    }
+
+    const tasks = await Task.find({
+      assignedTo: req.user.id,
+      workspace: req.user.workspace,
+      status: { $ne: "archived" },
+    })
+      .populate("assignedTo", "name email designation")
+      .populate("createdBy", "name email")
+      .populate({
+        path: "comments",
+        populate: { path: "author", select: "name" },
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json(Array.isArray(tasks) ? tasks : []);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getTaskById = async (req, res) => {
   try {
     const task = await Task.findOne({
@@ -131,6 +159,10 @@ export const getTaskById = async (req, res) => {
 export const updateTaskStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    if (!isValidStatus(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
     const task = await Task.findOne({ _id: req.params.id, workspace: req.user.workspace });
 
     if (!task) return res.status(404).json({ message: "Task not found" });
@@ -150,13 +182,6 @@ export const updateTaskStatus = async (req, res) => {
     }
 
     if (!allowed) {
-      console.log("[updateTaskStatus] forbidden transition", {
-        userId: req.user.id,
-        role: req.user.role,
-        taskId: task._id,
-        currentStatus,
-        attemptedStatus: status,
-      });
       return res.status(403).json({ message: "Status transition not allowed for your role" });
     }
 
@@ -173,7 +198,6 @@ export const updateTaskStatus = async (req, res) => {
     {
       const room = task.workspace ? `workspace:${String(task.workspace)}` : undefined;
       emitRealtime("taskUpdated", task, room);
-      console.log("[updateTaskStatus] emitted taskUpdated", { room, status: task.status });
     }
     res.json(task);
   } catch (error) {
@@ -207,7 +231,6 @@ export const updateTask = async (req, res) => {
     {
       const room = task.workspace ? `workspace:${String(task.workspace)}` : undefined;
       emitRealtime("taskUpdated", task, room);
-      console.log("[updateTask] emitted taskUpdated", { room });
     }
     res.json(task);
   } catch (error) {

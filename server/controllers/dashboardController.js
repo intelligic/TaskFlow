@@ -4,7 +4,13 @@ import User from "../models/User.js";
 export const getDashboardStats = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.json({
+        totalTasks: 0,
+        completedTasks: 0,
+        activeTasks: 0,
+        totalEmployees: 0,
+        activeEmployees: 0,
+      });
     }
 
     if (req.user.role === "admin") {

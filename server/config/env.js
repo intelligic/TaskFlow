@@ -20,7 +20,7 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 
-  FRONTEND_URL: z.string().url("FRONTEND_URL must be a valid URL").optional(),
+  FRONTEND_URL: z.string().url("FRONTEND_URL must be a valid URL"),
   CORS_ORIGIN: z.string().optional(),
 
   ALLOW_EMPLOYEE_REGISTER: z.preprocess(toBool, z.boolean()).default(false),

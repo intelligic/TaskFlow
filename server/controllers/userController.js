@@ -118,11 +118,9 @@ export const updateOnlineStatus = async (req, res) => {
     
 
     if (!user) return res.status(404).json({ message: "User not found" });
-    console.log("[updateOnlineStatus] user updated:", { id: user._id, isOnline: user.isOnline, workspace: user.workspace });
     // Emit only to sockets connected to the same workspace to avoid leaking across workspaces
     const room = user.workspace ? `workspace:${user.workspace}` : undefined;
     emitRealtime("userStatusUpdated", user, room);
-    console.log("[updateOnlineStatus] emitted userStatusUpdated", { room });
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error" });

@@ -155,12 +155,10 @@ export const login = async (req, res) => {
 
     const user = await User.findOne({ email: normalizedEmail }).select("+password");
     if (!user) {
-      console.log("Login failed: User not found", normalizedEmail);
       return res.status(404).json({ message: "User not found" });
     }
 
     if (user.role === "employee" && user.isVerified === false) {
-      console.log("Login failed: Employee not verified", normalizedEmail);
       return res.status(403).json({
         message: "Account not verified. Please set your password using the invite link.",
       });
@@ -168,7 +166,6 @@ export const login = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Login failed: Password mismatch", normalizedEmail);
       return res.status(400).json({ message: "Password incorrect" });
     }
 
@@ -244,12 +241,10 @@ export const inviteEmployee = async (req, res) => {
     const normalizedEmail = normalizeEmail(email);
 
     if (!safeName || safeName.length < 2) {
-      console.log("inviteEmployee 400: Name is required", safeName);
       return res.status(400).json({ message: "Name is required" });
     }
 
     if (!isValidEmail(normalizedEmail)) {
-      console.log("inviteEmployee 400: Valid email is required", normalizedEmail);
       return res.status(400).json({ message: "Valid email is required" });
     }
 
@@ -258,7 +253,6 @@ export const inviteEmployee = async (req, res) => {
 
     const existing = await User.findOne({ email: normalizedEmail }).select("+password");
     if (existing && existing.isVerified) {
-      console.log("inviteEmployee 400: Employee already exists", normalizedEmail);
       return res.status(400).json({ message: "Employee already exists" });
     }
 
