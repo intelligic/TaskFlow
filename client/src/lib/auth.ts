@@ -1,4 +1,4 @@
-import { jwtDecode } from 'jwt-decode';
+﻿import { jwtDecode } from 'jwt-decode';
 
 type JWTPayload = {
   role: 'admin' | 'employee';
@@ -42,7 +42,7 @@ export function logout() {
     };
     const base =
       normalizeApiBase(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL) ||
-      (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
+      (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
     fetch(`${base}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
   } finally {
     localStorage.removeItem(TOKEN_KEY);
@@ -59,7 +59,7 @@ export function logoutSilent() {
   };
   const base =
     normalizeApiBase(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL) ||
-    (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
+    (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
   const url = `${base}/auth/logout`;
   try {
     if (navigator.sendBeacon) {
@@ -75,3 +75,4 @@ export function logoutSilent() {
 export function getUserRole(_token: string): 'admin' | 'employee' | null {
   return null;
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { Calendar, Tag } from 'lucide-react';
@@ -46,7 +46,7 @@ export default function TaskBubble({
     const base =
       process.env.NEXT_PUBLIC_API_BASE_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
+      (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
     const origin = base.replace(/\/api\/?$/, '');
     return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
   };
@@ -185,3 +185,4 @@ export default function TaskBubble({
     </div>
   );
 }
+

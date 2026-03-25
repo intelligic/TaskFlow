@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Task, TaskComment, TaskStatus } from '@/types/task';
@@ -153,7 +153,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     const base =
       process.env.NEXT_PUBLIC_API_BASE_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api');
+      (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api');
     const origin = base.replace(/\/api\/?$/, '');
     return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
   };
@@ -445,3 +445,4 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     </div>
   );
 }
+

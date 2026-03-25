@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 
 import { logout } from '@/lib/auth';
 
@@ -12,7 +12,7 @@ const normalizeApiBase = (base?: string) => {
 };
 
 const fallbackBaseURL =
-  process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api';
+  process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com/api' : 'http://localhost:5000/api';
 
 if (!resolvedBaseURL && process.env.NODE_ENV === 'production') {
   // Avoid throwing during build/SSR; surface as a visible warning instead.
@@ -52,3 +52,4 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+

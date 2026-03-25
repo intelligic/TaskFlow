@@ -1,8 +1,8 @@
-import { io } from 'socket.io-client';
+﻿import { io } from 'socket.io-client';
 
 const rawSocketUrl =
   process.env.NEXT_PUBLIC_SOCKET_URL ||
-  (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5000');
+  (process.env.NODE_ENV === 'production' ? 'https://taskflow-serer.onrender.com' : 'http://localhost:5000');
 
 const normalizeSocketUrl = (value?: string) => {
   if (!value) return value;
@@ -32,3 +32,4 @@ socket.on('connect_error', (err) => {
     console.warn('[socket] connect_error', err);
   }
 });
+
