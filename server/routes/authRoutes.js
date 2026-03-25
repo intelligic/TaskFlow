@@ -1,6 +1,6 @@
 import express from "express";
 
-import protect from "../middleware/authMiddleware.js";
+import protect, { optionalProtect } from "../middleware/authMiddleware.js";
 import updateLastActive from "../middleware/updateLastActive.js";
 import {
   inviteEmployee,
@@ -27,6 +27,6 @@ router.post("/set-password", setPassword);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/forgot-password-direct", resetPasswordWithEmail);
-router.get("/profile", protect, updateLastActive, getProfile);
+router.get("/profile", optionalProtect, getProfile);
 
 export default router;

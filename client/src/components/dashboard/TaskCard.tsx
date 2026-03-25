@@ -166,14 +166,14 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     .join('');
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white text-black p-5 shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:shadow-[0_12px_24px_rgba(15,23,42,0.12)] transition-shadow">
-      <div className="flex items-start justify-between gap-4">
+    <div className="rounded-2xl border border-slate-100 bg-white text-black p-4 sm:p-5 shadow-[0_8px_18px_rgba(15,23,42,0.08)] hover:shadow-[0_12px_24px_rgba(15,23,42,0.12)] transition-shadow">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
         <div className="flex items-start gap-4 flex-1">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700 shadow-inner">
+          <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700 shadow-inner">
             {initials || 'U'}
           </div>
           <div className="flex-1">
-            <h4 className="text-[17px] font-bold text-slate-900">{task.title}</h4>
+            <h4 className="text-[15px] sm:text-[17px] font-bold text-slate-900">{task.title}</h4>
           {task.description && (
             <div
               role="button"
@@ -190,7 +190,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             >
               <p
                 ref={descriptionRef}
-                className={`text-[14px] text-slate-500 ${
+                className={`text-[13px] sm:text-[14px] text-slate-500 ${
                   isDescriptionExpanded ? '' : 'line-clamp-2'
                 }`}
               >
@@ -239,9 +239,9 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
                   <div key={`${task._id}-${item.url}`} className="max-w-xl rounded-lg bg-slate-50 p-3">
                     {isImage ? (
                       <a href={assetUrl} target="_blank" rel="noreferrer" className="block">
-                        <div className="relative h-48 w-full max-w-xl overflow-hidden rounded-md bg-white">
-                          <img src={assetUrl} alt={item.name} className="h-full w-full object-contain" />
-                        </div>
+                          <div className="relative h-28 sm:h-48 w-full max-w-xl overflow-hidden rounded-md bg-white">
+                            <img src={assetUrl} alt={item.name} className="h-full w-full object-contain" />
+                          </div>
                       </a>
                     ) : isAudio ? (
                       <audio controls className="w-full">
@@ -267,12 +267,12 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
           )}
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2 min-w-30">
+        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-slate-100">
           <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider 
-            ${task.status === 'pending' ? 'bg-orange-100 text-orange-600 py-1 px-3 text-[12px]' : ''}
-            ${task.status === 'completed' ? 'bg-blue-100 text-blue-600 py-1 px-3 text-[12px]' : ''}
-            ${task.status === 'closed' ? 'bg-green-100 text-green-600 py-1 px-3 text-[12px]' : ''}
-            ${task.status === 'archived' ? 'bg-slate-100 text-slate-600 py-1 px-3 text-[12px]' : ''}
+            ${task.status === 'pending' ? 'bg-orange-100 text-orange-600 py-1 px-3 text-[11px] sm:text-[12px]' : ''}
+            ${task.status === 'completed' ? 'bg-blue-100 text-blue-600 py-1 px-3 text-[11px] sm:text-[12px]' : ''}
+            ${task.status === 'closed' ? 'bg-green-100 text-green-600 py-1 px-3 text-[11px] sm:text-[12px]' : ''}
+            ${task.status === 'archived' ? 'bg-slate-100 text-slate-600 py-1 px-3 text-[11px] sm:text-[12px]' : ''}
           `}>
             {task.status}
           </span>
@@ -308,8 +308,8 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 pl-18">
+      <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-slate-50 pt-3">
+        <div className="flex items-center gap-2">
           {task.tags && task.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {task.tags.map((tag) => (
@@ -375,8 +375,8 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
       </div>
 
       {showComments && (
-        <div className="border-t pt-4 space-y-3">
-          <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
+          <div className="border-t pt-4 space-y-3">
+          <div className="max-h-32 sm:max-h-40 overflow-y-auto space-y-2 pr-1">
             {loadingComments ? (
               <p className="text-xs text-slate-400">Loading comments...</p>
             ) : comments.length === 0 ? (

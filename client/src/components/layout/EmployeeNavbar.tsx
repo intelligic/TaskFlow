@@ -149,15 +149,15 @@ export default function EmployeeNavbar() {
       </div>
 
       {mobileOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white  px-4 sm:px-14 py-3 ">
-          <div className="flex justify-center items-center ">
-            <div className="flex flex-wrap w-full items-center gap-3 sm:gap-6">
+        <div className="lg:hidden border-t border-slate-200 bg-white px-4 sm:px-6 py-4">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
               <Link
                 href="/employee/dashboard"
                 onClick={() => setMobileOpen(false)}
-                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                className={`text-[15px] font-semibold tracking-wide transition-colors ${
                   isActive("/employee/dashboard")
-                    ? "text-blue-700"
+                    ? "text-blue-700 font-bold"
                     : "text-slate-600 hover:text-blue-700"
                 }`}
               >
@@ -166,9 +166,9 @@ export default function EmployeeNavbar() {
               <Link
                 href="/employee/archive"
                 onClick={() => setMobileOpen(false)}
-                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                className={`text-[15px] font-semibold tracking-wide transition-colors ${
                   isActive("/employee/archive")
-                    ? "text-blue-700"
+                    ? "text-blue-700 font-bold"
                     : "text-slate-600 hover:text-blue-700"
                 }`}
               >
@@ -176,35 +176,44 @@ export default function EmployeeNavbar() {
               </Link>
             </div>
 
+            <div className="h-px w-full bg-slate-200" />
 
-            <div className="w-full relative flex items-center justify-end gap-3 sm:gap-6 flex-nowrap">
-              <NotificationBell />
-              <span
-                className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}
-              >
-                {isOnline ? "ONLINE" : "OFFLINE"}
-              </span>
-              <button
-                onClick={handleToggleStatus}
-                disabled={statusLoading}
-                className={`text-[32px] transition-colors duration-300 ${
-                  isOnline ? "text-green-600" : "text-gray-400"
-                } disabled:opacity-50`}
-                title={isOnline ? "Go Offline" : "Go Online"}
-              >
-                {isOnline ? <MdToggleOn /> : <MdToggleOff />}
-              </button>
-              <button
-                onClick={() => {
-                  setMobileOpen(false);
-                  logout();
-                }}
-                className=" flex items-center gap-2 rounded text-red-600 hover:text-red-500 font-bold right-0"
-                aria-label="Logout"
-                title="Logout"
-              >
-                <RiLogoutCircleRLine size={20} />
-              </button>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <NotificationBell />
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[12px] font-bold tracking-wider ${isOnline ? "text-green-600" : "text-gray-500"}`}
+                    >
+                      {isOnline ? "ONLINE" : "OFFLINE"}
+                    </span>
+                    <button
+                      onClick={handleToggleStatus}
+                      disabled={statusLoading}
+                      className={`text-[32px] transition-colors duration-300 ${
+                        isOnline ? "text-green-600" : "text-gray-400"
+                      } disabled:opacity-50`}
+                      title={isOnline ? "Go Offline" : "Go Online"}
+                    >
+                      {isOnline ? <MdToggleOn /> : <MdToggleOff />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    logout();
+                  }}
+                  className="flex items-center gap-2 rounded text-red-600 hover:text-red-500 font-bold"
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <RiLogoutCircleRLine size={22} />
+                  <span>Logout</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

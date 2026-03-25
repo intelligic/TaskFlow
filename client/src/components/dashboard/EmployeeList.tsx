@@ -27,31 +27,31 @@ export default function EmployeeList({ data }: EmployeeListProps) {
         <div
           key={emp._id}
           onClick={() => router.push(`/admin/chat/${emp.slug || emp._id}`)}
-          className="flex cursor-pointer items-center justify-between rounded border bg-white p-2 hover:bg-gray-50"
+          className="flex flex-col sm:flex-row cursor-pointer items-start sm:items-center justify-between rounded border bg-white p-3 hover:bg-gray-50 gap-3"
         >
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-bold font-sans text-black">{emp.name}</p>
-              <p className="text-xs font-medium text-gray-500">
-                {emp.email} | {emp.designation || "Employee"}
+          <div className="flex flex-1 items-center justify-between w-full">
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <p className="text-sm font-bold font-sans text-black truncate">{emp.name}</p>
+              <p className="text-[11px] sm:text-xs font-medium text-gray-500 truncate">
+                {emp.email} <span className="hidden sm:inline">|</span> <br className="sm:hidden" /> {emp.designation || "Employee"}
               </p>
             </div>
             {/* Stats */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 shrink-0 px-2">
               <div className="flex items-center gap-1">
-                <RiArrowDownBoxFill size={20} className="text-red-500" />
+                <RiArrowDownBoxFill size={18} className="text-red-500 sm:size-20" />
                 <span className="text-xs font-bold text-slate-700">{emp.pending ?? 0}</span>
               </div>
               <div className="flex items-center gap-1">
-                <RiArrowUpBoxFill size={20} className="text-green-500" />
+                <RiArrowUpBoxFill size={18} className="text-green-500 sm:size-20" />
                 <span className="text-xs font-bold text-slate-700">{emp.completed ?? 0}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm ml-3">
+          <div className="flex items-center gap-4 text-sm w-full sm:w-auto justify-end sm:justify-start pt-2 sm:pt-0 border-t sm:border-0 border-slate-50">
             <span
-              className={`rounded px-3 py-1 text-xs ${
+              className={`rounded px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
                 emp.status === "Active"
                   ? "bg-green-100 text-green-600"
                   : "bg-yellow-100 text-yellow-600"

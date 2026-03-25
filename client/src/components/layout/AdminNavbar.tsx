@@ -134,15 +134,15 @@ export default function AdminNavbar() {
       </div>
 
       {mobileOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-4 sm:px-14 py-3">
+        <div className="lg:hidden border-t border-slate-200 bg-white px-4 sm:px-6 py-4">
           <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-col gap-4">
               <Link
                 href="/admin/dashboard"
                 onClick={() => setMobileOpen(false)}
-                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                className={`text-[15px] font-semibold tracking-wide transition-colors ${
                   isActive("/admin/dashboard")
-                    ? "text-indigo-700"
+                    ? "text-indigo-700 font-bold"
                     : "text-slate-600 hover:text-indigo-600"
                 }`}
               >
@@ -151,9 +151,9 @@ export default function AdminNavbar() {
               <Link
                 href="/admin/employees"
                 onClick={() => setMobileOpen(false)}
-                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                className={`text-[15px] font-semibold tracking-wide transition-colors ${
                   isActive("/admin/employees")
-                    ? "text-indigo-700"
+                    ? "text-indigo-700 font-bold"
                     : "text-slate-600 hover:text-indigo-600"
                 }`}
               >
@@ -162,9 +162,9 @@ export default function AdminNavbar() {
               <Link
                 href="/admin/archive"
                 onClick={() => setMobileOpen(false)}
-                className={`text-[14px] font-semibold tracking-wide transition-colors ${
+                className={`text-[15px] font-semibold tracking-wide transition-colors ${
                   isActive("/admin/archive")
-                    ? "text-indigo-700"
+                    ? "text-indigo-700 font-bold"
                     : "text-slate-600 hover:text-indigo-600"
                 }`}
               >
@@ -174,9 +174,9 @@ export default function AdminNavbar() {
 
             <div className="h-px w-full bg-slate-200" />
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="w-full flex flex-col sm:flex-row gap-6 ">
-                <div className=" relative w-full flex  items-center justify-start gap-5 sm:w-95">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <NotificationBell />
                   <div
                     className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-gray-600"
@@ -184,53 +184,43 @@ export default function AdminNavbar() {
                     title="User"
                   >
                     <FaUserAlt size={18} />
-
-                      <button
-                        onClick={() => {
-                          setMobileOpen(false);
-                          router.push("/admin/employees/invite");
-                        }}
-                       className="flex absolute right-0 sm:hidden items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all duration-200 ease-in-out"
-                      >
-                        <MdPersonAddAlt1 className="text-lg" />
-                        Add Employee
-                      </button>
                   </div>
                 </div>
-                <div className="w-full flex  items-center justify-end gap-5 relative sm:static">
-                    <button
-                      onClick={() => {
-                        setMobileOpen(false);
-                        router.push("/admin/employees/invite");
-                      }}
-                      className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all duration-200 ease-in-out"
-                    >
-                      <MdPersonAddAlt1 className="text-lg" />
-                      Add Employee
-                    </button>
 
-                  <button
-                    onClick={() => {
-                      setMobileOpen(false);
-                      handleCreateTask();
-                    }}
-                    className="absolute left-0 sm:static bg-blue-600 text-white px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors duration-200"
-                  >
-                    <MdOutlineAddTask className="text-lg" />
-                    Create Task
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMobileOpen(false);
-                      handleLogout();
-                    }}
-                    className="flex items-center gap-2 rounded text-red-600 hover:text-red-500 font-bold"
-                    aria-label="Logout"
-                    title="Logout"
-                  >
-                    <RiLogoutCircleRLine size={20} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex items-center gap-2 rounded text-red-600 hover:text-red-500 font-bold"
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <RiLogoutCircleRLine size={22} />
+                  <span>Logout</span>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-2">
+                <Link
+                  href="/admin/employees/invite"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all duration-200 ease-in-out"
+                >
+                  <MdPersonAddAlt1 className="text-lg" />
+                  Add Employee
+                </Link>
+
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    handleCreateTask();
+                  }}
+                  className="w-full bg-blue-600 text-white px-4 py-2.5 text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors duration-200"
+                >
+                  <MdOutlineAddTask className="text-lg" />
+                  Create Task
+                </button>
               </div>
             </div>
           </div>

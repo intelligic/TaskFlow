@@ -135,14 +135,14 @@ export default function EmployeeDashboardPage() {
           <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
             My Task Feed
           </h3>
-          <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
-            <FiSearch className="text-[16px] text-slate-500" />
+          <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm min-w-0">
+            <FiSearch className="text-[16px] text-slate-500 flex-shrink-0" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search tasks..."
-              className="w-56 md:w-72 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
+              className="w-full max-w-[200px] sm:max-w-xs bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function EmployeeDashboardPage() {
           ) : filteredTasks.length === 0 ? (
             <div className="flex flex-1 items-center justify-center py-10">
               <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
-                <div className="w-130 mx-auto">
+                <div className="w-full max-w-sm mx-auto">
                     <img src='/NoTaskImg.webp' className="h-80 w-full object-cover" alt="NO Task Image"/>
                 </div>
                 

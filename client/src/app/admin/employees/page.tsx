@@ -73,18 +73,18 @@ export default function AdminEmployeesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-1 min-h-0 flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
-        <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
-          <div className="flex flex-col gap-1 items-start justify-start">
-            <h2 className="text-2xl font-extrabold text-slate-800 tracking-wide font-heading">
+        <div className="flex flex-col sm:flex-row items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-3 gap-4">
+          <div className="flex flex-col gap-1 items-start justify-start w-full sm:w-auto">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-wide font-heading">
               All Employees
             </h2>
-            <p className="text-sm font-semibold font-sans text-slate-700 tracking-wide">
-              A Text only Historical record of your complete and close tasks.
+            <p className="text-xs sm:text-sm font-semibold font-sans text-slate-700 tracking-wide">
+              Manage your team members and their activity.
             </p>
           </div>
 
-          <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
-            <FiSearch className="text-[16px] text-slate-500" />
+          <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm w-full sm:w-auto min-w-0">
+            <FiSearch className="text-[16px] text-slate-500 flex-shrink-0" />
             <input
               type="text"
               value={searchTerm}
@@ -92,8 +92,8 @@ export default function AdminEmployeesPage() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search by name, email or designation..."
-              className="w-56 md:w-72 bg-transparent text-[13px] text-slate-7200 outline-none placeholder:text-slate-400"
+              placeholder="Search..."
+              className="w-full sm:w-48 md:w-64 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function AdminEmployeesPage() {
             // </p>
             <div className="flex flex-1 items-center justify-center py-10">
               <div className="grid w-full max-w-7xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
-                <div className="w-130 mx-auto">
+                <div className="w-full max-w-sm mx-auto">
                   <img
                     src="/NoTaskImg.webp"
                     className="h-80 w-full object-cover"
@@ -145,44 +145,52 @@ export default function AdminEmployeesPage() {
       </div>
 
       <div className="flex flex-col gap-3 rounded-lg bg-white px-4 py-2 text-sm md:flex-row md:items-center md:justify-between">
-        <p className="text-md font-extrabold text-slate-800 tracking-wide font-heading">
-          Showing {startItem}-{endItem} of {filteredEmployees.length} employees
+        <p className="text-sm font-extrabold text-slate-800 tracking-wide font-heading">
+          Showing {startItem}-{endItem} of {filteredEmployees.length}
         </p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center sm:justify-end gap-2 overflow-x-auto pb-2 sm:pb-0">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={safePage === 1}
-            className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded border border-black px-3 sm:px-4 text-black py-1 sm:py-1.5 text-xs sm:text-sm disabled:cursor-not-allowed disabled:opacity-70 whitespace-nowrap"
           >
-            Previous
+            Prev
           </button>
 
-          {Array.from({ length: totalPages }).map((_, index) => {
-            const page = index + 1;
-            const active = page === safePage;
+          <div className="flex items-center gap-1 sm:gap-2 mx-1">
+            {Array.from({ length: totalPages }).map((_, index) => {
+              const page = index + 1;
+              const active = page === safePage;
+              
+              // Only show active page and neighbors on mobile
+              if (totalPages > 5 && Math.abs(page - safePage) > 1 && page !== 1 && page !== totalPages) {
+                if (Math.abs(page - safePage) === 2) return <span key={page}>...</span>;
+                return null;
+              }
 
-            return (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`rounded border px-3 py-1.5 ${
-                  active
-                    ? "border-blue-600 bg-blue-600 text-white"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`rounded border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm ${
+                    active
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+          </div>
 
           <button
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={safePage === totalPages}
-            className="rounded border border-black px-4 text-black py-1.5 disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded border border-black px-3 sm:px-4 text-black py-1 sm:py-1.5 text-xs sm:text-sm disabled:cursor-not-allowed disabled:opacity-70 whitespace-nowrap"
           >
             Next
           </button>

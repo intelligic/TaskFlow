@@ -3,7 +3,8 @@ import User from "../models/User.js";
 export const getProfile = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: "Unauthorized" });
+      // Return 200 with null user to indicate no session without triggering console errors
+      return res.status(200).json(null);
     }
 
     const user = await User.findById(req.user.id)

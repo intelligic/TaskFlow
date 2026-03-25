@@ -125,4 +125,45 @@ const protect = async (req, res, next) => {
   }
 };
 
+export const optionalProtect = async (req, res, next) => {
+  if (!process.env.JWT_SECRET) return next();
+
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const bearerToken =
+    typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : null;
+
+  const tokenFromHeader = req.headers["x-auth-token"] || req.headers.token;
+  const cookies = parseCookies(req.headers.cookie || "");
+  const tokenFromCookie = cookies.token;
+  const token =
+    bearerToken ||
+    (Array.isArray(tokenFromHeader) ? tokenFromHeader[0] : tokenFromHeader) ||
+    tokenFromCookie;
+
+  if (!token) return next();
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || typeof decoded !== "object" || !decoded.id || !decoded.role) {
+      return next();
+    }
+
+    if (!isValidObjectId(decoded.id)) return next();
+
+    const dbUser = await User.findById(decoded.id).select("_id name role workspace");
+    if (!dbUser) return next();
+
+    req.user = {
+      id: String(dbUser._id),
+      role: dbUser.role,
+      workspace: dbUser.workspace || null,
+    };
+    next();
+  } catch {
+    next();
+  }
+};
+
 export default protect;

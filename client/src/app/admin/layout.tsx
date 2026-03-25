@@ -9,7 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <ProtectedRoute role="admin">
       <div className="flex h-dvh flex-col overflow-hidden bg-slate-50">
         <AdminNavbar />
-        <main className="flex-1 overflow-y-auto px-14 pt-10">{children}</main>
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-14 pt-10">{children}</main>
         <Footer />
       </div>
     </ProtectedRoute>
