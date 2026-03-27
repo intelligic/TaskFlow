@@ -96,7 +96,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-[420px] rounded-xl bg-white p-6 sm:p-8 shadow-md">
         <h2 className="mb-6 font-heading text-2xl font-semibold text-black">
           Login
@@ -125,7 +125,7 @@ export default function LoginPage() {
                 placeholder="Password"
                 autoComplete="current-password"
                 {...register("password")}
-                className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-12 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
               <button
                 type="button"
@@ -142,14 +142,14 @@ export default function LoginPage() {
               )}
             </div>
 
-            <div className="mb-3 flex items-center gap-3">
-              <div className="bg-gray-200 px-4 py-2 font-sans text-lg tracking-widest text-black">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <div className="w-full sm:w-auto bg-gray-200 px-4 py-2 text-center font-sans text-lg tracking-widest text-black">
                 {captcha}
               </div>
               <button
                 type="button"
                 onClick={refreshCaptcha}
-                className="text-sm text-blue-600"
+                className="self-start text-sm text-blue-600 sm:self-auto"
               >
                 <TbRefresh className="text-[25px]" />
               </button>
@@ -164,7 +164,7 @@ export default function LoginPage() {
             className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
           {errors.captchaInput && (
-            <p className="mb-2 text-sm text-red-500">
+            <p className="mb-2 text-xs text-red-500 sm:text-sm">
               {errors.captchaInput.message}
             </p>
           )}
@@ -172,7 +172,7 @@ export default function LoginPage() {
           <input type="hidden" {...register("captchaGenerated")} />
 
           {serverError && (
-            <p className="mt-3 text-sm text-red-600">{serverError}</p>
+            <p className="mt-3 text-xs text-red-600 sm:text-sm">{serverError}</p>
           )}
 
           <button

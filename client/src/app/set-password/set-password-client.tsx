@@ -67,7 +67,7 @@ export default function SetPasswordClient() {
           if (!token) return;
 
           if (!validatePassword(password)) {
-            setError("Password must be exactly 10 characters with uppercase, lowercase, number, and special character");
+            setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
             return;
           }
 

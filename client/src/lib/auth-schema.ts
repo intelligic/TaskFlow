@@ -3,7 +3,7 @@ import { z } from "zod";
 const normalizeCaptcha = (value: string) => value.trim().toUpperCase();
 
 const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{10}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{8,}$/;
 
 /* REGISTER */
 
@@ -25,7 +25,7 @@ export const registerSchema = z
       .string()
       .regex(
         passwordRegex,
-        "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+        "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
       ),
     confirmPassword: z.string(),
     captchaInput: z.string().min(1, "Captcha required"),
@@ -52,7 +52,7 @@ export const loginSchema = z
       .string()
       .regex(
         passwordRegex,
-        "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+        "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
       ),
     captchaInput: z.string().min(1, "Captcha required"),
     captchaGenerated: z.string(),
@@ -73,7 +73,7 @@ export const forgotPasswordSchema = z
       .string()
       .regex(
         passwordRegex,
-        "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+        "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
       ),
     confirmPassword: z.string(),
   })

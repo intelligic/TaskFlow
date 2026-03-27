@@ -15,7 +15,7 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isValidName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*$/.test(name);
 const isValidWorkspaceName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*$/.test(name);
 const isValidPassword = (password) =>
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{10}$/.test(password);
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{8,}$/.test(password);
 
 const signToken = (user) => {
   if (!process.env.JWT_SECRET) {
@@ -98,7 +98,7 @@ export const register = async (req, res) => {
     if (!password || typeof password !== "string" || !isValidPassword(password)) {
       return res.status(400).json({
         message:
-          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+          "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
       });
     }
 
@@ -386,7 +386,7 @@ export const setPassword = async (req, res) => {
     if (!password || typeof password !== "string" || !isValidPassword(password)) {
       return res.status(400).json({
         message:
-          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+          "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
       });
     }
 
@@ -472,7 +472,7 @@ export const resetPassword = async (req, res) => {
     if (!password || typeof password !== "string" || !isValidPassword(password)) {
       return res.status(400).json({
         message:
-          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+          "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
       });
     }
 
@@ -508,7 +508,7 @@ export const resetPasswordWithEmail = async (req, res) => {
     if (!password || typeof password !== "string" || !isValidPassword(password)) {
       return res.status(400).json({
         message:
-          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+          "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
       });
     }
 
