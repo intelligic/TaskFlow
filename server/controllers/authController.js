@@ -103,11 +103,10 @@ export const register = async (req, res) => {
     const adminExists = await User.exists({ role: "admin" });
     const role = adminExists ? "employee" : "admin";
 
-    if (role === "employee" && String(process.env.ALLOW_EMPLOYEE_REGISTER || "").toLowerCase() !== "true") {
-      return res
-        .status(403)
-        .json({ message: "Employee registration is disabled. Please use an invite link." });
-    }
+    // Registration rule:
+    // - First ever user becomes admin
+    // - All subsequent users become employee
+    // This avoids ambiguity about who is admin and keeps onboarding simple.
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
