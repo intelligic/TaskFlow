@@ -4,6 +4,17 @@ export const validateEmail = (email: string) => {
   return regex.test(email);
 };
 
+export const validateName = (value: string) => {
+  const regex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+  return regex.test(value.trim());
+};
+
+export const validateWorkspaceName = (value: string) => {
+  const regex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+  return regex.test(value.trim());
+};
+
 export const validatePassword = (password: string) => {
-  return password.length >= 8;
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{10}$/;
+  return regex.test(password);
 };

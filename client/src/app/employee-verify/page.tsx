@@ -3,7 +3,7 @@
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { generateCaptcha } from "@/lib/captcha";
-import { validateEmail, validatePassword } from "@/lib/validation";
+import { validateEmail, validateName, validatePassword } from "@/lib/validation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { TbRefresh } from "react-icons/tb";
 
@@ -29,8 +29,8 @@ export default function EmployeeVerify() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (name.length < 3) {
-      setError("Name must be at least 3 characters");
+    if (!validateName(name)) {
+      setError("Name can contain only letters and spaces");
       return;
     }
 
@@ -40,7 +40,7 @@ export default function EmployeeVerify() {
     }
 
     if (!validatePassword(password)) {
-      setError("Password must be at least 8 characters");
+      setError("Password must be exactly 10 characters with uppercase, lowercase, number, and special character");
       return;
     }
 

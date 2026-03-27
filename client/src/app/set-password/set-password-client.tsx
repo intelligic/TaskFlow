@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 import { setEmployeePassword, verifyInviteToken } from "@/lib/api/authApi";
+import { validatePassword } from "@/lib/validation";
 
 export default function SetPasswordClient() {
   const router = useRouter();
@@ -65,8 +66,8 @@ export default function SetPasswordClient() {
           e.preventDefault();
           if (!token) return;
 
-          if (password.length < 8) {
-            setError("Password must be at least 8 characters");
+          if (!validatePassword(password)) {
+            setError("Password must be exactly 10 characters with uppercase, lowercase, number, and special character");
             return;
           }
 

@@ -12,6 +12,10 @@ const normalizeEmail = (email) =>
   typeof email === "string" ? email.trim().toLowerCase() : "";
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*$/.test(name);
+const isValidWorkspaceName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*$/.test(name);
+const isValidPassword = (password) =>
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{10}$/.test(password);
 
 const signToken = (user) => {
   if (!process.env.JWT_SECRET) {
@@ -83,16 +87,24 @@ export const register = async (req, res) => {
     const safeName = typeof name === "string" ? name.trim() : "";
     const normalizedEmail = normalizeEmail(email);
 
-    if (safeName.length < 2) {
-      return res.status(400).json({ message: "Name is required" });
+    if (safeName.length < 2 || !isValidName(safeName)) {
+      return res.status(400).json({ message: "Name can contain only letters and spaces" });
     }
 
     if (!isValidEmail(normalizedEmail)) {
       return res.status(400).json({ message: "Valid email is required" });
     }
 
-    if (!password || typeof password !== "string" || password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    if (!password || typeof password !== "string" || !isValidPassword(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+      });
+    }
+
+    const safeWorkspaceName = typeof workspaceName === "string" ? workspaceName.trim() : "";
+    if (safeWorkspaceName && !isValidWorkspaceName(safeWorkspaceName)) {
+      return res.status(400).json({ message: "Workspace name can contain only letters and spaces" });
     }
 
     const existingUser = await User.findOne({ email: normalizedEmail });
@@ -105,8 +117,12 @@ export const register = async (req, res) => {
 
     // Registration rule:
     // - First ever user becomes admin
-    // - All subsequent users become employee
-    // This avoids ambiguity about who is admin and keeps onboarding simple.
+    // - After that, self-registration is disabled (employees must be invited by admin)
+    if (adminExists) {
+      return res.status(403).json({
+        message: "Registration is closed. Please ask your admin for an invite link.",
+      });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -119,7 +135,7 @@ export const register = async (req, res) => {
       status: "active",
     });
 
-    await ensureWorkspaceForUser(user, workspaceName);
+    await ensureWorkspaceForUser(user, safeWorkspaceName);
 
     const token = signToken(user);
     setAuthCookie(res, token);
@@ -367,8 +383,11 @@ export const setPassword = async (req, res) => {
       return res.status(400).json({ message: "Token is required" });
     }
 
-    if (!password || typeof password !== "string" || password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    if (!password || typeof password !== "string" || !isValidPassword(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+      });
     }
 
     const user = await User.findOne({
@@ -450,8 +469,11 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Token is required" });
     }
 
-    if (!password || typeof password !== "string" || password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    if (!password || typeof password !== "string" || !isValidPassword(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+      });
     }
 
     const user = await User.findOne({
@@ -483,8 +505,11 @@ export const resetPasswordWithEmail = async (req, res) => {
       return res.status(400).json({ message: "Valid email is required" });
     }
 
-    if (!password || typeof password !== "string" || password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    if (!password || typeof password !== "string" || !isValidPassword(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be exactly 10 characters with uppercase, lowercase, number, and special character",
+      });
     }
 
     if (password !== confirmPassword) {
