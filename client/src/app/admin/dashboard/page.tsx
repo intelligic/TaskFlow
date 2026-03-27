@@ -334,9 +334,24 @@ export default function AdminDashboardPage() {
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 hover:scrollbar-thumb-slate-300">
             <div className="divide-y">
               {paginatedEmployees.length === 0 ? (
-                <div className="px-4 py-6 text-sm font-semibold text-slate-600">
-                  No employees found
-                </div>
+              <div className="flex flex-1 items-center justify-center py-10">
+                  <div className="text-center md:text-left flex items-center justify-center flex-col gap-5">
+                    <h4 className="text-2xl font-extrabold text-slate-800">
+                      No employees found
+                    </h4>
+                    <p className="text-[14px] text-slate-500 text-center">
+                      You currently have no tasks assigned to you.
+                      <br />
+                      Enjoy your productive day!
+                    </p>
+                    <button
+                      onClick={loadData}
+                      className="inline-flex items-center justify-center rounded-full bg-blue-600 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+              </div>
               ) : (
                 paginatedEmployees.map((emp) => {
                   const online = isRecentlyActive(emp.lastActive, emp.isOnline);

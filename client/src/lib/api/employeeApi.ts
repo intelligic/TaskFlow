@@ -1,15 +1,11 @@
 import { api } from "@/lib/api/axios";
 
 export const inviteEmployee = async (name: string, email: string, designation?: string) => {
-  try {
-    const response = await api.post<{ message: string; user?: { _id: string; name: string; email: string } }>(
-      "auth/invite",
-      { name, email, designation },
-    );
-    return response.data;
-  } catch {
-    return null;
-  }
+  const response = await api.post<{ message: string; user?: { _id: string; name: string; email: string } }>(
+    "auth/invite",
+    { name, email, designation },
+  );
+  return response.data;
 };
 
 export type EmployeeItem = {
