@@ -1,5 +1,52 @@
 import nodemailer from "nodemailer";
 
+const parseFrom = (value) => {
+  if (!value) return { name: "TaskFlow", email: "" };
+  const match = String(value).match(/^(.*)<([^>]+)>$/);
+  if (match) {
+    return { name: match[1].trim() || "TaskFlow", email: match[2].trim() };
+  }
+  return { name: "TaskFlow", email: String(value).trim() };
+};
+
+const sendWithBrevo = async ({ to, subject, html, replyTo }) => {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) return false;
+
+  const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || "";
+  const sender = parseFrom(emailFrom);
+  if (!sender.email) throw new Error("EMAIL_FROM is required to send emails");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+      body: JSON.stringify({
+        sender: { name: sender.name, email: sender.email },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        replyTo: replyTo ? { email: replyTo } : undefined,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `Brevo API error (${res.status})`);
+    }
+    return true;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 let cachedTransporter = null;
 
 const getTransporter = () => {
@@ -28,6 +75,15 @@ const getTransporter = () => {
 };
 
 export const sendEmail = async (to, subject, html, options = {}) => {
+  // Prefer Brevo API if API key is configured (more reliable on cloud hosts).
+  const usedBrevo = await sendWithBrevo({
+    to,
+    subject,
+    html,
+    replyTo: options.replyTo || undefined,
+  });
+  if (usedBrevo) return;
+
   const transporter = getTransporter();
   const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_USER;
   if (!emailFrom) throw new Error("EMAIL_FROM or SMTP_USER is required to send emails");
@@ -41,5 +97,4 @@ export const sendEmail = async (to, subject, html, options = {}) => {
     html,
     replyTo: options.replyTo || undefined,
   });
-
 };
