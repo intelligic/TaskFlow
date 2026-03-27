@@ -9,7 +9,7 @@ export const getEmployees = async (req, res) => {
     const limitNum = Math.min(Math.max(Number(limit) || 20, 1), 100);
 
     const roleFilter = typeof role === "string" && role.trim() ? role.trim() : "employee";
-    const query = { role: roleFilter, workspace: req.user.workspace };
+    const query = { role: roleFilter, workspace: req.user.workspace, isVerified: true };
     if (typeof search === "string" && search.trim()) {
       const q = search.trim();
       query.$or = [

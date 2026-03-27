@@ -150,6 +150,10 @@ export default function AdminDashboardPage() {
     );
   }, [searchTerm, employees]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const paginatedEmployees = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredEmployees.slice(start, start + ITEMS_PER_PAGE);
@@ -339,27 +343,27 @@ export default function AdminDashboardPage() {
                   return (
                     <div
                       key={emp._id}
-                      className="flex justify-between items-center px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                      className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
                       onClick={() =>
                         router.push(`/admin/chat/${emp.slug || emp._id}`)
                       }
                     >
-                      <div className="w-1/3 text-left">
+                      <div className="w-full sm:w-1/3 text-left">
                         <p className="text-[14px] font-bold text-slate-900">
                           {emp.name}
                         </p>
                       </div>
-                      <div className="w-1/3 flex justify-center items-center gap-3">
+                      <div className="w-full sm:w-1/3 flex justify-start sm:justify-center items-center gap-3">
                         <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
-                          <RiArrowDownBoxFill size={20} className="text-red-500" />
+                          <RiArrowDownBoxFill size={16} className="text-red-500 h-4 w-4 sm:h-5 sm:w-5" />
                           {emp.pending ?? 0}
                         </span>
                         <span className="text-slate-700 text-[14px] font-bold flex items-center gap-1">
-                          <RiArrowUpBoxFill size={20} className="text-green-500" />
+                          <RiArrowUpBoxFill size={16} className="text-green-500 h-4 w-4 sm:h-5 sm:w-5" />
                           {emp.completed ?? 0}
                         </span>
                       </div>
-                      <div className="w-1/3 text-right flex items-center justify-end gap-2">
+                      <div className="w-full sm:w-1/3 text-right flex items-center justify-start sm:justify-end gap-2">
                         <span
                           className={`inline-block h-2 w-2 rounded-full ${online ? "bg-green-500" : "bg-slate-300"}`}
                         ></span>

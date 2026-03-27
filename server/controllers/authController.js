@@ -283,6 +283,28 @@ export const inviteEmployee = async (req, res) => {
     const workspace = await Workspace.findById(workspaceId).select("name");
     const workspaceName = workspace?.name || resolveWorkspaceName("TaskFlow");
 
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (!frontendUrl) {
+      return res.status(500).json({ message: "Server misconfigured: FRONTEND_URL missing" });
+    }
+    const link = `${frontendUrl.replace(/\/+$/, "")}/set-password?token=${inviteToken}`;
+
+    const adminName = admin?.name?.trim() || "Admin";
+    const replyTo = admin?.email;
+    const finalWorkspaceName = requestedWorkspaceName || workspaceName;
+
+    await sendEmail(
+      normalizedEmail,
+      "You're invited to join TaskFlow",
+      inviteEmailTemplate({
+        inviteLink: link,
+        adminName,
+        workspaceName: finalWorkspaceName,
+        employeeName: safeName,
+      }),
+      { replyTo },
+    );
+
     const user = existing
       ? await User.findOneAndUpdate(
         { _id: existing._id },
@@ -311,33 +333,6 @@ export const inviteEmployee = async (req, res) => {
         inviteTokenExpires,
         workspace: workspaceId,
       });
-
-    await Workspace.updateOne(
-      { _id: workspaceId },
-      { $addToSet: { members: { user: user._id, role: "employee" } } },
-    );
-
-    const frontendUrl = process.env.FRONTEND_URL;
-    if (!frontendUrl) {
-      return res.status(500).json({ message: "Server misconfigured: FRONTEND_URL missing" });
-    }
-    const link = `${frontendUrl.replace(/\/+$/, "")}/set-password?token=${inviteToken}`;
-
-    const adminName = admin?.name?.trim() || "Admin";
-    const replyTo = admin?.email;
-    const finalWorkspaceName = requestedWorkspaceName || workspaceName;
-
-    await sendEmail(
-      normalizedEmail,
-      "You're invited to join TaskFlow",
-      inviteEmailTemplate({
-        inviteLink: link,
-        adminName,
-        workspaceName: finalWorkspaceName,
-        employeeName: safeName,
-      }),
-      { replyTo },
-    );
 
     res.status(201).json({
       message: "Invite sent",
@@ -402,6 +397,7 @@ export const setPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
     user.isVerified = true;
+    user.status = "active";
     if (typeof name === "string" && name.trim().length >= 2) {
       user.name = name.trim();
     }
@@ -411,6 +407,13 @@ export const setPassword = async (req, res) => {
     user.inviteToken = undefined;
     user.inviteTokenExpires = undefined;
     await user.save();
+
+    if (user.workspace) {
+      await Workspace.updateOne(
+        { _id: user.workspace },
+        { $addToSet: { members: { user: user._id, role: user.role || "employee" } } },
+      );
+    }
 
     res.json({ message: "Password set successfully" });
   } catch (error) {

@@ -102,10 +102,10 @@ export default function CreateTaskPage() {
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm" aria-hidden />
       <div className="relative z-10 flex h-full items-center justify-center p-6">
-        <div className="w-full max-w-190 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl">
+        <div className="w-full max-w-2xl md:max-w-3xl max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
       <div className="space-y-3">
         <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">Create New Task</h1>
-        <p className="w-160 text-md text-slate-500 font-medium">
+        <p className="w-full max-w-xl text-md text-slate-500 font-medium">
           Set up a new project task and assign it to a team member.
         </p>
       </div>
@@ -121,7 +121,12 @@ export default function CreateTaskPage() {
         </p>
       )}
 
-      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-7 shadow-sm">
+      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 sm:p-7 shadow-sm">
+        {!loading && employees.length === 0 && (
+          <p className="mb-4 rounded-lg border bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+            No verified employees found. Invite an employee first to assign tasks.
+          </p>
+        )}
         <div className="mb-5">
           <label className="mb-2 block text-sm font-semibold text-slate-700">Task Title</label>
           <input
@@ -151,7 +156,7 @@ export default function CreateTaskPage() {
                 className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-3 pr-10 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
-                disabled={loading}
+                disabled={loading || employees.length === 0}
               >
                 <option value="">Select employee</option>
                 {employees.map((employee) => (
@@ -208,7 +213,7 @@ export default function CreateTaskPage() {
         <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
           <button
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || employees.length === 0}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg tracking-wide bg-blue-600 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <MdOutlineAddTask className="text-lg" />

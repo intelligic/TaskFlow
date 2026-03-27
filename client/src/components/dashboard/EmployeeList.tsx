@@ -39,11 +39,11 @@ export default function EmployeeList({ data }: EmployeeListProps) {
             {/* Stats */}
             <div className="flex items-center gap-3 sm:gap-4 shrink-0 px-2">
               <div className="flex items-center gap-1">
-                <RiArrowDownBoxFill size={18} className="text-red-500 sm:size-20" />
+                <RiArrowDownBoxFill size={16} className="text-red-500 h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="text-xs font-bold text-slate-700">{emp.pending ?? 0}</span>
               </div>
               <div className="flex items-center gap-1">
-                <RiArrowUpBoxFill size={18} className="text-green-500 sm:size-20" />
+                <RiArrowUpBoxFill size={16} className="text-green-500 h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="text-xs font-bold text-slate-700">{emp.completed ?? 0}</span>
               </div>
             </div>
