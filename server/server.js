@@ -39,8 +39,24 @@ const server = http.createServer(app);
 const serverDir = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(serverDir, "uploads");
 
+const rawOrigins = [
+  process.env.CORS_ORIGIN,
+  process.env.FRONTEND_URL,
+]
+  .filter(Boolean)
+  .flatMap((value) => String(value).split(","))
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+const allowedOrigins = new Set(rawOrigins);
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+  origin: (origin, callback) => {
+    // Allow non-browser or same-origin requests
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
 };
 
