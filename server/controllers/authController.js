@@ -346,7 +346,9 @@ export const inviteEmployee = async (req, res) => {
     if (msg.includes("SMTP") || msg.includes("EMAIL_FROM")) {
       return res.status(500).json({ message: "Email service is not configured" });
     }
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({
+      message: msg || "Unable to send invitation email",
+    });
   }
 };
 
