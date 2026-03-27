@@ -28,12 +28,12 @@ const signToken = (user) => {
 
 const setAuthCookie = (res, token) => {
   const isProd = String(process.env.NODE_ENV || "").toLowerCase() === "production";
-  // Use SameSite=Lax to ensure cookies work in development (localhost with different ports)
-  // and set `secure` only in production where HTTPS is used.
+  // In production (cross-site: Vercel -> Render), use SameSite=None + Secure.
+  // In development, keep Lax to avoid issues on localhost.
   res.cookie("token", token, {
     httpOnly: true,
     secure: isProd,
-    sameSite: "lax",
+    sameSite: isProd ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
@@ -109,15 +109,20 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "User already exists and role cannot be changed" });
     }
 
     const adminExists = await User.exists({ role: "admin" });
-    const role = adminExists ? "employee" : "admin";
-
-    // Registration rule:
+    // Registration rule (strict):
     // - First ever user becomes admin
-    // - After that, users can still self-register but are employees
+    // - After that, self-registration is disabled (employees must be invited)
+    if (adminExists) {
+      return res.status(403).json({
+        message: "Registration is closed. Only admins can invite employees.",
+      });
+    }
+
+    const role = "admin";
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -229,7 +234,7 @@ export const logout = async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: isProd,
-      sameSite: "lax",
+      sameSite: isProd ? "none" : "lax",
     });
     res.json({ message: "Logged out" });
   } catch {
@@ -261,7 +266,10 @@ export const inviteEmployee = async (req, res) => {
     const inviteToken = crypto.randomBytes(32).toString("hex");
     const inviteTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    const existing = await User.findOne({ email: normalizedEmail }).select("+password");
+    const existing = await User.findOne({ email: normalizedEmail }).select("+password role isVerified");
+    if (existing && existing.role !== "employee") {
+      return res.status(400).json({ message: "User already exists and role cannot be changed" });
+    }
     if (existing && existing.isVerified) {
       return res.status(400).json({ message: "Employee already exists" });
     }
