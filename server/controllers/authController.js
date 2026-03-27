@@ -117,12 +117,7 @@ export const register = async (req, res) => {
 
     // Registration rule:
     // - First ever user becomes admin
-    // - After that, self-registration is disabled (employees must be invited by admin)
-    if (adminExists) {
-      return res.status(403).json({
-        message: "Registration is closed. Please ask your admin for an invite link.",
-      });
-    }
+    // - After that, users can still self-register but are employees
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
