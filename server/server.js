@@ -189,7 +189,19 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || env.PORT || 5000;
+const resolvePort = () => {
+  const raw = process.env.PORT;
+  if (raw) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  if (String(process.env.NODE_ENV || "").toLowerCase() === "production") {
+    console.error("PORT is required in production. Falling back to default 5000.");
+  }
+  return env.PORT || 5000;
+};
+
+const PORT = resolvePort();
 
 server.on("error", (error) => {
   if (error && error.code === "EADDRINUSE") {
@@ -202,7 +214,7 @@ server.on("error", (error) => {
   process.exit(1);
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
   logger.info(`Server running on port ${PORT}`);
 });
