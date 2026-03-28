@@ -34,7 +34,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToToasts((payload) => {
+    const unsubscribe: () => void = subscribeToToasts((payload) => {
       const trimmed = payload.message?.trim();
       if (!trimmed) return;
       const id = createId();
@@ -44,9 +44,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
       }, durationMs);
     });
-    return () => {
-      unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
   const remove = (id: string) => {

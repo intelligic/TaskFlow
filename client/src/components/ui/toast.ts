@@ -25,9 +25,10 @@ export const toast = {
   info: (message: string, durationMs?: number) => emit({ message, type: 'info', durationMs }),
 };
 
-export const subscribeToToasts = (listener: ToastListener): (() => void) => {
+export const subscribeToToasts = (listener: ToastListener): VoidFunction => {
   listeners.add(listener);
-  return () => {
+  const unsubscribe: VoidFunction = () => {
     listeners.delete(listener);
   };
+  return unsubscribe;
 };
