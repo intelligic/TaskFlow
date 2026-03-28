@@ -322,7 +322,7 @@ export const inviteEmployee = async (req, res) => {
           inviteTokenExpires,
           workspace: workspaceId,
         },
-        { new: true },
+        { returnDocument: "after" },
       )
       : await User.create({
         name: safeName,

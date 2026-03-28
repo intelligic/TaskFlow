@@ -224,7 +224,7 @@ export const updateTask = async (req, res) => {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, workspace: req.user.workspace },
       { title, description, assignedTo, dueDate, tags },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
 
     if (!task) return res.status(404).json({ message: "Task not found" });
