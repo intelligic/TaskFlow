@@ -259,13 +259,13 @@ export default function AdminDashboardPage() {
               Recent Tasks
             </h3>
             <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm min-w-0">
-              <FiSearch className="text-[16px] text-black flex-shrink-0" />
+              <FiSearch className="text-[16px] text-black shrink-0" />
               <input
                 type="text"
                 value={taskSearchTerm}
                 onChange={(e) => setTaskSearchTerm(e.target.value)}
                 placeholder="Search tasks..."
-                className="w-full max-w-[200px] sm:max-w-xs bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
+                className="w-full max-w-50 sm:max-w-xs bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -319,19 +319,19 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Employees Section */}
-        <div className="flex w-full lg:w-[450px] min-h-0 flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
+        <div className="flex w-full lg:w-112.5 min-h-0 flex-col gap-4 rounded-2xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] border border-slate-100">
           <div className="flex items-center justify-between rounded-t-2xl bg-slate-400/70 px-5 py-2">
             <h3 className="text-[16px] font-extrabold text-slate-800 uppercase tracking-wide">
               Employees
             </h3>
             <div className="relative flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 shadow-sm min-w-0">
-              <FiSearch className="text-[16px] text-black flex-shrink-0" />
+              <FiSearch className="text-[16px] text-black shrink-0" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search..."
-                className="w-full max-w-[120px] sm:max-w-[180px] bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
+                className="w-full max-w-30 sm:max-w-45 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400"
               />
             </div>
           </div>

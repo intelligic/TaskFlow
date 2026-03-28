@@ -165,7 +165,7 @@ function UpdateTaskContent() {
           <input
             type="text"
             placeholder="e.g. Q4 Financial Reporting"
-            className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-black placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -175,7 +175,7 @@ function UpdateTaskContent() {
           <label className="mb-2 block text-sm font-semibold text-slate-700">Description</label>
           <textarea
             placeholder="Describe the task requirements and goals..."
-            className="h-28 w-full resize-none rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="h-28 w-full resize-none rounded-lg border border-slate-200 px-3 py-3 text-sm text-black placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -186,7 +186,7 @@ function UpdateTaskContent() {
             <label className="mb-2 block text-sm font-semibold text-slate-700">Assign To</label>
             <div className="relative">
               <select
-                className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-3 pr-10 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-3 pr-10 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
                 disabled={loading || employees.length === 0}
@@ -207,7 +207,7 @@ function UpdateTaskContent() {
             <div className="relative">
               <input
                 type="date"
-                className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-lg border border-slate-200 px-3 py-3 pr-10 text-sm text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 min={minDueDate}
