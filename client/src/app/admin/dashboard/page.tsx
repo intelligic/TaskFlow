@@ -42,6 +42,10 @@ export default function AdminDashboardPage() {
   const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const today = new Date();
+  const minDueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
+    today.getDate(),
+  ).padStart(2, "0")}`;
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -457,12 +461,13 @@ export default function AdminDashboardPage() {
                   <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
                     Due Date
                   </label>
-                  <input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600"
-                  />
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  min={minDueDate}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600"
+                />
                 </div>
               </div>
               <div>
