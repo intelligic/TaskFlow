@@ -44,7 +44,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
       }, durationMs);
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const remove = (id: string) => {
