@@ -27,13 +27,15 @@ import logger from "./utils/logger.js";
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes per IP
+  max: 600, // 600 requests per 15 minutes per IP
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many requests, please try again later." },
 });
 
 const app = express();
+// Trust proxy so rate-limits use the real client IP on Render/behind proxies.
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 const server = http.createServer(app);
 const serverDir = path.dirname(fileURLToPath(import.meta.url));
@@ -115,7 +117,11 @@ app.use(
 );
 app.use(morgan("dev"));
 app.use(express.json({ limit: "1mb" }));
-app.use(limiter);
+app.use((req, res, next) => {
+  // Allow frequent profile checks without triggering rate limits.
+  if (req.path === "/api/auth/profile") return next();
+  return limiter(req, res, next);
+});
 app.use(
   "/uploads",
   express.static(uploadsDir, {
