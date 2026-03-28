@@ -352,6 +352,13 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
           <div className="flex gap-2">
             <button
               disabled={isUpdating}
+              onClick={() => handleStatusUpdate('pending')}
+              className="rounded bg-orange-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-600 disabled:opacity-50"
+            >
+              Mark Pending
+            </button>
+            <button
+              disabled={isUpdating}
               onClick={() => handleStatusUpdate('closed')}
               className="rounded bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 disabled:opacity-50"
             >
