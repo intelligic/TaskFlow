@@ -403,51 +403,64 @@ export default function AdminDashboardPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border bg-white p-6 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between border-b pb-4">
-              <h3 className="text-lg font-bold text-slate-900">
-                Create New Task
-              </h3>
+          <div className="w-full max-w-2xl md:max-w-3xl max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+                  Create New Task
+                </h1>
+                <p className="w-full max-w-xl text-md text-slate-500 font-medium">
+                  Set up a new project task and assign it to a team member.
+                </p>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
+                aria-label="Close"
               >
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleCreateTask} className="space-y-4">
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                  Title
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="h-24 w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600 resize-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 sm:p-7 shadow-sm">
+                {!loading && employees.length === 0 && (
+                  <p className="mb-4 rounded-lg border bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                    No verified employees found. Invite an employee first to assign tasks.
+                  </p>
+                )}
+                <div className="mb-5">
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Task Title
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600"
+                  />
+                </div>
+                <div className="mb-5">
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="h-28 w-full resize-none rounded-lg border border-slate-200 px-3 py-3 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600"
+                  />
+                </div>
+                <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
                     Assign To
                   </label>
                   <select
                     required
                     value={assigneeId}
                     onChange={(e) => setAssigneeId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-black bg-white outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-black bg-white outline-none focus:ring-1 focus:ring-blue-600"
+                    disabled={loading || employees.length === 0}
                   >
                     <option value="">Select</option>
                     {employees.map((e) => (
@@ -458,7 +471,7 @@ export default function AdminDashboardPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
                     Due Date
                   </label>
                   <input
@@ -466,50 +479,51 @@ export default function AdminDashboardPage() {
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                     min={minDueDate}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
-                  Tags
-                </label>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {TASK_TAGS.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all ${
-                        selectedTags.includes(tag)
-                          ? getTagClasses(tag, "selected")
-                          : getTagClasses(tag, "unselected")
-                      }`}
-                    >
-                      <Tag size={10} />
-                      {tag}
-                    </button>
-                  ))}
+                <div className="mb-6">
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Tags
+                  </label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {TASK_TAGS.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                          selectedTags.includes(tag)
+                            ? getTagClasses(tag, "selected")
+                            : getTagClasses(tag, "unselected")
+                        }`}
+                      >
+                        <Tag size={12} />
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              {formError && (
-                <p className="text-xs font-bold text-red-600">{formError}</p>
-              )}
-              <div className="flex gap-3 pt-6">
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {formLoading ? "Creating..." : "Create Task"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
+                {formError && (
+                  <p className="text-xs font-bold text-red-600">{formError}</p>
+                )}
+                <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
+                  <button
+                    type="submit"
+                    disabled={formLoading || employees.length === 0}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg tracking-wide bg-blue-600 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {formLoading ? "Creating..." : "Create Task"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </form>
           </div>
