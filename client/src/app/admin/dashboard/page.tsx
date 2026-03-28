@@ -425,7 +425,7 @@ export default function AdminDashboardPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600"
                 />
               </div>
               <div>
@@ -435,7 +435,7 @@ export default function AdminDashboardPage() {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="h-24 w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600 resize-none"
+                  className="h-24 w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600 resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -447,7 +447,7 @@ export default function AdminDashboardPage() {
                     required
                     value={assigneeId}
                     onChange={(e) => setAssigneeId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm bg-white outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-black bg-white outline-none focus:ring-1 focus:ring-blue-600"
                   >
                     <option value="">Select</option>
                     {employees.map((e) => (
@@ -461,13 +461,13 @@ export default function AdminDashboardPage() {
                   <label className="mb-1 block text-xs font-bold uppercase text-slate-500">
                     Due Date
                   </label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  min={minDueDate}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-blue-600"
-                />
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    min={minDueDate}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-black outline-none focus:ring-1 focus:ring-blue-600"
+                  />
                 </div>
               </div>
               <div>
