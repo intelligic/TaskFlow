@@ -78,6 +78,23 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const refreshPresence = async () => {
+    try {
+      const [statsRes, employeesRes, profileRes] = await Promise.all([
+        getDashboardStats(),
+        getEmployees({ role: "employee" }),
+        getProfile(),
+      ]);
+      setStats(statsRes);
+      setEmployees(
+        Array.isArray(employeesRes.employees) ? employeesRes.employees : [],
+      );
+      setWorkspaceName(profileRes?.workspace?.name || "");
+    } catch {
+      // keep last known state
+    }
+  };
+
   useEffect(() => {
     loadData();
 
@@ -85,13 +102,36 @@ export default function AdminDashboardPage() {
     socket.on("taskCreated", loadData);
     socket.on("taskUpdated", loadData);
     socket.on("taskDeleted", loadData);
-    socket.on("userStatusUpdated", loadData);
+    socket.on("userStatusUpdated", refreshPresence);
 
     return () => {
       socket.off("taskCreated", loadData);
       socket.off("taskUpdated", loadData);
       socket.off("taskDeleted", loadData);
-      socket.off("userStatusUpdated", loadData);
+      socket.off("userStatusUpdated", refreshPresence);
+    };
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refreshPresence();
+      }
+    }, 45000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshPresence();
+      }
+    };
+
+    window.addEventListener("focus", handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleVisibility);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 

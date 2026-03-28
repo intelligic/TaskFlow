@@ -14,13 +14,13 @@ import { updateStatus } from "@/lib/api/employeeApi";
 import { getProfile } from "@/lib/api/authApi";
 import { getApiErrorMessage } from "@/lib/api";
 import { isRecentlyActive } from "@/lib/online";
-import { toast } from "@/components/ui/toast";
 
 export default function EmployeeNavbar() {
   const pathname = usePathname();
   const [isOnline, setIsOnline] = useState(false);
   const [lastActive, setLastActive] = useState<string | undefined>(undefined);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -39,6 +39,7 @@ export default function EmployeeNavbar() {
   const handleToggleStatus = async () => {
     try {
       setStatusLoading(true);
+      setStatusError("");
       const newStatus = !isOnline;
       const updated = await updateStatus(newStatus);
       setIsOnline(newStatus);
@@ -49,7 +50,7 @@ export default function EmployeeNavbar() {
       }
     } catch (error) {
       console.error("Failed to update status:", error);
-      toast.error(getApiErrorMessage(error, "Failed to update status"));
+      setStatusError(getApiErrorMessage(error, "Failed to update status"));
     } finally {
       setStatusLoading(false);
     }
@@ -132,6 +133,9 @@ export default function EmployeeNavbar() {
               {isRecentlyActive(lastActive, isOnline) ? <MdToggleOn /> : <MdToggleOff />}
             </button>
           </div>
+          {statusError && (
+            <span className="text-[11px] font-semibold text-red-600">{statusError}</span>
+          )}
           <NotificationBell />
           {/* <div
             className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm"
@@ -219,6 +223,9 @@ export default function EmployeeNavbar() {
                     </button>
                   </div>
                 </div>
+                {statusError && (
+                  <span className="text-[11px] font-semibold text-red-600">{statusError}</span>
+                )}
 
                 <button
                   onClick={() => {

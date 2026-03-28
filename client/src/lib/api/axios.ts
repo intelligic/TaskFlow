@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 import { getToken, logout } from '@/lib/auth';
-import { toast } from '@/components/ui/toast';
 
 const resolvedBaseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -22,20 +21,6 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-const shouldSkipToast = (config?: { headers?: Record<string, unknown> }) => {
-  const value = config?.headers?.['x-skip-toast'];
-  return value === true || value === 'true' || value === '1';
-};
-
-const extractErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<{ message?: string }>(error)) {
-    const serverMessage = error.response?.data?.message;
-    if (serverMessage) return serverMessage;
-    if (error.code === 'ERR_NETWORK') return 'Unable to connect to API server.';
-  }
-  return fallback;
-};
-
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
@@ -46,29 +31,7 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => {
-    if (!shouldSkipToast(response.config)) {
-      const method = String(response.config?.method || '').toLowerCase();
-      const isMutation = method === 'post' || method === 'put' || method === 'patch' || method === 'delete';
-      const url = String(response.config?.url || '');
-      const isAuthRoute = url.includes('/auth/');
-      const message = response?.data?.message;
-      if (isMutation && !isAuthRoute) {
-        if (typeof message === 'string' && message.trim()) {
-          toast.success(message.trim());
-        } else {
-          const fallback =
-            method === 'delete'
-              ? 'Deleted successfully.'
-              : method === 'post'
-                ? 'Saved successfully.'
-                : 'Updated successfully.';
-          toast.success(fallback);
-        }
-      }
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
       const requestUrl = String(error?.config?.url || "");
@@ -90,10 +53,6 @@ api.interceptors.response.use(
       } else {
         logout();
       }
-    }
-    if (!shouldSkipToast(error?.config)) {
-      const message = extractErrorMessage(error, 'Request failed.');
-      if (message) toast.error(message);
     }
     return Promise.reject(error);
   },

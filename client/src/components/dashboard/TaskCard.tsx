@@ -7,7 +7,6 @@ import { getApiErrorMessage } from '@/lib/api';
 import { MessageSquare, Send, SquarePen, Tag, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTagClasses } from '@/lib/task-tags';
-import { useToast } from '@/components/ui/ToastProvider';
 
 type Props = {
   task: Task;
@@ -19,10 +18,12 @@ type Props = {
 export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: Props) {
   const router = useRouter();
   const [showComments, setShowComments] = useState(false);
-  const { error: showError } = useToast();
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [commentError, setCommentError] = useState('');
+  const [statusError, setStatusError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -107,10 +108,11 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     try {
       setIsUpdating(true);
       await updateTaskStatus(task._id, newStatus);
+      setStatusError('');
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Failed to update status', err);
-      showError(getApiErrorMessage(err, 'Failed to update status'));
+      setStatusError(getApiErrorMessage(err, 'Failed to update status'));
     } finally {
       setIsUpdating(false);
     }
@@ -120,9 +122,10 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     try {
       setIsUpdating(true);
       await deleteTask(task._id);
+      setDeleteError('');
       if (onRefresh) onRefresh();
     } catch (err) {
-      showError(getApiErrorMessage(err, 'Failed to delete task'));
+      setDeleteError(getApiErrorMessage(err, 'Failed to delete task'));
     } finally {
       setIsUpdating(false);
       setShowDeleteConfirm(false);
@@ -135,10 +138,11 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
     try {
       await createTaskComment(task._id, commentText.trim());
       setCommentText('');
+      setCommentError('');
       await loadComments();
       if (onRefresh) onRefresh();
     } catch (err) {
-      showError(getApiErrorMessage(err, 'Failed to add comment'));
+      setCommentError(getApiErrorMessage(err, 'Failed to add comment'));
     }
   };
 
@@ -349,6 +353,10 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             </button>
           )}
         </div>
+        {statusError && (
+          <p className="text-[11px] font-semibold text-red-600">{statusError}</p>
+        )}
+
         {/* Admin Actions */}
         {role === 'admin' && task.status === 'completed' && (
           <div className="flex gap-2">
@@ -403,6 +411,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
                 value={commentText}
                 onChange={(e) => {
                   setCommentText(e.target.value);
+                  if (commentError) setCommentError('');
                 }}
                 placeholder="Write a comment..."
                 className="flex-1 rounded border border-slate-200 px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none"
@@ -417,6 +426,9 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
               </button>
             </div>
           )}
+          {commentError && (
+            <p className="text-[11px] font-semibold text-red-600">{commentError}</p>
+          )}
         </div>
       )}
 
@@ -427,6 +439,9 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             <p className="mt-2 text-xs text-slate-600">
               Are you sure you want to delete this task? This action cannot be undone.
             </p>
+            {deleteError && (
+              <p className="mt-2 text-[11px] font-semibold text-red-600">{deleteError}</p>
+            )}
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"

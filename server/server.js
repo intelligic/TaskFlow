@@ -65,6 +65,46 @@ const corsOptions = {
 const io = new SocketIOServer(server, { cors: corsOptions });
 global.io = io;
 
+const activeSocketsByUser = new Map();
+
+const emitUserStatus = async (userId, workspaceId, isOnline) => {
+  try {
+    const update = { isOnline, lastActive: new Date() };
+    const user = await User.findByIdAndUpdate(userId, update, { new: true })
+      .select("_id name email role designation slug lastActive isVerified isOnline createdAt workspace");
+    if (!user) return;
+    const room = workspaceId ? `workspace:${workspaceId}` : undefined;
+    if (room) {
+      io.to(room).emit("userStatusUpdated", user);
+    } else {
+      io.emit("userStatusUpdated", user);
+    }
+  } catch (err) {
+    logger.error("Failed to emit user status update", { error: err?.message || String(err) });
+  }
+};
+
+const applySocketPresence = async (userId, workspaceId, isConnected) => {
+  try {
+    const user = await User.findById(userId).select("onlinePreference isOnline workspace");
+    if (!user) return;
+    if (!user.onlinePreference) return;
+
+    if (isConnected) {
+      if (!user.isOnline) {
+        await emitUserStatus(userId, workspaceId, true);
+      } else {
+        // Refresh lastActive for connected users.
+        await emitUserStatus(userId, workspaceId, true);
+      }
+    } else if (user.isOnline) {
+      await emitUserStatus(userId, workspaceId, false);
+    }
+  } catch (err) {
+    logger.error("Failed to apply socket presence", { error: err?.message || String(err) });
+  }
+};
+
 const parseSocketCookies = (cookieHeader = "") => {
   const out = {};
   cookieHeader.split(";").forEach((part) => {
@@ -124,8 +164,28 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   logger.info("Socket connected", { id: socket.id });
+  const userId = socket.data?.userId;
+  const workspaceId = socket.data?.workspace;
+
+  if (userId) {
+    const currentCount = activeSocketsByUser.get(userId) || 0;
+    activeSocketsByUser.set(userId, currentCount + 1);
+    if (currentCount === 0) {
+      void applySocketPresence(userId, workspaceId, true);
+    }
+  }
+
   socket.on("disconnect", () => {
     logger.info("Socket disconnected");
+    if (!userId) return;
+    const currentCount = activeSocketsByUser.get(userId) || 0;
+    const nextCount = Math.max(currentCount - 1, 0);
+    if (nextCount === 0) {
+      activeSocketsByUser.delete(userId);
+      void applySocketPresence(userId, workspaceId, false);
+    } else {
+      activeSocketsByUser.set(userId, nextCount);
+    }
   });
 });
 

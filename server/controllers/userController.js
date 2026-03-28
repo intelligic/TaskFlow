@@ -110,9 +110,14 @@ export const updateOnlineStatus = async (req, res) => {
       return res.status(400).json({ message: "isOnline must be a boolean" });
     }
 
+    const updatePayload = { isOnline, onlinePreference: isOnline };
+    if (isOnline) {
+      updatePayload.lastActive = new Date();
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { isOnline },
+      updatePayload,
       { new: true }
     ).select("_id name email role designation slug lastActive isVerified isOnline createdAt workspace");
     

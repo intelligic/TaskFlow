@@ -1,4 +1,5 @@
 export const isRecentlyActive = (lastActive?: string, fallback?: boolean) => {
+  if (fallback === false) return false;
   if (lastActive) {
     const ts = new Date(lastActive).getTime();
     if (!Number.isNaN(ts)) {

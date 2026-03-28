@@ -37,6 +37,15 @@ export default function EmployeeDashboardPage() {
     }
   };
 
+  const refreshStats = async () => {
+    try {
+      const statsRes = await getDashboardStats();
+      setStats(statsRes);
+    } catch {
+      // keep last known stats
+    }
+  };
+
   useEffect(() => {
     loadData();
 
@@ -51,6 +60,29 @@ export default function EmployeeDashboardPage() {
       socket.off("taskUpdated", loadData);
       socket.off("taskDeleted", loadData);
       socket.off("userStatusUpdated", loadData);
+    };
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refreshStats();
+      }
+    }, 45000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshStats();
+      }
+    };
+
+    window.addEventListener("focus", handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleVisibility);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 
