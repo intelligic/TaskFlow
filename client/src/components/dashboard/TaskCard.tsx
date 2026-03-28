@@ -7,6 +7,7 @@ import { getApiErrorMessage } from '@/lib/api';
 import { MessageSquare, Send, SquarePen, Tag, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getTagClasses } from '@/lib/task-tags';
+import { useToast } from '@/components/ui/ToastProvider';
 
 type Props = {
   task: Task;
@@ -18,6 +19,7 @@ type Props = {
 export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: Props) {
   const router = useRouter();
   const [showComments, setShowComments] = useState(false);
+  const { error: showError } = useToast();
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -108,7 +110,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Failed to update status', err);
-      alert(getApiErrorMessage(err, 'Failed to update status'));
+      showError(getApiErrorMessage(err, 'Failed to update status'));
     } finally {
       setIsUpdating(false);
     }
@@ -120,7 +122,7 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
       await deleteTask(task._id);
       if (onRefresh) onRefresh();
     } catch (err) {
-      alert(getApiErrorMessage(err, 'Failed to delete task'));
+      showError(getApiErrorMessage(err, 'Failed to delete task'));
     } finally {
       setIsUpdating(false);
       setShowDeleteConfirm(false);
@@ -129,13 +131,14 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
 
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
+    if (task.status === 'archived') return;
     try {
       await createTaskComment(task._id, commentText.trim());
       setCommentText('');
       await loadComments();
       if (onRefresh) onRefresh();
     } catch (err) {
-      alert('Failed to add comment');
+      showError(getApiErrorMessage(err, 'Failed to add comment'));
     }
   };
 
@@ -346,7 +349,6 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             </button>
           )}
         </div>
-
         {/* Admin Actions */}
         {role === 'admin' && task.status === 'completed' && (
           <div className="flex gap-2">
@@ -392,23 +394,29 @@ export default function TaskCard({ task, role, onRefresh, commentsRefreshKey }: 
             )}
           </div>
           
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a comment..."
-              className="flex-1 rounded border border-slate-200 px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-            />
-            <button
-              onClick={handleAddComment}
-              disabled={!commentText.trim()}
-              className="rounded bg-blue-600 p-1.5 text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              <Send size={14} />
-            </button>
-          </div>
+          {task.status === 'archived' ? (
+            <p className="text-xs text-slate-400 italic">Archived tasks are read-only.</p>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => {
+                  setCommentText(e.target.value);
+                }}
+                placeholder="Write a comment..."
+                className="flex-1 rounded border border-slate-200 px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
+              />
+              <button
+                onClick={handleAddComment}
+                disabled={!commentText.trim()}
+                className="rounded bg-blue-600 p-1.5 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                <Send size={14} />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

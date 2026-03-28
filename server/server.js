@@ -1,4 +1,4 @@
-﻿import http from "http";
+import http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -65,18 +65,41 @@ const corsOptions = {
 const io = new SocketIOServer(server, { cors: corsOptions });
 global.io = io;
 
-// Attempt to authenticate socket connections using the auth cookie (if present).
+const parseSocketCookies = (cookieHeader = "") => {
+  const out = {};
+  cookieHeader.split(";").forEach((part) => {
+    const [rawKey, ...rest] = part.split("=");
+    const key = rawKey?.trim();
+    if (!key) return;
+    const value = rest.join("=").trim();
+    out[key] = decodeURIComponent(value);
+  });
+  return out;
+};
+
+const resolveSocketToken = (socket) => {
+  const authToken = socket.handshake?.auth?.token;
+  const authHeader = socket.handshake?.headers?.authorization || socket.handshake?.headers?.Authorization;
+  const bearerToken =
+    typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : null;
+  const tokenHeader = socket.handshake?.headers?.["x-auth-token"] || socket.handshake?.headers?.token;
+  const cookies = parseSocketCookies(socket.handshake?.headers?.cookie || "");
+
+  return (
+    authToken ||
+    bearerToken ||
+    (Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader) ||
+    cookies.token ||
+    null
+  );
+};
+
+// Attempt to authenticate socket connections using cookie or auth token (if present).
 io.use(async (socket, next) => {
   try {
-    const cookieHeader = socket.handshake.headers.cookie || "";
-    const parts = cookieHeader.split(";").map((p) => p.trim());
-    const cookies = {};
-    parts.forEach((part) => {
-      const [k, ...rest] = part.split("=");
-      if (!k) return;
-      cookies[k.trim()] = decodeURIComponent(rest.join("=") || "");
-    });
-    const token = cookies.token;
+    const token = resolveSocketToken(socket);
     if (!token) return next();
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -94,7 +117,7 @@ io.use(async (socket, next) => {
     }
     return next();
   } catch (err) {
-    // Don't prevent connections if cookie is missing or invalid; proceed unauthenticated
+    // Don't prevent connections if auth is missing or invalid; proceed unauthenticated
     return next();
   }
 });
@@ -153,7 +176,7 @@ app.use("/api/audit", auditRoutes);
 app.use("/api/users", userRoutes);
 
 app.get("/", (req, res) => {
-  res.send("TaskFlow API is running 🚀");
+  res.send("TaskFlow API is running ??");
 });
 
 app.get("/api/health", (req, res) => {
@@ -193,6 +216,7 @@ process.on("uncaughtException", (error) => {
   logger.error(`Uncaught exception: ${error?.stack || error?.message || String(error)}`);
   server.close(() => process.exit(1));
 });
+
 
 
 

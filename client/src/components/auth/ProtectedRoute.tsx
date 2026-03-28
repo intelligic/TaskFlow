@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { logout, logoutSilent } from '@/lib/auth';
+import { getToken, logout } from '@/lib/auth';
 import { getProfile } from '@/lib/api/authApi';
 import { socket } from '@/lib/socket';
 
@@ -39,6 +39,8 @@ export default function ProtectedRoute({
           return;
         }
 
+        const token = getToken();
+        socket.auth = token ? { token } : {};
         if (!socket.connected) socket.connect();
         setStatus('authorized');
         setIsAuthorized(true);
@@ -124,3 +126,4 @@ export default function ProtectedRoute({
 
   return <>{children}</>;
 }
+

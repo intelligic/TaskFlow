@@ -166,6 +166,9 @@ export const updateTaskStatus = async (req, res) => {
     const task = await Task.findOne({ _id: req.params.id, workspace: req.user.workspace });
 
     if (!task) return res.status(404).json({ message: "Task not found" });
+    if (task.status === "archived") {
+      return res.status(403).json({ message: "Archived tasks are read-only" });
+    }
 
     const userRole = req.user.role;
     const currentStatus = task.status;
@@ -212,6 +215,12 @@ export const updateTask = async (req, res) => {
     }
 
     const { title, description, assignedTo, dueDate, tags } = req.body;
+    const existing = await Task.findOne({ _id: req.params.id, workspace: req.user.workspace }).select("status");
+    if (!existing) return res.status(404).json({ message: "Task not found" });
+    if (existing.status === "archived") {
+      return res.status(403).json({ message: "Archived tasks are read-only" });
+    }
+
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, workspace: req.user.workspace },
       { title, description, assignedTo, dueDate, tags },

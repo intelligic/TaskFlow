@@ -14,6 +14,7 @@ import { updateStatus } from "@/lib/api/employeeApi";
 import { getProfile } from "@/lib/api/authApi";
 import { getApiErrorMessage } from "@/lib/api";
 import { isRecentlyActive } from "@/lib/online";
+import { toast } from "@/components/ui/toast";
 
 export default function EmployeeNavbar() {
   const pathname = usePathname();
@@ -48,7 +49,7 @@ export default function EmployeeNavbar() {
       }
     } catch (error) {
       console.error("Failed to update status:", error);
-      alert(getApiErrorMessage(error, "Failed to update status"));
+      toast.error(getApiErrorMessage(error, "Failed to update status"));
     } finally {
       setStatusLoading(false);
     }

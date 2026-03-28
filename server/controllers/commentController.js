@@ -8,14 +8,14 @@ const ensureCanAccessTask = async (req, taskId) => {
 
   if (req.user && req.user.role === "admin") {
     return await Task.findOne({ _id: taskId, workspace: req.user.workspace })
-      .select("_id assignedTo title workspace");
+      .select("_id assignedTo title workspace status");
   }
 
   return await Task.findOne({
     _id: taskId,
     assignedTo: req.user.id,
     workspace: req.user.workspace,
-  }).select("_id assignedTo title workspace");
+  }).select("_id assignedTo title workspace status");
 };
 
 export const addComment = async (req, res) => {
@@ -35,6 +35,12 @@ export const addComment = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Task not found",
+      });
+    }
+    if (task.status === "archived") {
+      return res.status(403).json({
+        success: false,
+        message: "Archived tasks are read-only",
       });
     }
 
