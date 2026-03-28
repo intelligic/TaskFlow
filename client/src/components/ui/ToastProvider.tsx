@@ -33,8 +33,8 @@ const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  useEffect(() => {
-    const unsubscribe: () => void = subscribeToToasts((payload) => {
+  useEffect((): void | (() => void) => {
+    const unsubscribe = subscribeToToasts((payload) => {
       const trimmed = payload.message?.trim();
       if (!trimmed) return;
       const id = createId();
@@ -44,7 +44,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
       }, durationMs);
     });
-    return unsubscribe;
+    const cleanup: VoidFunction = () => {
+      unsubscribe();
+    };
+    return cleanup;
   }, []);
 
   const remove = (id: string) => {
