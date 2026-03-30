@@ -9,12 +9,6 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{
 
 export const registerSchema = z
   .object({
-    uniqueId: z
-      .string()
-      .trim()
-      .min(4, "Unique ID must be at least 4 characters")
-      .max(32, "Unique ID must be at most 32 characters")
-      .regex(/^[A-Za-z0-9]+$/, "Unique ID can contain only letters and numbers"),
     name: z
       .string()
       .trim()

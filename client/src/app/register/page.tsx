@@ -66,7 +66,6 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const res = await registerUser(
-        data.uniqueId,
         data.name,
         data.email,
         data.password,
@@ -115,15 +114,6 @@ export default function RegisterPage() {
         className="w-full max-w-[420px] rounded-xl bg-white p-6 sm:p-8 shadow-md"
       >
         <h2 className="mb-6 text-2xl font-semibold text-black">Register</h2>
-
-        <input
-          type="text"
-          placeholder="Unique ID"
-          autoComplete="off"
-          {...register("uniqueId")}
-          className="mb-3 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-        />
-        {errors.uniqueId && <p className="mb-2 text-sm text-red-500">{errors.uniqueId.message}</p>}
 
         <input
           type="text"

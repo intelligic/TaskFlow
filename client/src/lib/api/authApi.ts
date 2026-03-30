@@ -24,14 +24,12 @@ export const loginUser = async (email: string, password: string) => {
 };
 
 export const registerUser = async (
-  uniqueId: string,
   name: string,
   email: string,
   password: string,
   workspaceName?: string,
 ) => {
   const response = await api.post<RegisterResponse>('auth/register', {
-    uniqueId,
     name,
     email,
     password,

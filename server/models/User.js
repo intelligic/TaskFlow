@@ -19,13 +19,6 @@ const userSchema = new mongoose.Schema(
       maxlength: 254,
     },
 
-    uniqueId: {
-      type: String,
-      trim: true,
-      unique: true,
-      sparse: true,
-      index: true,
-    },
 
     designation: {
       type: String,
