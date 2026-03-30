@@ -10,10 +10,13 @@ import { resetPasswordTemplate } from "../templates/resetPasswordTemplate.js";
 
 const normalizeEmail = (email) =>
   typeof email === "string" ? email.trim().toLowerCase() : "";
+const normalizeUniqueId = (value) =>
+  typeof value === "string" ? value.trim().toUpperCase() : "";
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isValidName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*$/.test(name);
 const isValidWorkspaceName = (name) => /^[A-Za-z]+(?: [A-Za-z]+)*$/.test(name);
+const isValidUniqueId = (value) => /^[A-Z0-9]{4,32}$/.test(value);
 const isValidPassword = (password) =>
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])[^\s]{8,}$/.test(password);
 
@@ -82,10 +85,11 @@ const ensureWorkspaceForUser = async (user, customWorkspaceName) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, workspaceName } = req.body || {};
+    const { name, email, password, workspaceName, uniqueId } = req.body || {};
 
     const safeName = typeof name === "string" ? name.trim() : "";
     const normalizedEmail = normalizeEmail(email);
+    const normalizedUniqueId = normalizeUniqueId(uniqueId);
 
     if (safeName.length < 2 || !isValidName(safeName)) {
       return res.status(400).json({ message: "Name can contain only letters and spaces" });
@@ -93,6 +97,12 @@ export const register = async (req, res) => {
 
     if (!isValidEmail(normalizedEmail)) {
       return res.status(400).json({ message: "Valid email is required" });
+    }
+
+    if (!normalizedUniqueId || !isValidUniqueId(normalizedUniqueId)) {
+      return res
+        .status(400)
+        .json({ message: "Unique ID is required (4-32 letters/numbers)" });
     }
 
     if (!password || typeof password !== "string" || !isValidPassword(password)) {
@@ -109,19 +119,17 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists and role cannot be changed" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
-    const adminExists = await User.exists({ role: "admin" });
-    // Registration rule (strict):
-    // - First ever user becomes admin
-    // - After that, self-registration is disabled (employees must be invited)
-    if (adminExists) {
-      return res.status(403).json({
-        message: "Registration is closed. Only admins can invite employees.",
-      });
+    const existingUniqueId = await User.findOne({ uniqueId: normalizedUniqueId });
+    if (existingUniqueId) {
+      return res.status(400).json({ message: "Unique ID already exists" });
     }
 
+    // First ever user becomes admin. Subsequent users can also register as admins 
+    // of their own workspaces. If a specific "invite-only" policy is desired, 
+    // it should be managed via configuration or a different logic.
     const role = "admin";
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -130,6 +138,7 @@ export const register = async (req, res) => {
       name: safeName,
       email: normalizedEmail,
       password: hashedPassword,
+      uniqueId: normalizedUniqueId,
       role,
       isVerified: true,
       status: "active",
