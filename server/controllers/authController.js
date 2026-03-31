@@ -172,9 +172,17 @@ export const login = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    let isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Password incorrect" });
+      // Support legacy users whose passwords were stored in plain text.
+      // If it matches, upgrade to a bcrypt hash silently.
+      const isLegacyMatch = user.password === password;
+      if (!isLegacyMatch) {
+        return res.status(400).json({ message: "Password incorrect" });
+      }
+      user.password = await bcrypt.hash(password, 10);
+      await user.save();
+      isMatch = true;
     }
 
     try {
